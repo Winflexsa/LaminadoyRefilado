@@ -193,13 +193,33 @@ td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
 <!-- PC -->
 <section id="v-pc" class="view">
   <div class="tabs">
-    <button class="on" onclick="pcTab('oc',this)">Órdenes de compra</button>
+    <button class="on" onclick="pcTab('prod',this)">Producción en vivo</button>
+    <button onclick="pcTab('oc',this)">Órdenes de compra</button>
     <button onclick="pcTab('lam',this)">Bobinas laminadas</button>
     <button onclick="pcTab('fin',this)">Bobinas finales / remitos</button>
     <button onclick="pcTab('ops',this)">OPs de refilado</button>
     <button onclick="pcTab('cat',this)">Catálogo</button>
   </div>
-  <div id="pc-oc" class="pct">
+  <div id="pc-prod" class="pct">
+    <div class="card">
+      <div class="row">
+        <div class="f" style="max-width:180px"><label>Día</label><input id="prodDia" type="date" onchange="render()"></div>
+        <button class="btn sec" onclick="loadRemote(true)">Actualizar</button>
+        <span class="muted" id="prodUpd"></span>
+      </div>
+      <div class="kpi" id="prodKpi" style="margin-top:12px"></div>
+    </div>
+    <div class="card">
+      <h3>Eficiencia por turno</h3>
+      <table><thead><tr><th>Turno</th><th>Proceso</th><th class="n">Bobinas</th><th class="n">Kg</th><th class="n">Horas</th><th class="n">Kg/h real</th><th class="n">Kg/h objetivo</th><th class="n">Eficiencia</th><th class="n">Paradas</th></tr></thead><tbody id="prodTurnos"></tbody></table>
+      <p class="muted">Objetivo kg/h por producto se define en Catálogo; si el producto no tiene, usa el valor por defecto de ⚙ Configuración. La eficiencia es kg producidos / (horas del turno × kg/h objetivo).</p>
+    </div>
+    <div class="card">
+      <h3>Bobinas del día, en orden de salida</h3>
+      <table><thead><tr><th>Hora</th><th>Proceso</th><th>Operario</th><th>Cliente / OC</th><th>Bobina</th><th class="n">Kg</th><th class="n">m</th><th class="n">Δ min</th><th class="n">Kg/h</th><th class="n">Objetivo</th></tr></thead><tbody id="prodLista"></tbody></table>
+    </div>
+  </div>
+  <div id="pc-oc" class="pct" style="display:none">
     <div class="card">
       <h2>Nueva OC</h2>
       <div class="row">
@@ -272,11 +292,13 @@ td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
         <div class="f"><label>Metros bob. PE</label><input id="catMPe" type="number"></div>
         <div class="f"><label>Peso bob. laminada (kg)</label><input id="catPLam" type="number" step="any"></div>
         <div class="f"><label>Cilindro (mm)</label><input id="catCil" type="number"></div>
+        <div class="f"><label>Objetivo laminado (kg/h)</label><input id="catKhLam" type="number" step="any"></div>
+        <div class="f"><label>Objetivo refilado (kg/h)</label><input id="catKhRef" type="number" step="any"></div>
       </div>
       <div class="row" style="margin-top:10px"><button class="btn" onclick="catSave()">Guardar producto</button><button class="btn sec" onclick="catNew()">Limpiar</button></div>
     </div>
     <div class="card">
-      <table><thead><tr><th>Cliente</th><th>Medida</th><th class="n">A.PET</th><th class="n">E.PET</th><th class="n">A.PE</th><th class="n">E.PE</th><th class="n">Final</th><th class="n">Tiras</th><th class="n">Bob. PET</th><th class="n">Bob. PE</th><th class="n">Bob. lam.</th><th class="n">Cilindro</th><th></th></tr></thead><tbody id="catList"></tbody></table>
+      <table><thead><tr><th>Cliente</th><th>Medida</th><th class="n">A.PET</th><th class="n">E.PET</th><th class="n">A.PE</th><th class="n">E.PE</th><th class="n">Final</th><th class="n">Tiras</th><th class="n">Bob. PET</th><th class="n">Bob. PE</th><th class="n">Bob. lam.</th><th class="n">Cilindro</th><th class="n">Obj. lam.</th><th class="n">Obj. ref.</th><th></th></tr></thead><tbody id="catList"></tbody></table>
     </div>
   </div>
 </section>
@@ -295,6 +317,15 @@ td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
       <button class="btn sec" onclick="exportJSON()">Backup JSON</button>
     </div>
     <p class="muted">Sin credenciales la app trabaja solo en este dispositivo (localStorage). Con Bin ID y clave sincroniza con JSONBin cada vez que se guarda algo y cada 30 s.</p>
+    <h3>Turnos y objetivos por defecto</h3>
+    <div class="row">
+      <div class="f"><label>Turno mañana (inicio–fin)</label><input id="cfgT1" placeholder="06:00-14:00"></div>
+      <div class="f"><label>Turno tarde</label><input id="cfgT2" placeholder="14:00-22:00"></div>
+      <div class="f"><label>Turno noche (vacío si no hay)</label><input id="cfgT3" placeholder="22:00-06:00"></div>
+      <div class="f"><label>Objetivo laminado (kg/h)</label><input id="cfgKhLam" type="number" step="any"></div>
+      <div class="f"><label>Objetivo refilado (kg/h)</label><input id="cfgKhRef" type="number" step="any"></div>
+    </div>
+    <div class="row" style="margin-top:8px"><button class="btn" onclick="paramSave()">Guardar parámetros</button></div>
     <h3>Operarios (PIN)</h3>
     <div id="cfgOps"></div>
     <div class="row"><div class="f"><label>Nombre</label><input id="opNom"></div><div class="f"><label>PIN</label><input id="opPin" inputmode="numeric"></div><div class="f"><label>Acceso</label><select id="opRol"><option value="tablet">Solo tablets</option><option value="admin">Todo</option></select></div><button class="btn sec" onclick="opAdd()">Agregar</button></div>
@@ -306,7 +337,7 @@ td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
 
 <script>
 /* ================= ESTADO ================= */
-const VERSION='v0.6';
+const VERSION='v0.7';
 const CATALOGO=[
  {id:'CAT-01',cliente:'Don Yeyo',medida:'321x300',anchoPet:350,espPet:250,anchoPe:370,espPe:50,anchoFinal:321,tiras:1,pesoBobinaPet:92,metrosBobinaPet:762,pesoBobinaPe:26,metrosBobinaPe:1550,pesoBobinaLam:35,cilindro:340},
  {id:'CAT-02',cliente:'Molinos',medida:'472x235',anchoPet:500,espPet:200,anchoPe:530,espPe:35,anchoFinal:472,tiras:1,pesoBobinaPet:80,metrosBobinaPet:592,pesoBobinaPe:32,metrosBobinaPe:1900,pesoBobinaLam:40,cilindro:490},
@@ -330,7 +361,7 @@ const CATALOGO=[
  {id:'CAT-20',cliente:'BarielPack',medida:'520x350',anchoPet:550,espPet:300,anchoPe:570,espPe:50,anchoFinal:520,tiras:1,pesoBobinaPet:92,metrosBobinaPet:413,pesoBobinaPe:37.92,metrosBobinaPe:1700,pesoBobinaLam:31,cilindro:540},
  {id:'CAT-21',cliente:'BarielPack',medida:'520x600',anchoPet:550,espPet:550,anchoPe:570,espPe:50,anchoFinal:520,tiras:1,pesoBobinaPet:92,metrosBobinaPet:226,pesoBobinaPe:24.6,metrosBobinaPe:946,pesoBobinaLam:45,cilindro:540}
 ];
-const EMPTY=()=>({ocs:[],laminadas:[],ops:[],finales:[],catalogo:CATALOGO.map(p=>({...p})),operarios:[
+const EMPTY=()=>({ocs:[],laminadas:[],ops:[],finales:[],catalogo:CATALOGO.map(p=>({...p})),params:{t1:'06:00-14:00',t2:'14:00-22:00',t3:'',khLam:null,khRef:null},operarios:[
  {n:'Matías',pin:'1205',rol:'admin'},{n:'Jonathan',pin:'3080',rol:'admin'},
  {n:'Alejandro Delelis',pin:'0035',rol:'tablet'},{n:'Juan Vera',pin:'0022',rol:'tablet'},{n:'Antonio Zayas',pin:'0059',rol:'tablet'},{n:'Juan Brest',pin:'0003',rol:'tablet'}],meta:{v:VERSION}});
 let S=EMPTY(), cfg=JSON.parse(localStorage.getItem('wr_cfg')||'{}'), who=null, mode='', curOP=null;
@@ -359,6 +390,7 @@ function mergeInto(base,inc){ // unión por id, gana updatedAt más nuevo
   }
   base.operarios.forEach(o=>{if(!o.rol)o.rol='tablet'});
   if(!base.catalogo||!base.catalogo.length)base.catalogo=CATALOGO.map(p=>({...p}));
+  if(inc.params&&(inc.params.updatedAt||'')>=(base.params?.updatedAt||''))base.params={...(base.params||{}),...inc.params};
   base.meta=inc.meta||base.meta;return base;
 }
 async function loadRemote(force){
@@ -394,7 +426,7 @@ function go(v){
   if(!who&&v!=='login'){v='login'}
   if((v==='pc'||v==='config')&&rol!=='admin'){toast('Solo acceso total');return}
   document.querySelectorAll('.view').forEach(x=>x.classList.remove('active'));
-  if(v==='config'){$('cfgBin').value=cfg.bin||'';$('cfgKey').value=cfg.key||''}
+  if(v==='config'){$('cfgBin').value=cfg.bin||'';$('cfgKey').value=cfg.key||'';const p=S.params||{};$('cfgT1').value=p.t1||'';$('cfgT2').value=p.t2||'';$('cfgT3').value=p.t3||'';$('cfgKhLam').value=p.khLam??'';$('cfgKhRef').value=p.khRef??''}
   if(v==='login'){$('loginPin').value='';setTimeout(()=>$('loginPin').focus(),50)}
   $('v-'+v).classList.add('active');mode=v;$('modeLbl').textContent={pc:'Administración',lam:'Laminado',ref:'Refilado',op:'Refilado'}[v]||'';
   document.querySelectorAll('.adminOnly').forEach(x=>x.style.display=rol==='admin'?'':'none');
@@ -423,13 +455,13 @@ function ocSave(){
   S.ocs.push(o);save();['ocCli','ocNro','ocDesc','ocAncho','ocEspPet','ocEspPe','ocMxB','ocKxB','ocKg','ocFecha'].forEach(i=>$(i).value='');$('ocProd').value='';$('ocTiras').value=1;toast('OC guardada');
 }
 /* ---- catálogo ---- */
-function catNew(){$('catId').value='';$('catTitle').textContent='Nuevo producto';['catCli','catMed','catAPet','catEPet','catAPe','catEPe','catAF','catPPet','catMPet','catPPe','catMPe','catPLam','catCil'].forEach(i=>$(i).value='');$('catTiras').value=1}
+function catNew(){$('catId').value='';$('catTitle').textContent='Nuevo producto';['catCli','catMed','catAPet','catEPet','catAPe','catEPe','catAF','catPPet','catMPet','catPPe','catMPe','catPLam','catCil','catKhLam','catKhRef'].forEach(i=>$(i).value='');$('catTiras').value=1}
 function catEdit(id){const p=S.catalogo.find(x=>x.id===id);$('catId').value=id;$('catTitle').textContent='Editar producto';
   $('catCli').value=p.cliente;$('catMed').value=p.medida;$('catAPet').value=p.anchoPet;$('catEPet').value=p.espPet;$('catAPe').value=p.anchoPe;$('catEPe').value=p.espPe;$('catAF').value=p.anchoFinal;$('catTiras').value=p.tiras||1;
-  $('catPPet').value=p.pesoBobinaPet??'';$('catMPet').value=p.metrosBobinaPet??'';$('catPPe').value=p.pesoBobinaPe??'';$('catMPe').value=p.metrosBobinaPe??'';$('catPLam').value=p.pesoBobinaLam??'';$('catCil').value=p.cilindro??'';window.scrollTo(0,0)}
+  $('catPPet').value=p.pesoBobinaPet??'';$('catMPet').value=p.metrosBobinaPet??'';$('catPPe').value=p.pesoBobinaPe??'';$('catMPe').value=p.metrosBobinaPe??'';$('catPLam').value=p.pesoBobinaLam??'';$('catCil').value=p.cilindro??'';$('catKhLam').value=p.kgHoraLam??'';$('catKhRef').value=p.kgHoraRef??'';window.scrollTo(0,0)}
 function catSave(){
   const n=id=>{const v=parseFloat($(id).value);return isNaN(v)?null:v};
-  const p={cliente:$('catCli').value.trim(),medida:$('catMed').value.trim(),anchoPet:n('catAPet'),espPet:n('catEPet'),anchoPe:n('catAPe'),espPe:n('catEPe'),anchoFinal:n('catAF'),tiras:n('catTiras')||1,pesoBobinaPet:n('catPPet'),metrosBobinaPet:n('catMPet'),pesoBobinaPe:n('catPPe'),metrosBobinaPe:n('catMPe'),pesoBobinaLam:n('catPLam'),cilindro:n('catCil'),updatedAt:now()};
+  const p={cliente:$('catCli').value.trim(),medida:$('catMed').value.trim(),anchoPet:n('catAPet'),espPet:n('catEPet'),anchoPe:n('catAPe'),espPe:n('catEPe'),anchoFinal:n('catAF'),tiras:n('catTiras')||1,pesoBobinaPet:n('catPPet'),metrosBobinaPet:n('catMPet'),pesoBobinaPe:n('catPPe'),metrosBobinaPe:n('catMPe'),pesoBobinaLam:n('catPLam'),cilindro:n('catCil'),kgHoraLam:n('catKhLam'),kgHoraRef:n('catKhRef'),updatedAt:now()};
   if(!p.cliente||!p.medida||!p.anchoFinal)return toast('Falta cliente, medida o ancho final');
   const id=$('catId').value;if(id){Object.assign(S.catalogo.find(x=>x.id===id),p)}else{S.catalogo.push({id:uid('CAT'),...p})}
   save();catNew();toast('Producto guardado');
@@ -537,6 +569,42 @@ function exportCSV(){
   const a=document.createElement('a');a.href='data:text/csv;charset=utf-8,\uFEFF'+encodeURIComponent(rows.map(r=>r.join(';')).join('\n'));a.download='bobinas-finales.csv';a.click();
 }
 
+/* ================= PARÁMETROS ================= */
+function paramSave(){S.params={t1:$('cfgT1').value.trim(),t2:$('cfgT2').value.trim(),t3:$('cfgT3').value.trim(),khLam:+$('cfgKhLam').value||null,khRef:+$('cfgKhRef').value||null,updatedAt:now()};save();toast('Parámetros guardados')}
+function turnos(){const P=S.params||{};return [['Mañana',P.t1],['Tarde',P.t2],['Noche',P.t3]].filter(t=>t[1]&&/^\d\d:\d\d-\d\d:\d\d$/.test(t[1])).map(([n,r])=>{const [a,b]=r.split('-');const m=s=>+s.slice(0,2)*60+ +s.slice(3);return{n,ini:m(a),fin:m(b)}})}
+function objetivo(ocId,proc){const p=S.catalogo.find(x=>x.id===ocOf(ocId).prodId)||{};return (proc==='lam'?p.kgHoraLam:p.kgHoraRef)||(proc==='lam'?S.params?.khLam:S.params?.khRef)||null}
+function minOf(iso){const d=new Date(iso);return d.getHours()*60+d.getMinutes()}
+function enTurno(iso,t){const m=minOf(iso);return t.ini<t.fin?(m>=t.ini&&m<t.fin):(m>=t.ini||m<t.fin)}
+function effBadge(e){if(e==null)return'<span class="muted">—</span>';const c=e>=90?'cerr':e>=70?'pend':'bad';return`<span class="tag ${c}" style="${c==='bad'?'background:#fde3e1;color:var(--bad)':''}">${fmt(e)} %</span>`}
+function renderProd(){
+  const dia=$('prodDia').value||now().slice(0,10);if(!$('prodDia').value)$('prodDia').value=dia;
+  const lam=S.laminadas.filter(l=>!l.resto&&l.createdAt.startsWith(dia)).map(l=>({t:l.createdAt,proc:'lam',op:l.operario,ocId:l.ocId,lbl:'L'+l.nro,kg:l.kg,m:l.m}));
+  const fin=S.finales.filter(f=>f.createdAt.startsWith(dia)).map(f=>({t:f.createdAt,proc:'ref',op:f.operario,ocId:f.ocId,lbl:'bob '+f.nro,kg:f.kg,m:f.m}));
+  const all=[...lam,...fin].sort((a,b)=>a.t>b.t?1:-1);
+  const par=S.ops.flatMap(o=>o.paradas.filter(p=>p.t.startsWith(dia)));
+  $('prodKpi').innerHTML=`<div><b>${lam.length}</b><span>laminadas</span></div><div><b>${fmt(sum(lam,x=>x.kg))}</b><span>kg laminados</span></div><div><b>${fin.length}</b><span>bobinas finales</span></div><div><b>${fmt(sum(fin,x=>x.kg))}</b><span>kg refilados</span></div><div><b>${sum(par,p=>p.min)}</b><span>min de parada</span></div>`;
+  $('prodUpd').textContent='Actualizado '+new Date().toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit',second:'2-digit'})+' · se refresca solo cada 30 s';
+  const hoy=now().slice(0,10)===dia,nowMin=minOf(now());
+  let rows='';
+  for(const t of turnos()){
+    let dur=(t.fin-t.ini+1440)%1440;
+    if(hoy){const el=(nowMin-t.ini+1440)%1440;if(el<dur)dur=el;else if(t.ini<t.fin?nowMin<t.ini:false)dur=0}
+    const hrs=dur/60;
+    for(const [proc,nm] of [['lam','Laminado'],['ref','Refilado']]){
+      const b=all.filter(x=>x.proc===proc&&enTurno(x.t,t));if(!b.length&&!hrs)continue;
+      const kg=sum(b,x=>x.kg);const ocs=[...new Set(b.map(x=>x.ocId))];
+      const objs=ocs.map(o=>objetivo(o,proc)).filter(Boolean);const obj=objs.length?objs.reduce((a,c)=>a+c,0)/objs.length:null;
+      const real=hrs?kg/hrs:null;const eff=obj&&hrs?real/obj*100:null;
+      const pm=sum(par.filter(p=>enTurno(p.t,t)),p=>p.min);
+      rows+=`<tr><td>${t.n}</td><td>${nm}</td><td class="n">${b.length}</td><td class="n">${fmt(kg)}</td><td class="n">${fmt(hrs)}</td><td class="n">${real!=null?fmt(real):'—'}</td><td class="n">${obj?fmt(obj):'—'}</td><td class="n">${effBadge(eff)}</td><td class="n">${pm||''}</td></tr>`;
+    }
+  }
+  $('prodTurnos').innerHTML=rows||'<tr><td colspan="9" class="muted">Definí los turnos en ⚙ Configuración.</td></tr>';
+  const last={};
+  $('prodLista').innerHTML=all.map(x=>{const prev=last[x.proc];last[x.proc]=x.t;const dm=prev?(new Date(x.t)-new Date(prev))/60000:null;const kh=dm&&x.kg?x.kg/(dm/60):null;const obj=objetivo(x.ocId,x.proc);
+    return`<tr><td>${fh(x.t)}</td><td>${x.proc==='lam'?'Laminado':'Refilado'}</td><td>${x.op||''}</td><td>${ocLbl(ocOf(x.ocId))}</td><td>${x.lbl}</td><td class="n">${x.kg?fmt(x.kg):'<span class="tag pend">sin pesar</span>'}</td><td class="n">${x.m||''}</td><td class="n">${dm!=null?fmt(dm):''}</td><td class="n">${kh?fmt(kh):''}</td><td class="n">${obj?fmt(obj):''}</td></tr>`}).join('')||'<tr><td colspan="10" class="muted">Sin producción cargada ese día.</td></tr>';
+}
+
 /* ================= OPERARIOS ================= */
 function opAdd(){const n=$('opNom').value.trim(),p=$('opPin').value.trim();if(!n||!p)return;if(S.operarios.some(o=>o.pin===p))return toast('Ese PIN ya existe');S.operarios.push({n,pin:p,rol:$('opRol').value,updatedAt:now()});save();$('opNom').value='';$('opPin').value=''}
 async function opRm(pin){if(S.operarios.filter(o=>o.rol==='admin').length<=1&&S.operarios.find(o=>o.pin===pin)?.rol==='admin')return toast('Tiene que quedar al menos un acceso total');if(await confirmUI('¿Quitar operario?')){S.operarios=S.operarios.filter(o=>o.pin!==pin);save()}}
@@ -555,8 +623,9 @@ function render(){
     return`<div class="pick" onclick="opOpen('${o.id}')"><b>${ocLbl(o)}</b> ${op?tagOf('abierta'):''}<small>${o.desc||''} · ${o.ancho||'?'} mm × ${o.esp||'?'} µ${o.tiras>1?' · '+o.tiras+' tiras':''}${o.mxb?' · '+o.mxb+' m/bob':''}${o.kxb?' · ~'+o.kxb+' kg/bob':''}</small><small>${pend.length} laminadas por refilar (${fmt(sum(pend,l=>l.kg))} kg) · ${fmt(kf)} / ${fmt(o.kg)} kg finales</small></div>`}).join('')||'<p class="muted">No hay OC con bobinas laminadas para refilar.</p>';}
   if(mode==='op'&&curOP)renderOP();
   if(mode==='pc'){
+    renderProd();
     const pv=$('ocProd').value;$('ocProd').innerHTML='<option value="">— elegir producto —</option>'+S.catalogo.slice().sort((a,b)=>a.cliente.localeCompare(b.cliente)).map(p=>`<option value="${p.id}">${prodLbl(p)}</option>`).join('');$('ocProd').value=pv;
-    $('catList').innerHTML=S.catalogo.slice().sort((a,b)=>a.cliente.localeCompare(b.cliente)).map(p=>`<tr><td>${p.cliente}</td><td><b>${p.medida}</b></td><td class="n">${p.anchoPet??''}</td><td class="n">${p.espPet??''}</td><td class="n">${p.anchoPe??''}</td><td class="n">${p.espPe??''}</td><td class="n">${p.anchoFinal}</td><td class="n">${p.tiras||1}</td><td class="n">${p.pesoBobinaPet?p.pesoBobinaPet+' kg / '+(p.metrosBobinaPet||'?')+' m':'—'}</td><td class="n">${p.pesoBobinaPe?p.pesoBobinaPe+' kg / '+(p.metrosBobinaPe||'?')+' m':'—'}</td><td class="n">${p.pesoBobinaLam?p.pesoBobinaLam+' kg':'—'}</td><td class="n">${p.cilindro||'—'}</td><td><button class="btn sec" onclick="catEdit('${p.id}')">✎</button> <button class="btn sec" onclick="catDel('${p.id}')">✕</button></td></tr>`).join('');
+    $('catList').innerHTML=S.catalogo.slice().sort((a,b)=>a.cliente.localeCompare(b.cliente)).map(p=>`<tr><td>${p.cliente}</td><td><b>${p.medida}</b></td><td class="n">${p.anchoPet??''}</td><td class="n">${p.espPet??''}</td><td class="n">${p.anchoPe??''}</td><td class="n">${p.espPe??''}</td><td class="n">${p.anchoFinal}</td><td class="n">${p.tiras||1}</td><td class="n">${p.pesoBobinaPet?p.pesoBobinaPet+' kg / '+(p.metrosBobinaPet||'?')+' m':'—'}</td><td class="n">${p.pesoBobinaPe?p.pesoBobinaPe+' kg / '+(p.metrosBobinaPe||'?')+' m':'—'}</td><td class="n">${p.pesoBobinaLam?p.pesoBobinaLam+' kg':'—'}</td><td class="n">${p.cilindro||'—'}</td><td class="n">${p.kgHoraLam||'—'}</td><td class="n">${p.kgHoraRef||'—'}</td><td><button class="btn sec" onclick="catEdit('${p.id}')">✎</button> <button class="btn sec" onclick="catDel('${p.id}')">✕</button></td></tr>`).join('');
     $('ocList').innerHTML=S.ocs.slice().reverse().map(o=>{const k=ocKgs(o);return`<tr><td>${o.cliente}</td><td>${o.nro}</td><td>${o.desc||''}</td><td class="n">${o.ancho||''}</td><td class="n">${o.espPet?o.espPet+'+'+o.espPe:o.esp||''}</td><td class="n">${o.mxb||''}</td><td class="n">${fmt(o.kg)}</td><td class="n">${fmt(k.lam)}</td><td class="n">${fmt(k.fin)}</td><td class="n">${fmt(k.rem)}</td><td>${tagOf(o.estado)}</td><td><button class="btn sec" onclick="ocToggle('${o.id}')">${o.estado==='abierta'?'Cerrar':'Reabrir'}</button> <button class="btn sec" onclick="ocDel('${o.id}')">✕</button></td></tr>`}).join('');
     $('pcLam').innerHTML=S.laminadas.slice().reverse().map(l=>`<tr><td>${fd(l.createdAt)}</td><td>${ocLbl(ocOf(l.ocId))}</td><td>${l.partida}</td><td class="n">${l.nro}${l.resto?' (resto)':''}</td><td class="n">${fmt(l.kg)}</td><td class="n">${l.m||''}</td><td class="n">${l.ancho||''}</td><td class="n">${l.esp||''}</td><td>${l.operario||''}</td><td>${tagOf(l.estado)}</td><td>${l.estado==='pendiente'?`<button class="btn sec" onclick="lamDel('${l.id}')">✕</button>`:''}</td></tr>`).join('');
     const v=$('remOC').value;$('remOC').innerHTML=`<option value="">Todas las OC</option>`+S.ocs.map(o=>`<option value="${o.id}">${ocLbl(o)}</option>`).join('');$('remOC').value=v;
@@ -587,7 +656,7 @@ function renderOP(){
 /* ================= INIT ================= */
 (function(){
   try{const l=JSON.parse(localStorage.getItem('wr_state'));if(l)S=mergeInto(EMPTY(),l)}catch(e){}
-  $('loginLogo').src=document.querySelector('header img').src;go('login');loadRemote();setInterval(()=>{if(!saving)loadRemote()},30000);
+  $('loginLogo').src=document.querySelector('header img').src;go('login');loadRemote();setInterval(()=>{if(!saving)loadRemote()},30000);document.addEventListener('visibilitychange',()=>{if(!document.hidden&&!saving)loadRemote()});
 })();
 </script>
 </body>
