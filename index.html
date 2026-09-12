@@ -127,6 +127,7 @@ td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
       <div class="f"><label>Espesor (µ)</label><input id="lamEsp" type="number" inputmode="numeric"></div>
       <div class="f"><label>Máquina</label><input id="lamMaq" value="Laminadora"></div>
     </div>
+    <p class="muted" id="lamRef"></p><p id="lamAlerta" style="margin:4px 0;font-weight:600"></p>
     <div class="row" style="margin-top:10px"><button class="btn big" onclick="lamSave()">Guardar bobina laminada</button></div>
   </div>
   <div class="card">
@@ -196,26 +197,32 @@ td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
     <button onclick="pcTab('lam',this)">Bobinas laminadas</button>
     <button onclick="pcTab('fin',this)">Bobinas finales / remitos</button>
     <button onclick="pcTab('ops',this)">OPs de refilado</button>
+    <button onclick="pcTab('cat',this)">Catálogo</button>
   </div>
   <div id="pc-oc" class="pct">
     <div class="card">
       <h2>Nueva OC</h2>
       <div class="row">
-        <div class="f"><label>Cliente</label><input id="ocCli"></div>
+        <div class="f" style="flex:2"><label>Producto del catálogo</label><select id="ocProd" onchange="ocProdChange()"></select></div>
         <div class="f"><label>Nº OC</label><input id="ocNro"></div>
-        <div class="f"><label>Producto / descripción</label><input id="ocDesc" placeholder="PET/PE cristal"></div>
-      </div>
-      <div class="row">
-        <div class="f"><label>Ancho final (mm)</label><input id="ocAncho" type="number"></div>
-        <div class="f"><label>Espesor (µ)</label><input id="ocEsp" type="number"></div>
-        <div class="f"><label>Metros por bobina</label><input id="ocMxB" type="number"></div>
         <div class="f"><label>Kg totales</label><input id="ocKg" type="number"></div>
         <div class="f"><label>Fecha entrega</label><input id="ocFecha" type="date"></div>
       </div>
+      <div class="row">
+        <div class="f"><label>Cliente</label><input id="ocCli"></div>
+        <div class="f"><label>Medida / descripción</label><input id="ocDesc" placeholder="321x300"></div>
+        <div class="f"><label>Ancho final (mm)</label><input id="ocAncho" type="number"></div>
+        <div class="f"><label>Esp. PET (µ)</label><input id="ocEspPet" type="number"></div>
+        <div class="f"><label>Esp. PE (µ)</label><input id="ocEspPe" type="number"></div>
+        <div class="f"><label>Tiras</label><input id="ocTiras" type="number" value="1"></div>
+        <div class="f"><label>Metros por bobina</label><input id="ocMxB" type="number"></div>
+        <div class="f"><label>Kg por bobina (ref)</label><input id="ocKxB" type="number"></div>
+      </div>
+      <p class="muted">Elegí el producto y se completan las medidas; podés corregirlas para esta OC sin tocar el catálogo.</p>
       <div class="row" style="margin-top:10px"><button class="btn" onclick="ocSave()">Guardar OC</button></div>
     </div>
     <div class="card">
-      <table><thead><tr><th>Cliente</th><th>OC</th><th>Producto</th><th class="n">Ancho</th><th class="n">Esp</th><th class="n">m/bob</th><th class="n">Kg pedidos</th><th class="n">Kg lamin.</th><th class="n">Kg final</th><th class="n">Kg remit.</th><th>Estado</th><th></th></tr></thead><tbody id="ocList"></tbody></table>
+      <table><thead><tr><th>Cliente</th><th>OC</th><th>Producto</th><th class="n">Ancho</th><th class="n">PET+PE µ</th><th class="n">m/bob</th><th class="n">Kg pedidos</th><th class="n">Kg lamin.</th><th class="n">Kg final</th><th class="n">Kg remit.</th><th>Estado</th><th></th></tr></thead><tbody id="ocList"></tbody></table>
     </div>
   </div>
   <div id="pc-lam" class="pct" style="display:none">
@@ -242,6 +249,34 @@ td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
   <div id="pc-ops" class="pct" style="display:none">
     <div class="card">
       <table><thead><tr><th>Inicio</th><th>Cliente / OC</th><th>Operario</th><th class="n">Laminadas</th><th class="n">Kg laminados</th><th class="n">Bob. finales</th><th class="n">Kg finales</th><th class="n">Trim</th><th class="n">Scrap</th><th class="n">Resto</th><th class="n">Dif</th><th class="n">Rend.</th><th class="n">Paradas</th><th>Estado</th></tr></thead><tbody id="pcOps"></tbody></table>
+    </div>
+  </div>
+  <div id="pc-cat" class="pct" style="display:none">
+    <div class="card">
+      <h2 id="catTitle">Nuevo producto</h2>
+      <div class="row">
+        <input type="hidden" id="catId">
+        <div class="f"><label>Cliente</label><input id="catCli"></div>
+        <div class="f"><label>Medida</label><input id="catMed" placeholder="321x300"></div>
+        <div class="f"><label>Ancho PET (mm)</label><input id="catAPet" type="number"></div>
+        <div class="f"><label>Esp. PET (µ)</label><input id="catEPet" type="number"></div>
+        <div class="f"><label>Ancho PE (mm)</label><input id="catAPe" type="number"></div>
+        <div class="f"><label>Esp. PE (µ)</label><input id="catEPe" type="number"></div>
+        <div class="f"><label>Ancho final (mm)</label><input id="catAF" type="number"></div>
+        <div class="f"><label>Tiras</label><input id="catTiras" type="number" value="1"></div>
+      </div>
+      <div class="row">
+        <div class="f"><label>Peso bob. PET (kg)</label><input id="catPPet" type="number" step="any"></div>
+        <div class="f"><label>Metros bob. PET</label><input id="catMPet" type="number"></div>
+        <div class="f"><label>Peso bob. PE (kg)</label><input id="catPPe" type="number" step="any"></div>
+        <div class="f"><label>Metros bob. PE</label><input id="catMPe" type="number"></div>
+        <div class="f"><label>Peso bob. laminada (kg)</label><input id="catPLam" type="number" step="any"></div>
+        <div class="f"><label>Cilindro (mm)</label><input id="catCil" type="number"></div>
+      </div>
+      <div class="row" style="margin-top:10px"><button class="btn" onclick="catSave()">Guardar producto</button><button class="btn sec" onclick="catNew()">Limpiar</button></div>
+    </div>
+    <div class="card">
+      <table><thead><tr><th>Cliente</th><th>Medida</th><th class="n">A.PET</th><th class="n">E.PET</th><th class="n">A.PE</th><th class="n">E.PE</th><th class="n">Final</th><th class="n">Tiras</th><th class="n">Bob. PET</th><th class="n">Bob. PE</th><th class="n">Bob. lam.</th><th class="n">Cilindro</th><th></th></tr></thead><tbody id="catList"></tbody></table>
     </div>
   </div>
 </section>
@@ -271,8 +306,31 @@ td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
 
 <script>
 /* ================= ESTADO ================= */
-const VERSION='v0.5';
-const EMPTY=()=>({ocs:[],laminadas:[],ops:[],finales:[],operarios:[
+const VERSION='v0.6';
+const CATALOGO=[
+ {id:'CAT-01',cliente:'Don Yeyo',medida:'321x300',anchoPet:350,espPet:250,anchoPe:370,espPe:50,anchoFinal:321,tiras:1,pesoBobinaPet:92,metrosBobinaPet:762,pesoBobinaPe:26,metrosBobinaPe:1550,pesoBobinaLam:35,cilindro:340},
+ {id:'CAT-02',cliente:'Molinos',medida:'472x235',anchoPet:500,espPet:200,anchoPe:530,espPe:35,anchoFinal:472,tiras:1,pesoBobinaPet:80,metrosBobinaPet:592,pesoBobinaPe:32,metrosBobinaPe:1900,pesoBobinaLam:40,cilindro:490},
+ {id:'CAT-03',cliente:'Molinos',medida:'421x500',anchoPet:450,espPet:450,anchoPe:470,espPe:50,anchoFinal:421,tiras:1,pesoBobinaPet:102,metrosBobinaPet:373,pesoBobinaPe:35.26,metrosBobinaPe:1600,pesoBobinaLam:25,cilindro:440},
+ {id:'CAT-04',cliente:'Molinos',medida:'421x300',anchoPet:450,espPet:250,anchoPe:470,espPe:50,anchoFinal:421,tiras:1,pesoBobinaPet:null,metrosBobinaPet:null,pesoBobinaPe:null,metrosBobinaPe:null,pesoBobinaLam:35,cilindro:440},
+ {id:'CAT-05',cliente:'Molinos',medida:'421x400',anchoPet:450,espPet:350,anchoPe:470,espPe:50,anchoFinal:421,tiras:1,pesoBobinaPet:null,metrosBobinaPet:null,pesoBobinaPe:null,metrosBobinaPe:null,pesoBobinaLam:30,cilindro:440},
+ {id:'CAT-06',cliente:'MFA',medida:'323x330',anchoPet:350,espPet:280,anchoPe:370,espPe:50,anchoFinal:321,tiras:1,pesoBobinaPet:null,metrosBobinaPet:null,pesoBobinaPe:null,metrosBobinaPe:null,pesoBobinaLam:null,cilindro:null},
+ {id:'CAT-07',cliente:'MFA',medida:'461x300',anchoPet:480,espPet:250,anchoPe:500,espPe:50,anchoFinal:461,tiras:1,pesoBobinaPet:null,metrosBobinaPet:null,pesoBobinaPe:null,metrosBobinaPe:null,pesoBobinaLam:null,cilindro:null},
+ {id:'CAT-08',cliente:'Dantelli',medida:'357x350',anchoPet:380,espPet:300,anchoPe:400,espPe:50,anchoFinal:357,tiras:1,pesoBobinaPet:92,metrosBobinaPet:597,pesoBobinaPe:33.72,metrosBobinaPe:1800,pesoBobinaLam:30,cilindro:370},
+ {id:'CAT-09',cliente:'Dantelli NEGRO',medida:'357x350',anchoPet:380,espPet:300,anchoPe:400,espPe:50,anchoFinal:357,tiras:1,pesoBobinaPet:92,metrosBobinaPet:597,pesoBobinaPe:33.72,metrosBobinaPe:1800,pesoBobinaLam:30,cilindro:370},
+ {id:'CAT-10',cliente:'Dantelli',medida:'323x350',anchoPet:350,espPet:300,anchoPe:370,espPe:50,anchoFinal:323,tiras:1,pesoBobinaPet:92,metrosBobinaPet:649,pesoBobinaPe:34.64,metrosBobinaPe:2000,pesoBobinaLam:30,cilindro:340},
+ {id:'CAT-11',cliente:'Huertas',medida:'200x450',anchoPet:430,espPet:400,anchoPe:450,espPe:50,anchoFinal:200,tiras:2,pesoBobinaPet:100,metrosBobinaPet:430,pesoBobinaPe:38.09,metrosBobinaPe:1800,pesoBobinaLam:25,cilindro:420},
+ {id:'CAT-12',cliente:'Cadrinorte',medida:'520x400',anchoPet:550,espPet:350,anchoPe:570,espPe:50,anchoFinal:520,tiras:1,pesoBobinaPet:92,metrosBobinaPet:354,pesoBobinaPe:35.92,metrosBobinaPe:1500,pesoBobinaLam:31,cilindro:540},
+ {id:'CAT-13',cliente:'La italiana',medida:'421x500',anchoPet:450,espPet:450,anchoPe:470,espPe:50,anchoFinal:421,tiras:1,pesoBobinaPet:80,metrosBobinaPet:292,pesoBobinaPe:26.4,metrosBobinaPe:1228,pesoBobinaLam:80,cilindro:440},
+ {id:'CAT-14',cliente:'La italiana',medida:'421x350',anchoPet:450,espPet:300,anchoPe:470,espPe:50,anchoFinal:421,tiras:1,pesoBobinaPet:80,metrosBobinaPet:439,pesoBobinaPe:30,metrosBobinaPe:1380,pesoBobinaLam:80,cilindro:440},
+ {id:'CAT-15',cliente:'El artesano',medida:'422x250',anchoPet:450,espPet:200,anchoPe:470,espPe:35,anchoFinal:422,tiras:1,pesoBobinaPet:77,metrosBobinaPet:507,pesoBobinaPe:33,metrosBobinaPe:1530,pesoBobinaLam:25,cilindro:440},
+ {id:'CAT-16',cliente:'Mendia',medida:'312x300',anchoPet:350,espPet:250,anchoPe:370,espPe:50,anchoFinal:312,tiras:1,pesoBobinaPet:92,metrosBobinaPet:728,pesoBobinaPe:27.73,metrosBobinaPe:1600,pesoBobinaLam:31,cilindro:340},
+ {id:'CAT-17',cliente:'Smams',medida:'255x250',anchoPet:530,espPet:200,anchoPe:550,espPe:50,anchoFinal:255,tiras:2,pesoBobinaPet:null,metrosBobinaPet:null,pesoBobinaPe:null,metrosBobinaPe:null,pesoBobinaLam:null,cilindro:null},
+ {id:'CAT-18',cliente:'Villa D Agri',medida:'423x280',anchoPet:450,espPet:230,anchoPe:470,espPe:50,anchoFinal:423,tiras:1,pesoBobinaPet:83,metrosBobinaPet:594,pesoBobinaPe:39.1,metrosBobinaPe:1800,pesoBobinaLam:83,cilindro:440},
+ {id:'CAT-19',cliente:'Villa D Agri',medida:'323x280',anchoPet:350,espPet:280,anchoPe:370,espPe:50,anchoFinal:323,tiras:1,pesoBobinaPet:70,metrosBobinaPet:644,pesoBobinaPe:34.5,metrosBobinaPe:2000,pesoBobinaLam:35,cilindro:340},
+ {id:'CAT-20',cliente:'BarielPack',medida:'520x350',anchoPet:550,espPet:300,anchoPe:570,espPe:50,anchoFinal:520,tiras:1,pesoBobinaPet:92,metrosBobinaPet:413,pesoBobinaPe:37.92,metrosBobinaPe:1700,pesoBobinaLam:31,cilindro:540},
+ {id:'CAT-21',cliente:'BarielPack',medida:'520x600',anchoPet:550,espPet:550,anchoPe:570,espPe:50,anchoFinal:520,tiras:1,pesoBobinaPet:92,metrosBobinaPet:226,pesoBobinaPe:24.6,metrosBobinaPe:946,pesoBobinaLam:45,cilindro:540}
+];
+const EMPTY=()=>({ocs:[],laminadas:[],ops:[],finales:[],catalogo:CATALOGO.map(p=>({...p})),operarios:[
  {n:'Matías',pin:'1205',rol:'admin'},{n:'Jonathan',pin:'3080',rol:'admin'},
  {n:'Alejandro Delelis',pin:'0035',rol:'tablet'},{n:'Juan Vera',pin:'0022',rol:'tablet'},{n:'Antonio Zayas',pin:'0059',rol:'tablet'},{n:'Juan Brest',pin:'0003',rol:'tablet'}],meta:{v:VERSION}});
 let S=EMPTY(), cfg=JSON.parse(localStorage.getItem('wr_cfg')||'{}'), who=null, mode='', curOP=null;
@@ -293,13 +351,14 @@ const sum=(a,f)=>a.reduce((t,x)=>t+(+f(x)||0),0);
 function local(){localStorage.setItem('wr_state',JSON.stringify(S))}
 function setSync(c){$('sync').className=c}
 function mergeInto(base,inc){ // unión por id, gana updatedAt más nuevo
-  for(const k of ['ocs','laminadas','ops','finales','operarios']){
+  for(const k of ['ocs','laminadas','ops','finales','operarios','catalogo']){
     const key=k==='operarios'?'pin':'id';
     const map=new Map((base[k]||[]).map(x=>[x[key],x]));
     for(const x of (inc[k]||[])){const b=map.get(x[key]);if(!b||(x.updatedAt||'')>(b.updatedAt||''))map.set(x[key],x)}
     base[k]=[...map.values()];
   }
   base.operarios.forEach(o=>{if(!o.rol)o.rol='tablet'});
+  if(!base.catalogo||!base.catalogo.length)base.catalogo=CATALOGO.map(p=>({...p}));
   base.meta=inc.meta||base.meta;return base;
 }
 async function loadRemote(force){
@@ -352,11 +411,30 @@ let ovRes=null;function confirmUI(msg){return new Promise(res=>{ovRes=res;$('ovM
 function ovClose(v){$('ov').classList.remove('show');ovRes&&ovRes(v)}
 
 /* ================= OC ================= */
-function ocSave(){
-  const o={id:uid('OC'),cliente:$('ocCli').value.trim(),nro:$('ocNro').value.trim(),desc:$('ocDesc').value.trim(),ancho:+$('ocAncho').value,esp:+$('ocEsp').value,mxb:+$('ocMxB').value,kg:+$('ocKg').value,fecha:$('ocFecha').value,estado:'abierta',createdAt:now(),updatedAt:now(),por:who||'PC'};
-  if(!o.cliente||!o.nro)return toast('Falta cliente o nº OC');
-  S.ocs.push(o);save();['ocCli','ocNro','ocDesc','ocAncho','ocEsp','ocMxB','ocKg','ocFecha'].forEach(i=>$(i).value='');toast('OC guardada');
+function prodLbl(p){return `${p.cliente} · ${p.medida} (${p.anchoFinal} mm · ${p.espPet}+${p.espPe} µ)`}
+function ocProdChange(){
+  const p=S.catalogo.find(x=>x.id===$('ocProd').value);if(!p)return;
+  $('ocCli').value=p.cliente;$('ocDesc').value=p.medida;$('ocAncho').value=p.anchoFinal;$('ocEspPet').value=p.espPet;$('ocEspPe').value=p.espPe;$('ocTiras').value=p.tiras||1;$('ocKxB').value=p.pesoBobinaLam||'';
 }
+function ocSave(){
+  const espPet=+$('ocEspPet').value,espPe=+$('ocEspPe').value;
+  const o={id:uid('OC'),prodId:$('ocProd').value||null,cliente:$('ocCli').value.trim(),nro:$('ocNro').value.trim(),desc:$('ocDesc').value.trim(),ancho:+$('ocAncho').value,espPet,espPe,esp:espPet+espPe,tiras:+$('ocTiras').value||1,mxb:+$('ocMxB').value,kxb:+$('ocKxB').value,kg:+$('ocKg').value,fecha:$('ocFecha').value,estado:'abierta',createdAt:now(),updatedAt:now(),por:who||'PC'};
+  if(!o.cliente||!o.nro)return toast('Falta cliente o nº OC');
+  S.ocs.push(o);save();['ocCli','ocNro','ocDesc','ocAncho','ocEspPet','ocEspPe','ocMxB','ocKxB','ocKg','ocFecha'].forEach(i=>$(i).value='');$('ocProd').value='';$('ocTiras').value=1;toast('OC guardada');
+}
+/* ---- catálogo ---- */
+function catNew(){$('catId').value='';$('catTitle').textContent='Nuevo producto';['catCli','catMed','catAPet','catEPet','catAPe','catEPe','catAF','catPPet','catMPet','catPPe','catMPe','catPLam','catCil'].forEach(i=>$(i).value='');$('catTiras').value=1}
+function catEdit(id){const p=S.catalogo.find(x=>x.id===id);$('catId').value=id;$('catTitle').textContent='Editar producto';
+  $('catCli').value=p.cliente;$('catMed').value=p.medida;$('catAPet').value=p.anchoPet;$('catEPet').value=p.espPet;$('catAPe').value=p.anchoPe;$('catEPe').value=p.espPe;$('catAF').value=p.anchoFinal;$('catTiras').value=p.tiras||1;
+  $('catPPet').value=p.pesoBobinaPet??'';$('catMPet').value=p.metrosBobinaPet??'';$('catPPe').value=p.pesoBobinaPe??'';$('catMPe').value=p.metrosBobinaPe??'';$('catPLam').value=p.pesoBobinaLam??'';$('catCil').value=p.cilindro??'';window.scrollTo(0,0)}
+function catSave(){
+  const n=id=>{const v=parseFloat($(id).value);return isNaN(v)?null:v};
+  const p={cliente:$('catCli').value.trim(),medida:$('catMed').value.trim(),anchoPet:n('catAPet'),espPet:n('catEPet'),anchoPe:n('catAPe'),espPe:n('catEPe'),anchoFinal:n('catAF'),tiras:n('catTiras')||1,pesoBobinaPet:n('catPPet'),metrosBobinaPet:n('catMPet'),pesoBobinaPe:n('catPPe'),metrosBobinaPe:n('catMPe'),pesoBobinaLam:n('catPLam'),cilindro:n('catCil'),updatedAt:now()};
+  if(!p.cliente||!p.medida||!p.anchoFinal)return toast('Falta cliente, medida o ancho final');
+  const id=$('catId').value;if(id){Object.assign(S.catalogo.find(x=>x.id===id),p)}else{S.catalogo.push({id:uid('CAT'),...p})}
+  save();catNew();toast('Producto guardado');
+}
+async function catDel(id){if(S.ocs.some(o=>o.prodId===id))return toast('Hay OC que usan este producto');if(await confirmUI('¿Borrar el producto del catálogo?')){S.catalogo=S.catalogo.filter(x=>x.id!==id);save()}}
 function ocKgs(o){
   const lam=S.laminadas.filter(l=>l.ocId===o.id),fin=S.finales.filter(f=>f.ocId===o.id);
   return{lam:sum(lam,l=>l.kg),fin:sum(fin,f=>f.kg),rem:sum(fin.filter(f=>f.estado==='remitida'),f=>f.kg)};
@@ -367,11 +445,13 @@ async function ocDel(id){if(S.laminadas.some(l=>l.ocId===id))return toast('Tiene
 /* ================= LAMINADO ================= */
 function lamOCChange(){
   const o=ocOf($('lamOC').value);
-  if(o.id){const last=S.laminadas.filter(l=>l.ocId===o.id).sort((a,b)=>b.createdAt>a.createdAt?1:-1)[0];if(last&&!$('lamPartida').value)$('lamPartida').value=last.partida;$('lamEsp').value=o.esp||''}
+  if(o.id){const last=S.laminadas.filter(l=>l.ocId===o.id).sort((a,b)=>b.createdAt>a.createdAt?1:-1)[0];if(last&&!$('lamPartida').value)$('lamPartida').value=last.partida;$('lamEsp').value=o.esp||'';
+    const p=S.catalogo.find(x=>x.id===o.prodId);if(p){if(!$('lamAncho').value)$('lamAncho').value=p.anchoPet||'';$('lamRef').textContent=p.pesoBobinaLam?`Referencia: bobina laminada típica ~${p.pesoBobinaLam} kg · ancho bruto ${p.anchoPet} mm · cilindro ${p.cilindro||'?'} mm`:''}else $('lamRef').textContent=''}
   lamNro();
 }
 function lamNro(){const oc=$('lamOC').value;const n=S.laminadas.filter(l=>l.ocId===oc).reduce((m,l)=>Math.max(m,l.nro),0)+1;$('lamNro').value=oc?n:''}
 $('lamPartida').addEventListener('input',lamNro);
+$('lamKg').addEventListener('input',()=>{const o=ocOf($('lamOC').value),p=S.catalogo.find(x=>x.id===o.prodId),kg=+$('lamKg').value,a=$('lamAlerta');if(!p||!p.pesoBobinaLam||!kg){a.textContent='';return}const d=Math.abs(kg-p.pesoBobinaLam)/p.pesoBobinaLam;a.style.color=d>0.2?'var(--bad)':d>0.1?'var(--warn)':'var(--ok)';a.textContent=d>0.2?`⚠ Difiere más del 20 % de la referencia (${p.pesoBobinaLam} kg). Verificá.`:d>0.1?`⚠ Difiere ${Math.round(d*100)} % de la referencia.`:'✓ Dentro de lo normal'});
 function lamSave(){
   const p=$('lamPartida').value.trim().toUpperCase(),oc=ocOf($('lamOC').value);
   if(!oc.id)return toast('Elegí la OC');if(!p)return toast('Falta la partida');
@@ -472,10 +552,12 @@ function render(){
     const hoy=now().slice(0,10);$('lamHoy').innerHTML=S.laminadas.filter(l=>l.createdAt.startsWith(hoy)).reverse().map(l=>`<tr><td>${fh(l.createdAt)}</td><td>${ocLbl(ocOf(l.ocId))}</td><td>${l.partida}</td><td class="n">${l.nro}</td><td class="n">${fmt(l.kg)}</td><td class="n">${l.m||''}</td><td class="n">${l.ancho||''}</td><td><button class="btn sec" onclick="lamDel('${l.id}')">✕</button></td></tr>`).join('')||'<tr><td colspan="8" class="muted">Todavía no cargaste bobinas hoy.</td></tr>';}
   if(mode==='ref'){$('refPend').innerHTML=abiertas.map(o=>{const lams=S.laminadas.filter(l=>l.ocId===o.id),pend=lams.filter(l=>l.estado!=='cerrada'),op=opOf(o.id),kf=sum(S.finales.filter(f=>f.ocId===o.id),f=>f.kg);
     if(!lams.length&&!op)return '';
-    return`<div class="pick" onclick="opOpen('${o.id}')"><b>${ocLbl(o)}</b> ${op?tagOf('abierta'):''}<small>${o.desc||''} · ${o.ancho||'?'} mm × ${o.esp||'?'} µ${o.mxb?' · '+o.mxb+' m/bob':''}</small><small>${pend.length} laminadas por refilar (${fmt(sum(pend,l=>l.kg))} kg) · ${fmt(kf)} / ${fmt(o.kg)} kg finales</small></div>`}).join('')||'<p class="muted">No hay OC con bobinas laminadas para refilar.</p>';}
+    return`<div class="pick" onclick="opOpen('${o.id}')"><b>${ocLbl(o)}</b> ${op?tagOf('abierta'):''}<small>${o.desc||''} · ${o.ancho||'?'} mm × ${o.esp||'?'} µ${o.tiras>1?' · '+o.tiras+' tiras':''}${o.mxb?' · '+o.mxb+' m/bob':''}${o.kxb?' · ~'+o.kxb+' kg/bob':''}</small><small>${pend.length} laminadas por refilar (${fmt(sum(pend,l=>l.kg))} kg) · ${fmt(kf)} / ${fmt(o.kg)} kg finales</small></div>`}).join('')||'<p class="muted">No hay OC con bobinas laminadas para refilar.</p>';}
   if(mode==='op'&&curOP)renderOP();
   if(mode==='pc'){
-    $('ocList').innerHTML=S.ocs.slice().reverse().map(o=>{const k=ocKgs(o);return`<tr><td>${o.cliente}</td><td>${o.nro}</td><td>${o.desc||''}</td><td class="n">${o.ancho||''}</td><td class="n">${o.esp||''}</td><td class="n">${o.mxb||''}</td><td class="n">${fmt(o.kg)}</td><td class="n">${fmt(k.lam)}</td><td class="n">${fmt(k.fin)}</td><td class="n">${fmt(k.rem)}</td><td>${tagOf(o.estado)}</td><td><button class="btn sec" onclick="ocToggle('${o.id}')">${o.estado==='abierta'?'Cerrar':'Reabrir'}</button> <button class="btn sec" onclick="ocDel('${o.id}')">✕</button></td></tr>`}).join('');
+    const pv=$('ocProd').value;$('ocProd').innerHTML='<option value="">— elegir producto —</option>'+S.catalogo.slice().sort((a,b)=>a.cliente.localeCompare(b.cliente)).map(p=>`<option value="${p.id}">${prodLbl(p)}</option>`).join('');$('ocProd').value=pv;
+    $('catList').innerHTML=S.catalogo.slice().sort((a,b)=>a.cliente.localeCompare(b.cliente)).map(p=>`<tr><td>${p.cliente}</td><td><b>${p.medida}</b></td><td class="n">${p.anchoPet??''}</td><td class="n">${p.espPet??''}</td><td class="n">${p.anchoPe??''}</td><td class="n">${p.espPe??''}</td><td class="n">${p.anchoFinal}</td><td class="n">${p.tiras||1}</td><td class="n">${p.pesoBobinaPet?p.pesoBobinaPet+' kg / '+(p.metrosBobinaPet||'?')+' m':'—'}</td><td class="n">${p.pesoBobinaPe?p.pesoBobinaPe+' kg / '+(p.metrosBobinaPe||'?')+' m':'—'}</td><td class="n">${p.pesoBobinaLam?p.pesoBobinaLam+' kg':'—'}</td><td class="n">${p.cilindro||'—'}</td><td><button class="btn sec" onclick="catEdit('${p.id}')">✎</button> <button class="btn sec" onclick="catDel('${p.id}')">✕</button></td></tr>`).join('');
+    $('ocList').innerHTML=S.ocs.slice().reverse().map(o=>{const k=ocKgs(o);return`<tr><td>${o.cliente}</td><td>${o.nro}</td><td>${o.desc||''}</td><td class="n">${o.ancho||''}</td><td class="n">${o.espPet?o.espPet+'+'+o.espPe:o.esp||''}</td><td class="n">${o.mxb||''}</td><td class="n">${fmt(o.kg)}</td><td class="n">${fmt(k.lam)}</td><td class="n">${fmt(k.fin)}</td><td class="n">${fmt(k.rem)}</td><td>${tagOf(o.estado)}</td><td><button class="btn sec" onclick="ocToggle('${o.id}')">${o.estado==='abierta'?'Cerrar':'Reabrir'}</button> <button class="btn sec" onclick="ocDel('${o.id}')">✕</button></td></tr>`}).join('');
     $('pcLam').innerHTML=S.laminadas.slice().reverse().map(l=>`<tr><td>${fd(l.createdAt)}</td><td>${ocLbl(ocOf(l.ocId))}</td><td>${l.partida}</td><td class="n">${l.nro}${l.resto?' (resto)':''}</td><td class="n">${fmt(l.kg)}</td><td class="n">${l.m||''}</td><td class="n">${l.ancho||''}</td><td class="n">${l.esp||''}</td><td>${l.operario||''}</td><td>${tagOf(l.estado)}</td><td>${l.estado==='pendiente'?`<button class="btn sec" onclick="lamDel('${l.id}')">✕</button>`:''}</td></tr>`).join('');
     const v=$('remOC').value;$('remOC').innerHTML=`<option value="">Todas las OC</option>`+S.ocs.map(o=>`<option value="${o.id}">${ocLbl(o)}</option>`).join('');$('remOC').value=v;
     renderFin();
