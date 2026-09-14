@@ -383,6 +383,7 @@ td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
         <div class="f" style="max-width:180px"><label>Hoja</label><select id="petSheet" onchange="petParse()"></select></div>
         <div class="f" style="max-width:260px"><label>Filtrar (destino, medida, partida, pedido…)</label><input id="petQ" oninput="petRender()" placeholder="ej: Bligraf 540x290"></div>
         <label class="muted" style="align-self:center"><input type="checkbox" id="petInt" onchange="petRender()"> mostrar destinos internos (E900, termoformado…)</label>
+        <label class="muted" style="align-self:center"><input type="checkbox" id="petPP" onchange="petRender()"> mostrar clientes PET/PE (van a laminado)</label>
       </div>
       <div class="row" id="petMap" style="margin-top:10px"></div>
     </div>
@@ -466,6 +467,8 @@ td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
       <div class="f"><label>Tolerancia bruto−neto (%)</label><input id="cfgTol" type="number" step="any" placeholder="10"></div>
     </div>
     <div class="row" style="margin-top:8px"><button class="btn" onclick="paramSave()">Guardar parámetros</button></div>
+    <h3>Clientes PET/PE (sus bobinas de Chivilcoy van a laminado, no a refilado)</h3>
+    <div class="row"><div class="f" style="flex:3"><label>Lista separada por coma — se ocultan en Recepción PET</label><input id="cfgPP"></div><button class="btn" onclick="ppSave()">Guardar lista</button></div>
     <h3>Operarios (PIN)</h3>
     <div id="cfgOps"></div>
     <div class="row"><div class="f"><label>Nombre</label><input id="opNom"></div><div class="f"><label>PIN</label><input id="opPin" inputmode="numeric"></div><div class="f"><label>Acceso</label><select id="opRol"><option value="tablet">Solo tablets</option><option value="admin">Todo</option></select></div><button class="btn sec" onclick="opAdd()">Agregar</button></div>
@@ -478,7 +481,7 @@ td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
 
 <script>
 /* ================= ESTADO ================= */
-const VERSION='v0.19';
+const VERSION='v0.20';
 const CATALOGO=[
  {id:'CAT-01',cliente:'Don Yeyo',medida:'321x300',anchoPet:350,espPet:250,anchoPe:370,espPe:50,anchoFinal:321,tiras:1,pesoBobinaPet:92,metrosBobinaPet:762,pesoBobinaPe:26,metrosBobinaPe:1550,pesoBobinaFinal:35,cilindro:340},
  {id:'CAT-02',cliente:'Molinos',medida:'472x235',anchoPet:500,espPet:200,anchoPe:530,espPe:35,anchoFinal:472,tiras:1,pesoBobinaPet:80,metrosBobinaPet:592,pesoBobinaPe:32,metrosBobinaPe:1900,pesoBobinaFinal:40,cilindro:490},
@@ -585,7 +588,7 @@ function go(v){
   if(!who&&v!=='login'){v='login'}
   if((v==='pc'||v==='config')&&rol!=='admin'){toast('Solo acceso total');return}
   document.querySelectorAll('.view').forEach(x=>x.classList.remove('active'));
-  if(v==='config'){$('cfgBin').value=cfg.bin||'';$('cfgKey').value=cfg.key||'';const p=S.params||{};$('cfgT1').value=p.t1||'';$('cfgT2').value=p.t2||'';$('cfgT3').value=p.t3||'';$('cfgKhLam').value=p.khLam??'';$('cfgKhRef').value=p.khRef??'';$('cfgT3in').value=p.tara3??'';$('cfgT6in').value=p.tara6??'';$('cfgTol').value=p.tol??''}
+  if(v==='config'){$('cfgBin').value=cfg.bin||'';$('cfgKey').value=cfg.key||'';const p=S.params||{};$('cfgT1').value=p.t1||'';$('cfgT2').value=p.t2||'';$('cfgT3').value=p.t3||'';$('cfgKhLam').value=p.khLam??'';$('cfgKhRef').value=p.khRef??'';$('cfgT3in').value=p.tara3??'';$('cfgT6in').value=p.tara6??'';$('cfgTol').value=p.tol??'';$('cfgPP').value=petpeList().join(', ')}
   if(v==='login'){$('loginPin').value='';setTimeout(()=>$('loginPin').focus(),50)}
   $('v-'+v).classList.add('active');mode=v;$('modeLbl').textContent={pc:'Administración',lam:'Laminado',lamoc:'Laminado',ref:'Refilado',op:'Refilado'}[v]||'';
   document.querySelectorAll('.adminOnly').forEach(x=>x.style.display=rol==='admin'?'':'none');
@@ -954,19 +957,19 @@ function petMatchOC(g){ // 1) OC con la misma solicitud de Chivilcoy; 2) cliente
   o=ab.find(o=>norm(g.destino).includes(norm(o.cliente).slice(0,5)));return o?o.id:'';
 }
 function petRender(){
-  if(!petRows.length)return;const s=$('petQ').value,showInt=$('petInt').checked;
+  if(!petRows.length)return;const s=$('petQ').value,showInt=$('petInt').checked,showPP=$('petPP').checked;
   const ya=new Set(S.laminadas.filter(l=>l.tipo==='PET').map(l=>(l.partida+'|'+(l.nroOrigen||'')).toUpperCase()));
   const rows=petRows.map((r,i)=>({i,partida:String(petVal(r,'partida')).toUpperCase().trim(),nro:String(petVal(r,'nro')).trim(),kg:+String(petVal(r,'kg')).replace(',','.')||0,medida:String(petVal(r,'medida')).trim(),pallet:String(petVal(r,'pallet')).trim(),pedido:String(petVal(r,'pedido')).trim(),destino:String(petVal(r,'destino')).trim()}))
-    .map(x=>({...x,dup:ya.has(x.partida+'|'+x.nro),interno:INTERNOS.test(x.destino)})).filter(x=>(showInt||!x.interno)&&q(s,[x.destino,x.medida,x.partida,x.pedido,x.pallet].join(' ')));
+    .map(x=>({...x,dup:ya.has(x.partida+'|'+x.nro),interno:INTERNOS.test(x.destino),petpe:esPetPe(x.destino)})).filter(x=>(showInt||!x.interno)&&(showPP||!x.petpe)&&q(s,[x.destino,x.medida,x.partida,x.pedido,x.pallet].join(' ')));
   const keys=[...new Set(rows.map(x=>x.destino+'§'+x.medida+'§'+x.pedido))];
   const ocOpts=S.ocs.filter(o=>o.estado==='abierta').map(o=>`<option value="${o.id}">${ocLbl(o)} · ${o.desc||''} · ${fmt(o.kg)} kg</option>`).join('');
-  $('petInfo').textContent=`${petRows.length} bobinas en el Excel${petFecha?' · envío '+petFecha:''}${petRem?' · remito '+petRem:''} · ${rows.filter(x=>x.dup).length} ya cargadas`;
+  const ocultasPP=petRows.filter(r=>esPetPe(petVal(r,'destino'))).length;$('petInfo').textContent=`${petRows.length} bobinas en el Excel${petFecha?' · envío '+petFecha:''}${petRem?' · remito '+petRem:''}${ocultasPP&&!showPP?' · '+ocultasPP+' de clientes PET/PE ocultas':''} · ${rows.filter(x=>x.dup).length} ya cargadas`;
   $('petGroups').innerHTML=keys.map((k,gi)=>{const [destino,medida,pedido]=k.split('§'),g=rows.filter(x=>x.destino+'§'+x.medida+'§'+x.pedido===k),nuevas=g.filter(x=>!x.dup),ocId=petMatchOC({destino,medida,pedido}),oc=ocOf(ocId),kgOC=oc.id?ocKgs(oc):null;
     const pallets=[...new Set(g.map(x=>x.pallet))];
     return`<details open class="petg" data-g="${gi}" style="border:1px solid var(--line);border-left:6px solid ${g[0].interno?'#c9d2cc':'var(--brand3)'};border-radius:10px;margin-bottom:10px;background:#fff">
      <summary style="cursor:pointer;padding:10px 14px;display:flex;gap:12px;align-items:center;flex-wrap:wrap;list-style:none">
        <input type="checkbox" onclick="event.stopPropagation()" onchange="this.closest('details').querySelectorAll('tbody input:not(:disabled)').forEach(c=>c.checked=this.checked);petCount()" ${nuevas.length?'checked':'disabled'}>
-       <b style="color:var(--brand);font-size:16px">${destino}</b><span class="tag ref">${medida}</span><span class="muted">pedido Chivilcoy ${pedido||'—'}</span>
+       <b style="color:var(--brand);font-size:16px">${destino}</b><span class="tag ref">${medida}</span>${g[0].petpe?'<span class="tag pend">PET/PE → laminado</span>':''}<span class="muted">pedido Chivilcoy ${pedido||'—'}</span>
        <span class="muted" style="margin-left:auto">${g.length} bobinas · ${fmt(sum(g,x=>x.kg))} kg · ${pallets.length} pallet${pallets.length>1?'s':''}${nuevas.length<g.length?` · <span class="tag cerr">${g.length-nuevas.length} ya cargadas</span>`:''}</span>
      </summary>
      <div style="padding:0 14px 12px">
@@ -1000,7 +1003,11 @@ function renderPet(){
 }
 
 /* ================= PARÁMETROS ================= */
-function paramSave(){S.params={t1:$('cfgT1').value.trim(),t2:$('cfgT2').value.trim(),t3:$('cfgT3').value.trim(),khLam:+$('cfgKhLam').value||null,khRef:+$('cfgKhRef').value||null,tara3:+$('cfgT3in').value||null,tara6:+$('cfgT6in').value||null,tol:+$('cfgTol').value||null,updatedAt:now()};save();toast('Parámetros guardados')}
+const PETPE_DEFAULT=['Don Yeyo','Molinos','MFA','Dantelli','Cadrinorte','La Italiana','El Artesano','Mendia','Smams','Villa D Agri','BarielPack'];
+function petpeList(){return (S.params&&Array.isArray(S.params.petpe))?S.params.petpe:PETPE_DEFAULT}
+function ppSave(){S.params={...(S.params||{}),petpe:$('cfgPP').value.split(',').map(s=>s.trim()).filter(Boolean),updatedAt:now()};save();toast('Lista guardada')}
+function esPetPe(destino){const n=s=>String(s||'').toLowerCase().replace(/[^a-z0-9]/g,'');return petpeList().some(c=>n(destino).includes(n(c).slice(0,6)))}
+function paramSave(){S.params={...(S.params||{}),t1:$('cfgT1').value.trim(),t2:$('cfgT2').value.trim(),t3:$('cfgT3').value.trim(),khLam:+$('cfgKhLam').value||null,khRef:+$('cfgKhRef').value||null,tara3:+$('cfgT3in').value||null,tara6:+$('cfgT6in').value||null,tol:+$('cfgTol').value||null,updatedAt:now()};save();toast('Parámetros guardados')}
 function turnos(){const P=S.params||{};return [['Mañana',P.t1],['Tarde',P.t2],['Noche',P.t3]].filter(t=>t[1]&&/^\d\d:\d\d-\d\d:\d\d$/.test(t[1])).map(([n,r])=>{const [a,b]=r.split('-');const m=s=>+s.slice(0,2)*60+ +s.slice(3);return{n,ini:m(a),fin:m(b)}})}
 function objetivo(ocId,proc){const p=S.catalogo.find(x=>x.id===ocOf(ocId).prodId)||{};return (proc==='lam'?p.kgHoraLam:p.kgHoraRef)||(proc==='lam'?S.params?.khLam:S.params?.khRef)||null}
 function minOf(iso){const d=new Date(iso);return d.getHours()*60+d.getMinutes()}
