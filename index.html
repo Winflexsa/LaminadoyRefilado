@@ -101,7 +101,7 @@ td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
 #homeStats{text-align:center;margin-top:18px}
 @media (max-width:640px){main{padding:12px 10px}.card{padding:14px}.kpi div{min-width:44%}.f{min-width:100px}}
 @media print{header,.tabs,.btn,.noprint{display:none!important}body{background:#fff}.card{border:0;box-shadow:none}th{position:static}
- body.print-cro .pct{display:none!important}body.print-cro #pc-cro{display:block!important}body.print-cro #v-pc{display:block!important}@page{size:landscape;margin:10mm}}
+ body.print-cro .pct{display:none!important}body.print-cro #pc-cro{display:block!important}body.print-cro #v-pc{display:block!important}body.print-cro main{max-width:none;padding:0}body.print-cro #croGrid table{font-size:11px}body.print-cro #croGrid td div{page-break-inside:avoid}@page{size:landscape;margin:8mm}}
 </style>
 </head>
 <body>
@@ -225,24 +225,21 @@ td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
     <div id="lamForm">
     <div class="row">
       <div class="f"><label>Metros</label><input id="fM" type="number" inputmode="numeric"></div>
-      <div class="f"><label>Kg (al pesar)</label><input id="fKg" type="number" inputmode="decimal" step="0.1"></div>
+      <div class="f"><label>Kg bruto (con cono)</label><input id="fKgB" type="number" inputmode="decimal" step="0.1"></div>
+      <div class="f"><label>Kg neto</label><input id="fKg" type="number" inputmode="decimal" step="0.1"></div>
       <div class="f"><label>Ancho final (mm)</label><input id="fAncho" type="number" inputmode="numeric"></div>
       <div class="f"><label>Cono</label><select id="fCono"><option>3"</option><option>6"</option></select></div>
       <div class="f"><label>Etiqueta (opcional)</label><input id="fEti"></div>
     </div>
+    <p id="fAlerta" class="muted" style="margin:6px 0 0"></p>
     <div class="row" style="margin-top:10px"><button class="btn big" id="btnFin" onclick="finSave()">Agregar bobina final</button></div>
     </div>
     <h3>Bobinas finales salidas de esta laminada</h3>
-    <table><thead><tr><th class="n">Bob.</th><th class="n">m</th><th class="n">Kg</th><th class="n">Ancho</th><th>Cono</th><th>Etiqueta</th><th>Hora</th><th></th></tr></thead><tbody id="opFin"></tbody></table>
+    <table><thead><tr><th class="n">Bob.</th><th class="n">m</th><th class="n">Bruto</th><th class="n">Neto</th><th class="n">Ancho</th><th>Cono</th><th>Etiqueta</th><th>Hora</th><th></th></tr></thead><tbody id="opFin"></tbody></table>
     <h3>Cerrar esta laminada</h3>
     <div id="lamClose">
-    <div class="row">
-      <div class="f"><label>Trim lateral (kg)</label><input id="cTrim" type="number" step="0.1" inputmode="decimal"></div>
-      <div class="f"><label>Scrap arranque / parada (kg)</label><input id="cScrap" type="number" step="0.1" inputmode="decimal"></div>
-      <div class="f"><label>Resto (kg)</label><input id="cResto" type="number" step="0.1" inputmode="decimal" value="0"></div>
-      <div class="f"><label>Destino del resto</label><select id="cRestoDest"><option value="descarte">Descarte</option><option value="stock">Vuelve a stock</option></select></div>
-    </div>
     <p id="cBal" style="font-size:18px;margin:10px 0"></p>
+    <details class="muted" style="margin-bottom:10px"><summary style="cursor:pointer">¿Quedó un resto de laminada sin refilar? (opcional)</summary><div class="row" style="margin-top:8px"><div class="f" style="max-width:200px"><label>Resto que vuelve a stock (kg)</label><input id="cResto" type="number" step="0.1" inputmode="decimal" value="0"></div></div></details>
     <div class="row"><button class="btn ok big" onclick="lamCerrar()">Cerrar laminada</button></div>
     </div>
   </div>
@@ -334,14 +331,14 @@ td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
       </div>
     </div>
     <div class="card">
-      <table id="finTable"><thead><tr><th class="noprint"><input type="checkbox" onchange="finAll(this)"></th><th>Cliente / OC</th><th class="n">Bob.</th><th>Partida</th><th class="n">Lam.</th><th class="n">Ancho</th><th class="n">Esp</th><th class="n">Metros</th><th class="n">Kg</th><th>Cono</th><th>Etiqueta</th><th>Máq.</th><th>Fecha</th><th>Estado</th><th>Remito</th><th class="noprint"></th></tr></thead><tbody id="pcFin"></tbody></table>
+      <table id="finTable"><thead><tr><th class="noprint"><input type="checkbox" onchange="finAll(this)"></th><th>Cliente / OC</th><th class="n">Bob.</th><th>Partida</th><th class="n">Lam.</th><th class="n">Ancho</th><th class="n">Esp</th><th class="n">Metros</th><th class="n">Bruto</th><th class="n">Neto</th><th>Cono</th><th>Etiqueta</th><th>Máq.</th><th>Fecha</th><th>Estado</th><th>Remito</th><th class="noprint"></th></tr></thead><tbody id="pcFin"></tbody></table>
     </div>
   </div>
   <div id="pc-ops" class="pct" style="display:none">
     <div class="card">
       <h2>OPs de refilado · historial y balance por OC</h2>
-      <p class="muted" style="margin:0 0 12px">Cada fila es una OP de refilado (una por OC, se abre sola cuando el refilador toca la OC por primera vez). Muestra el balance de masa acumulado: kg laminados que entraron, cuántas laminadas ya se cerraron, bobinas y kg finales, trim, scrap, resto y la <b>diferencia sin justificar</b> (rojo si supera el 2 %). El rendimiento es kg finales / kg laminados. Sirve para ver cuánto material se perdió en cada OC y quién la trabajó.</p>
-      <table><thead><tr><th>Inicio</th><th>Cliente / OC</th><th>Operario</th><th class="n">Laminadas</th><th class="n">Kg laminados</th><th class="n">Bob. finales</th><th class="n">Kg finales</th><th class="n">Trim</th><th class="n">Scrap</th><th class="n">Resto</th><th class="n">Dif</th><th class="n">Rend.</th><th class="n">Paradas</th><th>Estado</th><th></th></tr></thead><tbody id="pcOps"></tbody></table>
+      <p class="muted" style="margin:0 0 12px">Cada fila es una OP de refilado (una por OC, se abre sola cuando el refilador toca la OC por primera vez). Muestra el balance de masa acumulado: kg laminados que entraron, cuántas laminadas ya se cerraron, bobinas y kg netos finales, el <b>scrap</b> (calculado solo: entrada − finales, sobre las laminadas cerradas; rojo si el rendimiento baja de 90 %) y el resto que volvió a stock. Sirve para ver cuánto material se perdió en cada OC y quién la trabajó.</p>
+      <table><thead><tr><th>Inicio</th><th>Cliente / OC</th><th>Operario</th><th class="n">Laminadas</th><th class="n">Kg laminados</th><th class="n">Bob. finales</th><th class="n">Kg finales</th><th class="n">Scrap</th><th class="n">Scrap %</th><th class="n">Resto a stock</th><th class="n">Rend.</th><th class="n">Paradas</th><th>Estado</th><th></th></tr></thead><tbody id="pcOps"></tbody></table>
     </div>
   </div>
   <div id="pc-cro" class="pct" style="display:none">
@@ -417,6 +414,9 @@ td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
       <div class="f"><label>Turno noche (vacío si no hay)</label><input id="cfgT3" placeholder="22:00-06:00"></div>
       <div class="f"><label>Objetivo laminado (kg/h)</label><input id="cfgKhLam" type="number" step="any"></div>
       <div class="f"><label>Objetivo refilado (kg/h)</label><input id="cfgKhRef" type="number" step="any"></div>
+      <div class="f"><label>Tara cono 3" (kg)</label><input id="cfgT3in" type="number" step="any" placeholder="ej: 0,9"></div>
+      <div class="f"><label>Tara cono 6" (kg)</label><input id="cfgT6in" type="number" step="any" placeholder="ej: 1,8"></div>
+      <div class="f"><label>Tolerancia bruto−neto (%)</label><input id="cfgTol" type="number" step="any" placeholder="10"></div>
     </div>
     <div class="row" style="margin-top:8px"><button class="btn" onclick="paramSave()">Guardar parámetros</button></div>
     <h3>Operarios (PIN)</h3>
@@ -431,7 +431,7 @@ td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
 
 <script>
 /* ================= ESTADO ================= */
-const VERSION='v0.15';
+const VERSION='v0.16';
 const CATALOGO=[
  {id:'CAT-01',cliente:'Don Yeyo',medida:'321x300',anchoPet:350,espPet:250,anchoPe:370,espPe:50,anchoFinal:321,tiras:1,pesoBobinaPet:92,metrosBobinaPet:762,pesoBobinaPe:26,metrosBobinaPe:1550,pesoBobinaFinal:35,cilindro:340},
  {id:'CAT-02',cliente:'Molinos',medida:'472x235',anchoPet:500,espPet:200,anchoPe:530,espPe:35,anchoFinal:472,tiras:1,pesoBobinaPet:80,metrosBobinaPet:592,pesoBobinaPe:32,metrosBobinaPe:1900,pesoBobinaFinal:40,cilindro:490},
@@ -482,7 +482,7 @@ function alertas(){
     if(d!=null&&d<0&&v.pctRem<100)a.push({t:'bad',m:`${ocLbl(o)} vencida hace ${-d} d · remitido ${fmt(v.pctRem)} %`});
     else if(d!=null&&d<=3&&v.pctFin<90)a.push({t:'warn',m:`${ocLbl(o)} entrega en ${d} d · refilado ${fmt(v.pctFin)} %`});}
   for(const l of S.laminadas.filter(x=>x.estado==='pendiente'&&minsAgo(x.createdAt)>3*1440))a.push({t:'warn',m:`Laminada ${lamLbl(l)} de ${ocLbl(ocOf(l.ocId))} lleva ${Math.floor(minsAgo(l.createdAt)/1440)} d sin refilar`});
-  for(const l of S.laminadas.filter(x=>x.estado==='cerrada'&&x.kg&&Math.abs(x.dif)/x.kg>0.05))a.push({t:'bad',m:`Laminada ${lamLbl(l)} (${ocLbl(ocOf(l.ocId))}) cerró con ${fmt(Math.abs(l.dif)/l.kg*100)} % de diferencia`});
+  for(const l of S.laminadas.filter(x=>x.estado==='cerrada'&&x.kg&&(x.rend??100)<85))a.push({t:'bad',m:`Laminada ${lamLbl(l)} (${ocLbl(ocOf(l.ocId))}) cerró con rendimiento ${fmt(l.rend)} % (scrap ${fmt(l.scrap)} kg)`});
   const sp=S.finales.filter(f=>!f.kg);if(sp.length)a.push({t:'warn',m:`${sp.length} bobina(s) final(es) sin pesar`});
   return a;
 }
@@ -538,7 +538,7 @@ function go(v){
   if(!who&&v!=='login'){v='login'}
   if((v==='pc'||v==='config')&&rol!=='admin'){toast('Solo acceso total');return}
   document.querySelectorAll('.view').forEach(x=>x.classList.remove('active'));
-  if(v==='config'){$('cfgBin').value=cfg.bin||'';$('cfgKey').value=cfg.key||'';const p=S.params||{};$('cfgT1').value=p.t1||'';$('cfgT2').value=p.t2||'';$('cfgT3').value=p.t3||'';$('cfgKhLam').value=p.khLam??'';$('cfgKhRef').value=p.khRef??''}
+  if(v==='config'){$('cfgBin').value=cfg.bin||'';$('cfgKey').value=cfg.key||'';const p=S.params||{};$('cfgT1').value=p.t1||'';$('cfgT2').value=p.t2||'';$('cfgT3').value=p.t3||'';$('cfgKhLam').value=p.khLam??'';$('cfgKhRef').value=p.khRef??'';$('cfgT3in').value=p.tara3??'';$('cfgT6in').value=p.tara6??'';$('cfgTol').value=p.tol??''}
   if(v==='login'){$('loginPin').value='';setTimeout(()=>$('loginPin').focus(),50)}
   $('v-'+v).classList.add('active');mode=v;$('modeLbl').textContent={pc:'Administración',lam:'Laminado',lamoc:'Laminado',ref:'Refilado',op:'Refilado'}[v]||'';
   document.querySelectorAll('.adminOnly').forEach(x=>x.style.display=rol==='admin'?'':'none');
@@ -633,11 +633,19 @@ async function lamDel(id){const l=S.laminadas.find(x=>x.id===id);
 function lamEdit(id){const l=S.laminadas.find(x=>x.id===id);
   if(l.estado!=='pendiente'&&!isAdmin())return toast('Ya está en refilado, solo Administración puede editarla');
   const f=[{k:'partida',l:'Partida',up:true},{k:'kg',l:'Kg',t:'number'},{k:'m',l:'Metros',t:'number'},{k:'ancho',l:'Ancho bruto (mm)',t:'number'},{k:'esp',l:'Espesor (µ)',t:'number'},{k:'obs',l:'Observaciones'}];
-  if(isAdmin()&&l.estado==='cerrada')f.push({k:'trim',l:'Trim (kg)',t:'number'},{k:'scrap',l:'Scrap (kg)',t:'number'},{k:'resto',l:'Resto (kg)',t:'number'});
-  edit('Editar laminada '+lamLbl(l),f,l,x=>{if(x.estado==='cerrada'){const kf=sum(S.finales.filter(q=>q.lamId===x.id),q=>q.kg);x.dif=x.kg-kf-(+x.trim||0)-(+x.scrap||0)-(+x.resto||0)}})}
+  if(isAdmin()&&l.estado==='cerrada')f.push({k:'resto',l:'Resto a stock (kg)',t:'number'});
+  edit('Editar laminada '+lamLbl(l),f,l,x=>{if(x.estado==='cerrada')recalcLam(x)})}
+function recalcLam(l){const kf=sum(S.finales.filter(q=>q.lamId===l.id),q=>q.kg),ent=l.kg-(+l.resto||0);l.scrap=Math.max(0,ent-kf);l.dif=l.scrap;l.rend=ent?kf/ent*100:0;l.updatedAt=now()}
 async function lamReabrir(id){const l=S.laminadas.find(x=>x.id===id);if(!isAdmin())return toast('Solo Administración');if(await confirmUI(`¿Reabrir la laminada ${lamLbl(l)}? Vuelve a "en refilado".`)){l.estado='en refilado';l.updatedAt=now();save()}}
 
 /* ================= REFILADO ================= */
+function tara(){const c=$('fCono').value;const P=S.params||{};return c==='6"'?P.tara6:P.tara3}
+function finCheck(){const b=+$('fKgB').value,n=+$('fKg').value,t=tara(),a=$('fAlerta');a.style.color='';a.textContent='';
+  if(b&&t&&!$('fKg').dataset.manual){$('fKg').value=(b-t).toFixed(1)}
+  const nn=+$('fKg').value;if(b&&nn){if(nn>b){a.style.color='var(--bad)';a.textContent='⚠ El neto no puede ser mayor que el bruto';return}
+    if(t){const esp=b-t,tol=(S.params?.tol||10)/100;if(Math.abs(nn-esp)/esp>tol){a.style.color='var(--bad)';a.textContent=`⚠ Neto esperado ~${fmt(esp)} kg (bruto − tara ${t} kg). Difiere más del ${Math.round(tol*100)} %.`}else{a.style.color='var(--ok)';a.textContent=`✓ Tara cono ${$('fCono').value} = ${t} kg`}}
+    else a.textContent=`Tara ${fmt(b-nn)} kg (no hay tara de cono configurada en ⚙)`}}
+$('fKgB').addEventListener('input',()=>{delete $('fKg').dataset.manual;finCheck()});$('fKg').addEventListener('input',()=>{$('fKg').dataset.manual=1;finCheck()});$('fCono').addEventListener('change',()=>{delete $('fKg').dataset.manual;finCheck()});
 function setMaq(m){maq=m;sessionStorage.setItem('wr_maq',m);render()}
 function paintMaq(){$('maqVerde').className='btn '+(maq==='Verde'?'ok':'sec');$('maqGris').className='btn '+(maq==='Gris'?'ok':'sec')}
 function opOf(ocId){return S.ops.find(o=>o.ocId===ocId&&o.estado==='abierta')}
@@ -651,22 +659,23 @@ function lamSel(lamId){
   const l=S.laminadas.find(x=>x.id===lamId),oc=ocOf(l.ocId);
   if(l.estado==='en refilado'&&l.refMaq&&l.refMaq!==maq)return toast(`Esa laminada la está refilando la ${l.refMaq}`);
   if(l.estado==='pendiente'){l.estado='en refilado';l.refInicio=now();l.refMaq=maq;l.updatedAt=now();save()}
-  curLam=lamId;$('fAncho').value=oc.ancho||'';$('fM').value=oc.mxb||'';$('cTrim').value=l.trim??'';$('cScrap').value=l.scrap??'';$('cResto').value=l.resto??0;
+  curLam=lamId;$('fAncho').value=oc.ancho||'';$('fM').value=oc.mxb||'';$('cResto').value=l.resto??0;
   renderOP();$('lamPanel').scrollIntoView({behavior:'smooth'});
 }
 function finSave(){
   const op=S.ops.find(o=>o.id===curOP),l=S.laminadas.find(x=>x.id===curLam);if(!l)return;
-  const m=+$('fM').value,kg=+$('fKg').value;if(!m&&!kg)return toast('Cargá metros o kg');
+  const m=+$('fM').value,kg=+$('fKg').value,kgB=+$('fKgB').value;if(!m&&!kg)return toast('Cargá metros o kg');
+  if(kgB&&kg>kgB)return toast('El neto no puede superar el bruto');
   const tiras=Math.max(1,+ocOf(l.ocId).tiras||1);let nro=S.finales.filter(f=>f.ocId===l.ocId).reduce((mx,f)=>Math.max(mx,f.nro),0);const nros=[];
-  for(let i=0;i<tiras;i++){nro++;nros.push(nro);S.finales.push({id:uid('FIN'),opId:op.id,lamId:l.id,ocId:l.ocId,partida:l.partida,lamNro:l.nro,nro,m,kg:i===0?kg:0,ancho:+$('fAncho').value,esp:l.esp,cono:$('fCono').value,etiqueta:i===0?$('fEti').value.trim():'',maq,estado:'en stock',createdAt:now(),updatedAt:now(),operario:who})}
-  op.updatedAt=now();save();$('fKg').value='';$('fEti').value='';toast(tiras>1?`Bobinas ${nros.join(' y ')} agregadas (${tiras} tiras) — pesá cada una`:`Bobina ${nro} agregada`);
+  for(let i=0;i<tiras;i++){nro++;nros.push(nro);S.finales.push({id:uid('FIN'),opId:op.id,lamId:l.id,ocId:l.ocId,partida:l.partida,lamNro:l.nro,nro,m,kg:i===0?kg:0,kgB:i===0?kgB:0,ancho:+$('fAncho').value,esp:l.esp,cono:$('fCono').value,etiqueta:i===0?$('fEti').value.trim():'',maq,estado:'en stock',createdAt:now(),updatedAt:now(),operario:who})}
+  op.updatedAt=now();save();$('fKg').value='';$('fKgB').value='';$('fEti').value='';delete $('fKg').dataset.manual;$('fAlerta').textContent='';toast(tiras>1?`Bobinas ${nros.join(' y ')} agregadas (${tiras} tiras) — pesá cada una`:`Bobina ${nro} agregada`);
 }
 function finEdit(id){const f=S.finales.find(x=>x.id===id);const l=S.laminadas.find(x=>x.id===f.lamId);
   if((f.estado==='remitida'||l?.estado==='cerrada')&&!isAdmin())return toast('Solo Administración puede editarla');
-  edit('Editar bobina '+f.nro,[{k:'m',l:'Metros',t:'number'},{k:'kg',l:'Kg',t:'number'},{k:'ancho',l:'Ancho (mm)',t:'number'},{k:'cono',l:'Cono',opts:['3"','6"']},{k:'etiqueta',l:'Etiqueta'}],f,x=>{if(l&&l.estado==='cerrada'){const kf=sum(S.finales.filter(q=>q.lamId===l.id),q=>q.kg);l.dif=l.kg-kf-(+l.trim||0)-(+l.scrap||0)-(+l.resto||0);l.updatedAt=now()}})}
+  edit('Editar bobina '+f.nro,[{k:'m',l:'Metros',t:'number'},{k:'kgB',l:'Kg bruto',t:'number'},{k:'kg',l:'Kg neto',t:'number'},{k:'ancho',l:'Ancho (mm)',t:'number'},{k:'cono',l:'Cono',opts:['3"','6"']},{k:'etiqueta',l:'Etiqueta'}],f,x=>{if(l&&l.estado==='cerrada')recalcLam(l)})}
 async function finDel(id){const f=S.finales.find(x=>x.id===id);const l=S.laminadas.find(x=>x.id===f.lamId);
   if((f.estado==='remitida'||l?.estado==='cerrada')&&!isAdmin())return toast('Solo Administración puede borrarla');
-  if(await confirmUI(`¿Borrar la bobina final ${f.nro}${f.estado==='remitida'?' (ya remitida en '+f.remito+')':''}?`)){S.finales=S.finales.filter(x=>x.id!==id);if(l&&l.estado==='cerrada'){const kf=sum(S.finales.filter(q=>q.lamId===l.id),q=>q.kg);l.dif=l.kg-kf-(+l.trim||0)-(+l.scrap||0)-(+l.resto||0);l.updatedAt=now()}save()}}
+  if(await confirmUI(`¿Borrar la bobina final ${f.nro}${f.estado==='remitida'?' (ya remitida en '+f.remito+')':''}?`)){S.finales=S.finales.filter(x=>x.id!==id);if(l&&l.estado==='cerrada')recalcLam(l);save()}}
 async function finDesremitir(id){const f=S.finales.find(x=>x.id===id);if(await confirmUI(`¿Sacar la bobina ${f.nro} del remito ${f.remito}? Vuelve a stock.`)){f.estado='en stock';f.remito=null;f.remFecha=null;f.updatedAt=now();save()}}
 async function paradaDel(opId,i){const op=S.ops.find(o=>o.id===opId);if(await confirmUI('¿Borrar la parada?')){op.paradas.splice(i,1);op.updatedAt=now();save()}}
 async function paradaAdd(){
@@ -675,25 +684,26 @@ async function paradaAdd(){
 }
 function lamCalc(l,live){
   const fin=S.finales.filter(f=>f.lamId===l.id),kf=sum(fin,f=>f.kg);
-  const g=k=>live?(+$(k).value||0):0;
-  const trim=l.estado==='cerrada'?+l.trim||0:g('cTrim'),scrap=l.estado==='cerrada'?+l.scrap||0:g('cScrap'),resto=l.estado==='cerrada'?+l.resto||0:g('cResto');
-  return{fin,kf,trim,scrap,resto,dif:l.kg-kf-trim-scrap-resto,rend:l.kg?kf/l.kg*100:0};
+  const resto=l.estado==='cerrada'?+l.resto||0:(live?(+$('cResto').value||0):0);
+  const ent=l.kg-resto,scrap=Math.max(0,ent-kf);
+  return{fin,kf,resto,ent,scrap,trim:0,dif:ent-kf,rend:ent?kf/ent*100:0};
 }
 function opCalc(op){
   const lams=S.laminadas.filter(l=>l.ocId===op.ocId&&!l.resto),fin=S.finales.filter(f=>f.ocId===op.ocId);
   const cerr=lams.filter(l=>l.estado==='cerrada');
-  const kl=sum(lams,l=>l.kg),kf=sum(fin,f=>f.kg),trim=sum(cerr,l=>l.trim),scrap=sum(cerr,l=>l.scrap),resto=sum(cerr,l=>l.resto),dif=sum(cerr,l=>l.dif);
-  return{lams,fin,cerr,kl,kf,trim,scrap,resto,dif,rend:kl?kf/kl*100:0};
+  const kl=sum(lams,l=>l.kg),kf=sum(fin,f=>f.kg),scrap=sum(cerr,l=>l.scrap),resto=sum(cerr,l=>l.resto),kEnt=sum(cerr,l=>l.kg-(+l.resto||0)),kfC=sum(fin.filter(f=>cerr.some(l=>l.id===f.lamId)),f=>f.kg);
+  return{lams,fin,cerr,kl,kf,trim:0,scrap,resto,dif:scrap,rend:kEnt?kfC/kEnt*100:0};
 }
-['cTrim','cScrap','cResto'].forEach(i=>$(i).addEventListener('input',renderOP));
+$('cResto').addEventListener('input',renderOP);
 async function lamCerrar(){
   const l=S.laminadas.find(x=>x.id===curLam);const c=lamCalc(l,true);
   if(!c.fin.length)return toast('No hay bobinas finales cargadas');
   if(c.fin.some(f=>!f.kg))return toast('Hay bobinas finales sin peso');
-  const pct=Math.abs(c.dif)/l.kg*100;
-  if(pct>2&&!await confirmUI(`La diferencia de balance es <b>${fmt(c.dif)} kg (${fmt(pct)} %)</b>. ¿Cerrar igual?`))return;
-  Object.assign(l,{trim:c.trim,scrap:c.scrap,resto:c.resto,refOperarioMaq:maq,restoDest:$('cRestoDest').value,dif:c.dif,refFin:now(),refOperario:who,estado:'cerrada',updatedAt:now()});
-  if(c.resto>0&&$('cRestoDest').value==='stock'){const nro=S.laminadas.filter(x=>x.ocId===l.ocId).reduce((m,x)=>Math.max(m,x.nro),0)+1;S.laminadas.push({...l,id:uid('LAM'),nro,kg:c.resto,m:0,estado:'pendiente',resto:true,origen:l.id,trim:undefined,scrap:undefined,dif:undefined,refFin:undefined,createdAt:now(),updatedAt:now()})}
+  if(c.kf>c.ent&&!await confirmUI(`Las finales pesan <b>${fmt(c.kf)} kg</b> y la laminada entró con <b>${fmt(c.ent)} kg</b>. ¿Cerrar igual?`))return;
+  const pct=c.scrap/c.ent*100;
+  if(pct>10&&!await confirmUI(`El scrap de esta laminada es <b>${fmt(c.scrap)} kg (${fmt(pct)} %)</b>, rendimiento ${fmt(c.rend)} %. ¿Cerrar igual?`))return;
+  Object.assign(l,{trim:0,scrap:c.scrap,resto:c.resto,refOperarioMaq:maq,dif:c.dif,rend:c.rend,refFin:now(),refOperario:who,estado:'cerrada',updatedAt:now()});
+  if(c.resto>0){const nro=S.laminadas.filter(x=>x.ocId===l.ocId).reduce((m,x)=>Math.max(m,x.nro),0)+1;S.laminadas.push({...l,id:uid('LAM'),nro,kg:c.resto,m:0,estado:'pendiente',resto:true,origen:l.id,trim:undefined,scrap:undefined,dif:undefined,refFin:undefined,createdAt:now(),updatedAt:now()})}
   save();curLam=null;toast(`Laminada L${l.nro} cerrada`);renderOP();window.scrollTo(0,0);
 }
 async function opReabrir(id){const op=S.ops.find(o=>o.id===id),oc=ocOf(op.ocId);if(opOf(op.ocId))return toast('Esa OC ya tiene otra OP abierta');
@@ -723,8 +733,8 @@ function finAll(cb){document.querySelectorAll('#pcFin input[type=checkbox]').for
 function finFiltered(){const oc=$('remOC').value,es=$('remEst').value,s=$('qFin').value;return S.finales.filter(f=>(!oc||f.ocId===oc)&&(!es||f.estado===es)&&q(s,f.partida+' '+(f.etiqueta||'')+' '+(f.remito||'')+' '+ocLbl(ocOf(f.ocId))+' bob '+f.nro)).sort((a,b)=>b.createdAt>a.createdAt?1:-1)}
 function printCert(){window.print()}
 function exportCSV(){
-  const rows=[['Cliente','OC','Bobina','Partida','Laminada','Ancho mm','Espesor u','Metros','Kg','Cono','Etiqueta','Fecha','Estado','Remito']];
-  finFiltered().forEach(f=>{const o=ocOf(f.ocId);rows.push([o.cliente,o.nro,f.nro,f.partida,'L'+f.lamNro,f.ancho,f.esp,f.m,f.kg,f.cono,f.etiqueta,fd(f.createdAt),f.estado,f.remito||''])});
+  const rows=[['Cliente','OC','Bobina','Partida','Laminada','Ancho mm','Espesor u','Metros','Kg bruto','Kg neto','Cono','Etiqueta','Fecha','Estado','Remito']];
+  finFiltered().forEach(f=>{const o=ocOf(f.ocId);rows.push([o.cliente,o.nro,f.nro,f.partida,'L'+f.lamNro,f.ancho,f.esp,f.m,f.kgB||'',f.kg,f.cono,f.etiqueta,fd(f.createdAt),f.estado,f.remito||''])});
   const a=document.createElement('a');a.href='data:text/csv;charset=utf-8,\uFEFF'+encodeURIComponent(rows.map(r=>r.join(';')).join('\n'));a.download='bobinas-finales.csv';a.click();
 }
 
@@ -749,44 +759,65 @@ function croForm(c){
    <div class="f"><label>Turno</label><select id="cr_turno">${['Mañana','Tarde','Noche','Todo el día'].map(t=>`<option ${t===c.turno?'selected':''}>${t}</option>`).join('')}</select></div>
    <div class="f" style="flex-basis:100%"><label>OC</label><select id="cr_oc"><option value="">— sin OC (mantenimiento, limpieza, etc.) —</option>${ocs.map(o=>`<option value="${o.id}" ${o.id===c.ocId?'selected':''}>${ocLbl(o)} · ${o.desc||''} · ${fmt(o.kg)} kg${o.fecha?' · entrega '+o.fecha.slice(8,10)+'/'+o.fecha.slice(5,7):''}</option>`).join('')}</select></div>
    <div class="f"><label>Operario</label><select id="cr_op"><option value="">—</option>${S.operarios.map(o=>`<option ${o.n===c.operario?'selected':''}>${o.n}</option>`).join('')}</select></div>
-   <div class="f"><label>Nota / kg objetivo</label><input id="cr_nota" value="${c.nota||''}" placeholder="ej: 600 kg, cambiar cuchillas"></div>
+   <div class="f"><label>Kg objetivo</label><input id="cr_kg" type="number" step="any" value="${c.kgObj??''}"></div>
+   <div class="f"><label>Nota</label><input id="cr_nota" value="${c.nota||''}" placeholder="ej: cambiar cuchillas"></div>
    ${c.id?`<div class="f" style="flex-basis:100%"><button class="btn bad" onclick="croDel('${c.id}')">Borrar asignación</button></div>`:''}`;
-  edCtx={custom:true,save:()=>{const v={fecha:$('cr_fecha').value,maq:$('cr_maq').value,turno:$('cr_turno').value,ocId:$('cr_oc').value,operario:$('cr_op').value,nota:$('cr_nota').value.trim(),updatedAt:now(),por:who};
+  edCtx={custom:true,save:()=>{const v={fecha:$('cr_fecha').value,maq:$('cr_maq').value,turno:$('cr_turno').value,ocId:$('cr_oc').value,operario:$('cr_op').value,kgObj:+$('cr_kg').value||null,nota:$('cr_nota').value.trim(),updatedAt:now(),por:who};
     if(!v.fecha)return toast('Falta la fecha');if(c.id){Object.assign(S.cronograma.find(x=>x.id===c.id),v)}else S.cronograma.push({id:uid('CRO'),...v});save();edClose();toast('Cronograma guardado')}};
   $('ed').classList.add('show');
 }
 async function croDel(id){edClose();if(await confirmUI('¿Borrar la asignación?')){const c=S.cronograma.find(x=>x.id===id);c.del=true;c.updatedAt=now();save()}}
 function renderCro(){
   const dias=croDias();const hoy=now().slice(0,10);
-  $('croGrid').innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><b style="font-size:17px;color:var(--brand)">Semana del ${dias[0].slice(8,10)}/${dias[0].slice(5,7)} al ${dias[5].slice(8,10)}/${dias[5].slice(5,7)}</b><span class="muted">Winflex · Laminado y Refilado</span></div>
-  <table style="table-layout:fixed"><thead><tr><th style="width:130px">Máquina</th>${dias.map((d,i)=>`<th style="${d===hoy?'background:var(--cerr)':''}">${DIAS[i]} ${d.slice(8,10)}/${d.slice(5,7)}</th>`).join('')}</tr></thead><tbody>
-  ${MAQS.map(m=>`<tr><td style="font-weight:700;color:var(--brand);vertical-align:top;white-space:normal">${m}</td>${dias.map(d=>{const it=croItems(d,m);return`<td style="vertical-align:top;white-space:normal;padding:6px;${d===hoy?'background:#f6fbf7':''}"><div style="min-height:60px;cursor:pointer" onclick="if(event.target===this)croAdd('${d}','${m}')">${it.map(c=>`<div onclick="croEditItem('${c.id}')" style="background:${c.ocId?'var(--ref)':'#fff1cc'};border-left:4px solid ${c.ocId?'var(--brand2)':'var(--warn)'};border-radius:6px;padding:5px 7px;margin-bottom:5px;font-size:12.5px;line-height:1.3;cursor:pointer"><b>${croLbl(c)}</b><br><span class="muted">${c.turno}${c.operario?' · '+c.operario:''}${c.nota?' · '+c.nota:''}</span></div>`).join('')}</div></td>`}).join('')}</tr>`).join('')}</tbody></table>`;
+  const tot=d=>{const its=MAQS.flatMap(m=>croItems(d,m));const obj=sum(its,c=>c.kgObj),real=sum(its,c=>croReal(c)||0);return obj?`<span class="muted" style="font-weight:400">${fmt(real)}/${fmt(obj)} kg</span>`:''};
+  $('croGrid').innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:8px"><b style="font-size:18px;color:var(--brand)">Semana del ${dias[0].slice(8,10)}/${dias[0].slice(5,7)} al ${dias[5].slice(8,10)}/${dias[5].slice(5,7)}</b><span class="muted">Winflex · Laminado y Refilado · actualizado ${new Date().toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'})}</span></div>
+  <div style="overflow-x:auto"><table style="table-layout:fixed;min-width:900px;border:1px solid var(--line);border-radius:10px;overflow:hidden"><thead><tr><th style="width:130px">Máquina</th>${dias.map((d,i)=>`<th style="${d===hoy?'background:var(--cerr);color:var(--brand)':''}">${DIAS[i]} ${d.slice(8,10)}/${d.slice(5,7)}${d===hoy?' · hoy':''}<br>${tot(d)}</th>`).join('')}</tr></thead><tbody>
+  ${MAQS.map((m,r)=>`<tr style="background:${r%2?'#fbfcfb':'#fff'}"><td style="font-weight:700;color:var(--brand);vertical-align:top;white-space:normal;border-right:1px solid var(--line)">${m}</td>${dias.map(d=>{const it=croItems(d,m);return`<td style="vertical-align:top;white-space:normal;padding:6px;${d===hoy?'background:#f3faf5':''}"><div style="min-height:64px;cursor:pointer" onclick="if(event.target===this)croAdd('${d}','${m}')">${it.map(c=>croCard(c)).join('')}</div></td>`}).join('')}</tr>`).join('')}</tbody></table></div>`;
   const v=$('croOp').value;$('croOp').innerHTML='<option value="">— elegir —</option>'+S.operarios.filter(o=>o.rol!=='admin').map(o=>`<option>${o.n}</option>`).join('');$('croOp').value=v;
 }
 function croPrint(){document.body.classList.add('print-cro');window.print();setTimeout(()=>document.body.classList.remove('print-cro'),500)}
 function croTexto(op){
   const dias=croDias();let t=`*Winflex · Cronograma ${op?op:'semana'}*\nSemana del ${dias[0].slice(8,10)}/${dias[0].slice(5,7)}\n`;
-  dias.forEach((d,i)=>{const its=MAQS.flatMap(m=>croItems(d,m).filter(c=>!op||c.operario===op).map(c=>({m,c})));if(!its.length)return;t+=`\n*${DIAS[i]} ${d.slice(8,10)}/${d.slice(5,7)}*\n`;its.forEach(({m,c})=>{t+=`• ${m}: ${croLbl(c)} (${c.turno}${!op&&c.operario?' · '+c.operario:''}${c.nota?' · '+c.nota:''})\n`})});
+  dias.forEach((d,i)=>{const its=MAQS.flatMap(m=>croItems(d,m).filter(c=>!op||c.operario===op).map(c=>({m,c})));if(!its.length)return;t+=`\n*${DIAS[i]} ${d.slice(8,10)}/${d.slice(5,7)}*\n`;its.forEach(({m,c})=>{t+=`• ${m}: ${croLbl(c)} — ${c.turno}${!op&&c.operario?' · '+c.operario:''}${c.kgObj?' · objetivo '+fmt(c.kgObj)+' kg':''}${c.nota?' · '+c.nota:''}\n`})});
   return t;
 }
 function croWA(){const op=$('croOp').value;if(!op)return;const t=croTexto(op);window.open('https://wa.me/?text='+encodeURIComponent(t),'_blank');$('croOp').value=''}
 function croPNG(){
-  const dias=croDias(),W=1400,colW=(W-200)/6,rowH=[],pad=10;const ctx0=document.createElement('canvas').getContext('2d');ctx0.font='13px sans-serif';
-  const lines=MAQS.map(m=>dias.map(d=>croItems(d,m).flatMap(c=>[croLbl(c),'   '+c.turno+(c.operario?' · '+c.operario:'')+(c.nota?' · '+c.nota:'')])));
-  MAQS.forEach((m,i)=>rowH[i]=Math.max(70,Math.max(...lines[i].map(l=>l.length))*18+pad*2));
-  const H=90+40+rowH.reduce((a,b)=>a+b,0)+20;const cv=document.createElement('canvas');cv.width=W;cv.height=H;const g=cv.getContext('2d');
-  g.fillStyle='#fff';g.fillRect(0,0,W,H);const grad=g.createLinearGradient(0,0,W,0);grad.addColorStop(0,'#2ebb62');grad.addColorStop(1,'#0a6b3a');g.fillStyle=grad;g.fillRect(0,0,W,70);
-  g.fillStyle='#fff';g.font='bold 26px sans-serif';g.fillText('Winflex · Cronograma Laminado y Refilado',20,44);g.font='18px sans-serif';g.textAlign='right';g.fillText(`Semana del ${dias[0].slice(8,10)}/${dias[0].slice(5,7)} al ${dias[5].slice(8,10)}/${dias[5].slice(5,7)}`,W-20,44);g.textAlign='left';
-  let y=90;g.fillStyle='#f6faf7';g.fillRect(0,y,W,40);g.fillStyle='#0a6b3a';g.font='bold 16px sans-serif';g.fillText('Máquina',20,y+26);dias.forEach((d,i)=>g.fillText(`${DIAS[i]} ${d.slice(8,10)}/${d.slice(5,7)}`,200+i*colW+10,y+26));y+=40;
-  MAQS.forEach((m,r)=>{g.strokeStyle='#dfe6e0';g.beginPath();g.moveTo(0,y);g.lineTo(W,y);g.stroke();g.fillStyle='#0a6b3a';g.font='bold 15px sans-serif';g.fillText(m,20,y+24);
-    dias.forEach((d,i)=>{let yy=y+pad+14;const x=200+i*colW+10;g.strokeStyle='#dfe6e0';g.beginPath();g.moveTo(200+i*colW,y);g.lineTo(200+i*colW,y+rowH[r]);g.stroke();
-      croItems(d,m).forEach(c=>{g.fillStyle=c.ocId?'#e1f3e8':'#fff1cc';const bh=36;g.fillRect(x-4,yy-14,colW-12,bh);g.fillStyle='#2f3634';g.font='bold 13px sans-serif';g.fillText(croLbl(c).slice(0,32),x,yy);g.font='12px sans-serif';g.fillStyle='#6f7a74';g.fillText((c.turno+(c.operario?' · '+c.operario:'')+(c.nota?' · '+c.nota:'')).slice(0,36),x,yy+16);yy+=bh+6})});y+=rowH[r]});
+  const dias=croDias(),W=1600,L=210,colW=(W-L-20)/6,pad=10,cardH=52;
+  const rowH=MAQS.map(m=>Math.max(80,Math.max(...dias.map(d=>croItems(d,m).length))*(cardH+8)+pad*2));
+  const H=110+44+rowH.reduce((a,b)=>a+b,0)+30;const cv=document.createElement('canvas');cv.width=W;cv.height=H;const g=cv.getContext('2d');
+  const rr=(x,y,w,h,r,fill,stroke)=>{g.beginPath();g.moveTo(x+r,y);g.arcTo(x+w,y,x+w,y+h,r);g.arcTo(x+w,y+h,x,y+h,r);g.arcTo(x,y+h,x,y,r);g.arcTo(x,y,x+w,y,r);g.closePath();if(fill){g.fillStyle=fill;g.fill()}if(stroke){g.strokeStyle=stroke;g.stroke()}};
+  g.fillStyle='#f3f6f3';g.fillRect(0,0,W,H);const grad=g.createLinearGradient(0,0,W,0);grad.addColorStop(0,'#2ebb62');grad.addColorStop(1,'#0a6b3a');g.fillStyle=grad;g.fillRect(0,0,W,84);
+  g.fillStyle='#fff';g.font='bold 30px sans-serif';g.fillText('Cronograma · Laminado y Refilado',24,52);g.font='20px sans-serif';g.textAlign='right';g.fillText(`Semana del ${dias[0].slice(8,10)}/${dias[0].slice(5,7)} al ${dias[5].slice(8,10)}/${dias[5].slice(5,7)}  ·  Winflex S.A.`,W-24,52);g.textAlign='left';
+  let y=110;rr(10,y,W-20,44+rowH.reduce((a,b)=>a+b,0),12,'#fff','#dfe6e0');
+  g.fillStyle='#f6faf7';g.fillRect(11,y,W-22,44);g.fillStyle='#0a6b3a';g.font='bold 17px sans-serif';g.fillText('Máquina',24,y+28);const hoy=now().slice(0,10);
+  dias.forEach((d,i)=>{if(d===hoy){g.fillStyle='#d6efdf';g.fillRect(L+i*colW,y,colW,44);g.fillStyle='#0a6b3a'}g.fillText(`${DIAS[i]} ${d.slice(8,10)}/${d.slice(5,7)}`,L+i*colW+12,y+28)});y+=44;
+  MAQS.forEach((m,r)=>{g.strokeStyle='#dfe6e0';g.beginPath();g.moveTo(11,y);g.lineTo(W-11,y);g.stroke();g.fillStyle='#0a6b3a';g.font='bold 17px sans-serif';g.fillText(m,24,y+30);
+    dias.forEach((d,i)=>{const x=L+i*colW;g.strokeStyle='#dfe6e0';g.beginPath();g.moveTo(x,y);g.lineTo(x,y+rowH[r]);g.stroke();let yy=y+pad;
+      croItems(d,m).forEach(c=>{const o=ocOf(c.ocId),col=croColor(c),real=croReal(c);rr(x+8,yy,colW-16,cardH,7,'#fff','#dfe6e0');g.fillStyle=col;g.fillRect(x+8,yy+4,5,cardH-8);
+        g.fillStyle=col;g.font='bold 15px sans-serif';g.fillText((o.id?`${o.cliente} · OC ${o.nro}`:(c.nota||'—')).slice(0,30),x+20,yy+20);
+        g.fillStyle='#2f3634';g.font='13px sans-serif';g.fillText((o.desc?o.desc+' · ':'')+c.turno+(c.operario?' · '+c.operario:'')+(o.id&&c.nota?' · '+c.nota:''),x+20,yy+38);
+        if(c.kgObj){const bw=colW-40,bx=x+20,by=yy+44;g.fillStyle='#e6ede8';g.fillRect(bx,by,bw,5);g.fillStyle=col;g.fillRect(bx,by,bw*Math.min(1,(real||0)/c.kgObj),5);g.fillStyle='#6f7a74';g.font='11px sans-serif';g.textAlign='right';g.fillText(`${fmt(real||0)} / ${fmt(c.kgObj)} kg`,x+colW-12,yy+38);g.textAlign='left'}
+        yy+=cardH+8})});y+=rowH[r]});
+  g.fillStyle='#6f7a74';g.font='13px sans-serif';g.fillText('Generado '+new Date().toLocaleString('es-AR'),24,H-10);
   const a=document.createElement('a');a.href=cv.toDataURL('image/png');a.download=`cronograma-${dias[0]}.png`;a.click();toast('Imagen descargada — compartila por WhatsApp');
 }
+function croReal(c){ // kg producidos ese día en esa máquina para esa OC
+  if(!c.ocId)return null;
+  if(c.maq==='Laminadora')return sum(S.laminadas.filter(l=>!l.resto&&l.ocId===c.ocId&&l.createdAt.startsWith(c.fecha)),l=>l.kg);
+  const mq=c.maq.replace('Refiladora ','');return sum(S.finales.filter(f=>f.ocId===c.ocId&&f.maq===mq&&f.createdAt.startsWith(c.fecha)),f=>f.kg);
+}
+function croColor(c){const cols=['#1e9a4f','#0a6b3a','#2ebb62','#3a7ca5','#8a5cb8','#c0731a','#b53c6d'];if(!c.ocId)return '#b45f06';let s=0;for(const ch of c.ocId)s=(s*31+ch.charCodeAt(0))>>>0;return cols[s%cols.length]}
+function croCard(c,print){const real=croReal(c),o=ocOf(c.ocId),col=croColor(c),pct=c.kgObj&&real!=null?Math.min(100,real/c.kgObj*100):null;
+  return`<div ${print?'':`onclick="croEditItem('${c.id}')"`} style="background:#fff;border:1px solid var(--line);border-left:5px solid ${col};border-radius:8px;padding:6px 8px;margin-bottom:6px;font-size:12.5px;line-height:1.3;cursor:${print?'default':'pointer'};box-shadow:0 1px 2px rgba(0,0,0,.05)">
+   <b style="color:${col}">${o.id?o.cliente+' · OC '+o.nro:(c.nota||'—')}</b>${o.desc?`<span class="muted"> ${o.desc}</span>`:''}
+   <div class="muted" style="margin-top:2px">${c.turno}${c.operario?' · <b>'+c.operario+'</b>':''}${o.id&&c.nota?' · '+c.nota:''}</div>
+   ${c.kgObj?`<div style="display:flex;align-items:center;gap:6px;margin-top:4px"><div style="flex:1;height:6px;background:#e6ede8;border-radius:3px;overflow:hidden"><i style="display:block;height:100%;width:${pct||0}%;background:${pct>=100?'var(--ok)':col}"></i></div><span style="font-variant-numeric:tabular-nums;white-space:nowrap"><b>${fmt(real||0)}</b>/${fmt(c.kgObj)} kg</span></div>`:(real?`<div style="margin-top:3px"><b>${fmt(real)} kg</b> producidos</div>`:'')}
+  </div>`}
 function progHoy(maq){return croItems(now().slice(0,10),maq)}
 
 /* ================= PARÁMETROS ================= */
-function paramSave(){S.params={t1:$('cfgT1').value.trim(),t2:$('cfgT2').value.trim(),t3:$('cfgT3').value.trim(),khLam:+$('cfgKhLam').value||null,khRef:+$('cfgKhRef').value||null,updatedAt:now()};save();toast('Parámetros guardados')}
+function paramSave(){S.params={t1:$('cfgT1').value.trim(),t2:$('cfgT2').value.trim(),t3:$('cfgT3').value.trim(),khLam:+$('cfgKhLam').value||null,khRef:+$('cfgKhRef').value||null,tara3:+$('cfgT3in').value||null,tara6:+$('cfgT6in').value||null,tol:+$('cfgTol').value||null,updatedAt:now()};save();toast('Parámetros guardados')}
 function turnos(){const P=S.params||{};return [['Mañana',P.t1],['Tarde',P.t2],['Noche',P.t3]].filter(t=>t[1]&&/^\d\d:\d\d-\d\d:\d\d$/.test(t[1])).map(([n,r])=>{const [a,b]=r.split('-');const m=s=>+s.slice(0,2)*60+ +s.slice(3);return{n,ini:m(a),fin:m(b)}})}
 function objetivo(ocId,proc){const p=S.catalogo.find(x=>x.id===ocOf(ocId).prodId)||{};return (proc==='lam'?p.kgHoraLam:p.kgHoraRef)||(proc==='lam'?S.params?.khLam:S.params?.khRef)||null}
 function minOf(iso){const d=new Date(iso);return d.getHours()*60+d.getMinutes()}
@@ -886,26 +917,26 @@ function render(){
       <div style="padding:0 10px 10px"><table><thead><tr><th>Fecha</th><th>Hora</th><th class="n">Nº lam.</th><th>Partida</th><th class="n">Kg</th><th class="n">m</th><th class="n">Ancho</th><th class="n">Esp</th><th>Operario</th><th>Obs.</th><th>Estado</th><th></th></tr></thead><tbody>${ls.map(l=>`<tr><td>${fd(l.createdAt)}</td><td>${fh(l.createdAt)}</td><td class="n">L${l.nro}${l.resto?' (resto)':''}</td><td>${l.partida}</td><td class="n">${fmt(l.kg)}</td><td class="n">${l.m||''}</td><td class="n">${l.ancho||''}</td><td class="n">${l.esp||''}</td><td>${l.operario||''}</td><td style="white-space:normal;max-width:220px">${l.obs?'⚠️ '+l.obs:''}</td><td>${tagOf(l.estado)}</td><td><button class="btn sec" onclick="lamEdit('${l.id}')">✎</button> ${l.estado==='cerrada'?`<button class="btn sec" onclick="lamReabrir('${l.id}')">Reabrir</button> `:''}<button class="btn sec" onclick="lamDel('${l.id}')">✕</button></td></tr>`).join('')}</tbody></table></div></details>`}).join('')||'<p class="muted">Sin bobinas laminadas.</p>';
     const v=$('remOC').value;$('remOC').innerHTML=`<option value="">Todas las OC</option>`+S.ocs.map(o=>`<option value="${o.id}">${ocLbl(o)}</option>`).join('');$('remOC').value=v;
     renderFin();
-    $('pcOps').innerHTML=S.ops.slice().reverse().map(op=>{const c=opCalc(op);return`<tr><td>${fd(op.inicio)}</td><td>${ocLbl(ocOf(op.ocId))}</td><td>${op.operario}</td><td class="n">${c.cerr.length}/${c.lams.length}</td><td class="n">${fmt(c.kl)}</td><td class="n">${c.fin.length}</td><td class="n">${fmt(c.kf)}</td><td class="n">${fmt(c.trim)}</td><td class="n">${fmt(c.scrap)}</td><td class="n">${fmt(c.resto)}</td><td class="n bal ${c.kl&&Math.abs(c.dif)/c.kl>0.02?'bad':'ok'}">${fmt(c.dif)}</td><td class="n">${fmt(c.rend)} %</td><td class="n">${op.paradas.length?op.paradas.length+' / '+sum(op.paradas,p=>p.min)+' min':''}</td><td>${tagOf(op.estado)}</td><td>${op.estado==='cerrada'?`<button class="btn sec" onclick="opReabrir('${op.id}')">Reabrir</button> `:''}<button class="btn sec" onclick="opDel('${op.id}')">✕</button></td></tr>`}).join('');
+    $('pcOps').innerHTML=S.ops.slice().reverse().map(op=>{const c=opCalc(op);return`<tr><td>${fd(op.inicio)}</td><td>${ocLbl(ocOf(op.ocId))}</td><td>${op.operario}</td><td class="n">${c.cerr.length}/${c.lams.length}</td><td class="n">${fmt(c.kl)}</td><td class="n">${c.fin.length}</td><td class="n">${fmt(c.kf)}</td><td class="n">${fmt(c.scrap)}</td><td class="n bal ${c.rend&&c.rend<90?'bad':'ok'}">${c.cerr.length?fmt(100-c.rend)+' %':''}</td><td class="n">${fmt(c.resto)}</td><td class="n">${c.cerr.length?fmt(c.rend)+' %':''}</td><td class="n">${op.paradas.length?op.paradas.length+' / '+sum(op.paradas,p=>p.min)+' min':''}</td><td>${tagOf(op.estado)}</td><td>${op.estado==='cerrada'?`<button class="btn sec" onclick="opReabrir('${op.id}')">Reabrir</button> `:''}<button class="btn sec" onclick="opDel('${op.id}')">✕</button></td></tr>`}).join('');
   }
   if(mode==='config'){$('cfgOps').innerHTML='<table>'+S.operarios.map(o=>`<tr><td>${o.n}</td><td class="n">${o.pin}</td><td>${o.rol==='admin'?'Todo':'Solo tablets'}</td><td><button class="btn sec" onclick="opRm('${o.pin}')">✕</button></td></tr>`).join('')+'</table>'}
 }
 function renderFin(){
-  $('pcFin').innerHTML=finFiltered().map(f=>{const o=ocOf(f.ocId);return`<tr><td class="noprint">${f.estado==='en stock'?`<input type="checkbox" value="${f.id}">`:''}</td><td>${ocLbl(o)}</td><td class="n">${f.nro}</td><td>${f.partida}</td><td class="n">L${f.lamNro}</td><td class="n">${f.ancho||''}</td><td class="n">${f.esp||''}</td><td class="n">${f.m||''}</td><td class="n">${fmt(f.kg)}</td><td>${f.cono}</td><td>${f.etiqueta||''}</td><td>${f.maq||''}</td><td>${fd(f.createdAt)}</td><td>${tagOf(f.estado)}</td><td>${f.remito?`${f.remito} (${f.remFecha})`:''}</td><td class="noprint"><button class="btn sec" onclick="finEdit('${f.id}')">✎</button> ${f.estado==='remitida'?`<button class="btn sec" onclick="finDesremitir('${f.id}')">↩</button> `:''}<button class="btn sec" onclick="finDel('${f.id}')">✕</button></td></tr>`}).join('')||'<tr><td colspan="15" class="muted">Sin bobinas finales.</td></tr>';
+  $('pcFin').innerHTML=finFiltered().map(f=>{const o=ocOf(f.ocId);return`<tr><td class="noprint">${f.estado==='en stock'?`<input type="checkbox" value="${f.id}">`:''}</td><td>${ocLbl(o)}</td><td class="n">${f.nro}</td><td>${f.partida}</td><td class="n">L${f.lamNro}</td><td class="n">${f.ancho||''}</td><td class="n">${f.esp||''}</td><td class="n">${f.m||''}</td><td class="n">${f.kgB?fmt(f.kgB):''}</td><td class="n">${fmt(f.kg)}</td><td>${f.cono}</td><td>${f.etiqueta||''}</td><td>${f.maq||''}</td><td>${fd(f.createdAt)}</td><td>${tagOf(f.estado)}</td><td>${f.remito?`${f.remito} (${f.remFecha})`:''}</td><td class="noprint"><button class="btn sec" onclick="finEdit('${f.id}')">✎</button> ${f.estado==='remitida'?`<button class="btn sec" onclick="finDesremitir('${f.id}')">↩</button> `:''}<button class="btn sec" onclick="finDel('${f.id}')">✕</button></td></tr>`}).join('')||'<tr><td colspan="16" class="muted">Sin bobinas finales.</td></tr>';
 }
 function renderOP(){
   const op=S.ops.find(o=>o.id===curOP);if(!op)return;const c=opCalc(op),o=ocOf(op.ocId);
   $('opTitle').textContent=`OP · ${ocLbl(o)} · ${o.desc||''} · Refiladora ${maq}`;
   $('opKpi').innerHTML=`<div><b>${fmt(o.kg)}</b><span>kg pedidos</span></div><div><b>${fmt(c.kl)}</b><span>kg laminados</span></div><div><b>${c.fin.length}</b><span>bobinas finales</span></div><div><b>${fmt(c.kf)}</b><span>kg finales</span></div><div><b>${c.cerr.length}/${c.lams.length}</b><span>laminadas cerradas</span></div><div><b>${o.ancho||'?'} mm</b><span>ancho final${o.mxb?' · '+o.mxb+' m/bob':''}</span></div>`;
   $('opPar').innerHTML=op.paradas.map((p,i)=>`${fh(p.t)} ${p.mot} (${p.min} min${p.maq?' · '+p.maq:''}) <a href="#" onclick="paradaDel('${op.id}',${i});return false">✕</a>`).join(' · ')||'Sin paradas.';
-  $('opLams').innerHTML=S.laminadas.filter(l=>l.ocId===op.ocId).sort((a,b)=>a.nro-b.nro).map(l=>{const k=lamCalc(l);return`<div class="pick" style="${l.id===curLam?'border-color:var(--brand2);background:#f6fbf7':''}" onclick="lamSel('${l.id}')"><b>${lamLbl(l)}</b> ${tagOf(l.estado)}${l.refMaq&&l.estado!=='pendiente'?` <span class="tag ref">${l.refMaq}</span>`:''}${l.resto?' <span class="tag pend">resto</span>':''}<small>${fmt(l.kg)} kg · ${l.m||'?'} m · ${l.ancho||'?'} mm</small><small>${k.fin.length} finales · ${fmt(k.kf)} kg${l.estado==='cerrada'?' · dif '+fmt(l.dif)+' kg':''}</small>${l.obs?`<small style="color:var(--warn)">⚠️ ${l.obs}</small>`:''}</div>`}).join('')||'<p class="muted">Esta OC todavía no tiene bobinas laminadas.</p>';
+  $('opLams').innerHTML=S.laminadas.filter(l=>l.ocId===op.ocId).sort((a,b)=>a.nro-b.nro).map(l=>{const k=lamCalc(l);return`<div class="pick" style="${l.id===curLam?'border-color:var(--brand2);background:#f6fbf7':''}" onclick="lamSel('${l.id}')"><b>${lamLbl(l)}</b> ${tagOf(l.estado)}${l.refMaq&&l.estado!=='pendiente'?` <span class="tag ref">${l.refMaq}</span>`:''}${l.resto?' <span class="tag pend">resto</span>':''}<small>${fmt(l.kg)} kg · ${l.m||'?'} m · ${l.ancho||'?'} mm</small><small>${k.fin.length} finales · ${fmt(k.kf)} kg${l.estado==='cerrada'?' · scrap '+fmt(l.scrap)+' kg · rend. '+fmt(l.rend||k.rend)+' %':''}</small>${l.obs?`<small style="color:var(--warn)">⚠️ ${l.obs}</small>`:''}</div>`}).join('')||'<p class="muted">Esta OC todavía no tiene bobinas laminadas.</p>';
   const l=S.laminadas.find(x=>x.id===curLam);
   $('lamPanel').style.display=l?'':'none';if(!l)return;
-  const k=lamCalc(l,true),bad=Math.abs(k.dif)/l.kg>0.02;
+  const k=lamCalc(l,true),bad=k.ent&&(k.scrap/k.ent>0.10||k.kf>k.ent);
   $('lamTitle').textContent=`${lamLbl(l)} · ${fmt(l.kg)} kg · ${l.ancho||'?'} → ${o.ancho||'?'} mm`;
-  $('lamKpi').innerHTML=`<div><b>${k.fin.length}</b><span>finales</span></div><div><b>${fmt(k.kf)}</b><span>kg finales</span></div><div><b class="bal ${bad?'bad':'ok'}">${fmt(k.dif)}</b><span>kg sin justificar</span></div>`;
-  $('opFin').innerHTML=k.fin.map(f=>`<tr><td class="n">${f.nro}</td><td class="n">${f.m||''}</td><td class="n">${f.kg?fmt(f.kg):'<span class="tag pend">sin pesar</span>'}</td><td class="n">${f.ancho||''}</td><td>${f.cono}</td><td>${f.etiqueta||''}</td><td>${fh(f.createdAt)}</td><td>${l.estado==='cerrada'&&!isAdmin()?'':`<button class="btn sec" onclick="finEdit('${f.id}')">✎</button> <button class="btn sec" onclick="finDel('${f.id}')">✕</button>`}</td></tr>`).join('')||'<tr><td colspan="8" class="muted">Todavía no salió ninguna bobina final de esta laminada.</td></tr>';
-  $('cBal').innerHTML=`Balance: ${fmt(l.kg)} − ${fmt(k.kf)} finales − ${fmt(k.trim)} trim − ${fmt(k.scrap)} scrap − ${fmt(k.resto)} resto = <b class="bal ${bad?'bad':'ok'}">${fmt(k.dif)} kg</b> · rendimiento ${fmt(k.rend)} %`;
+  $('lamKpi').innerHTML=`<div><b>${k.fin.length}</b><span>finales</span></div><div><b>${fmt(k.kf)}</b><span>kg netos</span></div><div><b class="bal ${bad?'bad':'ok'}">${fmt(k.scrap)}</b><span>kg scrap</span></div><div><b class="bal ${bad?'bad':'ok'}">${fmt(k.rend)} %</b><span>rendimiento</span></div>`;
+  $('opFin').innerHTML=k.fin.map(f=>`<tr><td class="n">${f.nro}</td><td class="n">${f.m||''}</td><td class="n">${f.kgB?fmt(f.kgB):''}</td><td class="n">${f.kg?fmt(f.kg):'<span class="tag pend">sin pesar</span>'}</td><td class="n">${f.ancho||''}</td><td>${f.cono}</td><td>${f.etiqueta||''}</td><td>${fh(f.createdAt)}</td><td>${l.estado==='cerrada'&&!isAdmin()?'':`<button class="btn sec" onclick="finEdit('${f.id}')">✎</button> <button class="btn sec" onclick="finDel('${f.id}')">✕</button>`}</td></tr>`).join('')||'<tr><td colspan="9" class="muted">Todavía no salió ninguna bobina final de esta laminada.</td></tr>';
+  $('cBal').innerHTML=`Entró ${fmt(k.ent)} kg${k.resto?` (${fmt(l.kg)} − ${fmt(k.resto)} de resto)`:''} · salieron ${fmt(k.kf)} kg netos en ${k.fin.length} bobinas → <b class="bal ${bad?'bad':'ok'}">scrap ${fmt(k.scrap)} kg (${fmt(k.ent?k.scrap/k.ent*100:0)} %)</b> · rendimiento <b>${fmt(k.rend)} %</b>`;
   const closed=l.estado==='cerrada';$('lamForm').style.display=closed?'none':'';$('lamClose').style.display=closed?'none':'';
   const tiras=+o.tiras||1;$('btnFin').textContent=tiras>1?`Agregar corte (${tiras} tiras → ${tiras} bobinas)`:'Agregar bobina final';
 }
