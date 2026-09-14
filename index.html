@@ -100,7 +100,8 @@ td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
 #v-home .pick b{font-size:21px}
 #homeStats{text-align:center;margin-top:18px}
 @media (max-width:640px){main{padding:12px 10px}.card{padding:14px}.kpi div{min-width:44%}.f{min-width:100px}}
-@media print{header,.tabs,.btn,.noprint{display:none!important}body{background:#fff}.card{border:0;box-shadow:none}th{position:static}}
+@media print{header,.tabs,.btn,.noprint{display:none!important}body{background:#fff}.card{border:0;box-shadow:none}th{position:static}
+ body.print-cro .pct{display:none!important}body.print-cro #pc-cro{display:block!important}body.print-cro #v-pc{display:block!important}@page{size:landscape;margin:10mm}}
 </style>
 </head>
 <body>
@@ -140,6 +141,7 @@ td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
 
 <!-- LAMINADO (tablet): elegir OC -->
 <section id="v-lam" class="view">
+  <div class="card" id="lamProg" style="display:none"></div>
   <div class="card">
     <h2>Laminado · en curso</h2>
     <div class="grid" id="lamCurso"></div>
@@ -191,6 +193,7 @@ td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
       <button class="btn sec" id="maqVerde" onclick="setMaq('Verde')">Verde</button>
       <button class="btn sec" id="maqGris" onclick="setMaq('Gris')">Gris</button>
     </div>
+    <div id="refProg"></div>
     <div class="grid" id="refPend"></div>
   </div>
   <div class="card">
@@ -254,6 +257,7 @@ td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
     <button onclick="pcTab('fin',this)">Bobinas finales / remitos</button>
     <button onclick="pcTab('ops',this)">OPs de refilado</button>
     <button onclick="pcTab('cat',this)">Catálogo</button>
+    <button onclick="pcTab('cro',this)">Cronograma</button>
   </div>
   <div id="pc-prod" class="pct">
     <div class="card">
@@ -340,6 +344,26 @@ td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
       <table><thead><tr><th>Inicio</th><th>Cliente / OC</th><th>Operario</th><th class="n">Laminadas</th><th class="n">Kg laminados</th><th class="n">Bob. finales</th><th class="n">Kg finales</th><th class="n">Trim</th><th class="n">Scrap</th><th class="n">Resto</th><th class="n">Dif</th><th class="n">Rend.</th><th class="n">Paradas</th><th>Estado</th><th></th></tr></thead><tbody id="pcOps"></tbody></table>
     </div>
   </div>
+  <div id="pc-cro" class="pct" style="display:none">
+    <div class="card noprint">
+      <h2>Cronograma semanal</h2>
+      <div class="row">
+        <button class="btn sec" onclick="croWeek(-1)">◀ Semana</button>
+        <div class="f" style="max-width:170px"><label>Semana del</label><input id="croIni" type="date" onchange="render()"></div>
+        <button class="btn sec" onclick="croWeek(1)">Semana ▶</button>
+        <button class="btn sec" onclick="croHoy()">Hoy</button>
+        <button class="btn" onclick="croAdd()">+ Asignar trabajo</button>
+        <span style="flex:1"></span>
+        <button class="btn sec" onclick="croPrint()">🖨 Imprimir / PDF</button>
+        <button class="btn sec" onclick="croPNG()">⬇ Imagen semana</button>
+        <div class="f" style="max-width:220px"><label>Enviar a operario</label><select id="croOp" onchange="croWA()"><option value="">— elegir —</option></select></div>
+      </div>
+    </div>
+    <div class="card" id="croPrintArea">
+      <div id="croGrid"></div>
+      <p class="muted noprint" style="margin-top:8px">Tocá una celda vacía para asignar; tocá una asignación para editarla. Los operarios ven en su tablet lo programado para hoy en su máquina.</p>
+    </div>
+  </div>
   <div id="pc-cat" class="pct" style="display:none">
     <div class="card">
       <h2 id="catTitle">Nuevo producto</h2>
@@ -407,7 +431,7 @@ td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
 
 <script>
 /* ================= ESTADO ================= */
-const VERSION='v0.14';
+const VERSION='v0.15';
 const CATALOGO=[
  {id:'CAT-01',cliente:'Don Yeyo',medida:'321x300',anchoPet:350,espPet:250,anchoPe:370,espPe:50,anchoFinal:321,tiras:1,pesoBobinaPet:92,metrosBobinaPet:762,pesoBobinaPe:26,metrosBobinaPe:1550,pesoBobinaFinal:35,cilindro:340},
  {id:'CAT-02',cliente:'Molinos',medida:'472x235',anchoPet:500,espPet:200,anchoPe:530,espPe:35,anchoFinal:472,tiras:1,pesoBobinaPet:80,metrosBobinaPet:592,pesoBobinaPe:32,metrosBobinaPe:1900,pesoBobinaFinal:40,cilindro:490},
@@ -431,7 +455,7 @@ const CATALOGO=[
  {id:'CAT-20',cliente:'BarielPack',medida:'520x350',anchoPet:550,espPet:300,anchoPe:570,espPe:50,anchoFinal:520,tiras:1,pesoBobinaPet:92,metrosBobinaPet:413,pesoBobinaPe:37.92,metrosBobinaPe:1700,pesoBobinaFinal:31,cilindro:540},
  {id:'CAT-21',cliente:'BarielPack',medida:'520x600',anchoPet:550,espPet:550,anchoPe:570,espPe:50,anchoFinal:520,tiras:1,pesoBobinaPet:92,metrosBobinaPet:226,pesoBobinaPe:24.6,metrosBobinaPe:946,pesoBobinaFinal:45,cilindro:540}
 ];
-const EMPTY=()=>({ocs:[],laminadas:[],ops:[],finales:[],catalogo:CATALOGO.map(p=>({...p})),params:{t1:'06:00-14:00',t2:'14:00-22:00',t3:'',khLam:null,khRef:null},operarios:[
+const EMPTY=()=>({ocs:[],laminadas:[],ops:[],finales:[],catalogo:CATALOGO.map(p=>({...p})),cronograma:[],params:{t1:'06:00-14:00',t2:'14:00-22:00',t3:'',khLam:null,khRef:null},operarios:[
  {n:'Matías',pin:'1205',rol:'admin'},{n:'Jonathan',pin:'3080',rol:'admin'},
  {n:'Alejandro Delelis',pin:'0035',rol:'tablet'},{n:'Juan Vera',pin:'0022',rol:'tablet'},{n:'Antonio Zayas',pin:'0059',rol:'tablet'},{n:'Juan Brest',pin:'0003',rol:'tablet'}],meta:{v:VERSION}});
 let S=EMPTY(), cfg=JSON.parse(localStorage.getItem('wr_cfg')||'{}'), who=null, mode='', curOP=null;
@@ -469,7 +493,7 @@ function local(){localStorage.setItem('wr_state',JSON.stringify(S))}
 function setSync(c){$('sync').className=c}
 let lastCount=null;function novedades(){const c=S.laminadas.length+S.finales.length;if(lastCount!=null&&c>lastCount&&(mode==='pc'||mode==='home'))toast(`+${c-lastCount} bobina(s) nueva(s) en planta`);lastCount=c}
 function mergeInto(base,inc){ // unión por id, gana updatedAt más nuevo
-  for(const k of ['ocs','laminadas','ops','finales','operarios','catalogo']){
+  for(const k of ['ocs','laminadas','ops','finales','operarios','catalogo','cronograma']){
     const key=k==='operarios'?'pin':'id';
     const map=new Map((base[k]||[]).map(x=>[x[key],x]));
     for(const x of (inc[k]||[])){const b=map.get(x[key]);if(!b||(x.updatedAt||'')>(b.updatedAt||''))map.set(x[key],x)}
@@ -477,6 +501,7 @@ function mergeInto(base,inc){ // unión por id, gana updatedAt más nuevo
   }
   base.operarios.forEach(o=>{if(!o.rol)o.rol='tablet'});
   if(!base.catalogo||!base.catalogo.length)base.catalogo=CATALOGO.map(p=>({...p}));
+  base.cronograma=(base.cronograma||[]).filter(x=>!x.del);
   if(inc.params&&(inc.params.updatedAt||'')>=(base.params?.updatedAt||''))base.params={...(base.params||{}),...inc.params};
   base.meta=inc.meta||base.meta;return base;
 }
@@ -538,6 +563,7 @@ function edit(title,fields,obj,onSave){
 }
 function edClose(){$('ed').classList.remove('show');edCtx=null}
 function edSave(){
+  if(edCtx&&edCtx.custom)return edCtx.save();
   const {fields,obj,onSave}=edCtx;const v={};
   for(const f of fields){let x=$('ed_'+f.k).value;if(f.t==='number')x=x===''?null:+x;else x=x.trim();if(f.up)x=x.toUpperCase();v[f.k]=x}
   Object.assign(obj,v,{updatedAt:now(),editadoPor:who});if(onSave)onSave(obj);save();edClose();toast('Guardado');
@@ -702,6 +728,63 @@ function exportCSV(){
   const a=document.createElement('a');a.href='data:text/csv;charset=utf-8,\uFEFF'+encodeURIComponent(rows.map(r=>r.join(';')).join('\n'));a.download='bobinas-finales.csv';a.click();
 }
 
+/* ================= CRONOGRAMA ================= */
+const MAQS=['Laminadora','Refiladora Verde','Refiladora Gris'];
+const DIAS=['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'];
+function lunes(d){const x=new Date(d+'T12:00');const w=(x.getDay()+6)%7;x.setDate(x.getDate()-w);return x.toISOString().slice(0,10)}
+function addD(d,n){const x=new Date(d+'T12:00');x.setDate(x.getDate()+n);return x.toISOString().slice(0,10)}
+function croDias(){const ini=$('croIni').value||lunes(now().slice(0,10));if(!$('croIni').value)$('croIni').value=ini;return Array.from({length:6},(_,i)=>addD(ini,i))}
+function croWeek(n){$('croIni').value=addD($('croIni').value||lunes(now().slice(0,10)),7*n);render()}
+function croHoy(){$('croIni').value=lunes(now().slice(0,10));render()}
+function croItems(fecha,maq){return S.cronograma.filter(c=>!c.del&&c.fecha===fecha&&c.maq===maq).sort((a,b)=>(a.turno||'').localeCompare(b.turno||''))}
+function croLbl(c){const o=ocOf(c.ocId);return o.id?`${o.cliente} · OC ${o.nro}${o.desc?' · '+o.desc:''}`:(c.nota||'—')}
+function croAdd(fecha,maq){croForm({id:null,fecha:fecha||croDias()[0],maq:maq||MAQS[0],ocId:'',operario:'',turno:'Mañana',nota:''})}
+function croEditItem(id){const c=S.cronograma.find(x=>x.id===id);if(c)croForm({...c})}
+function croForm(c){
+  const ocs=S.ocs.filter(o=>o.estado==='abierta').sort((a,b)=>(a.fecha||'9')>(b.fecha||'9')?1:-1);
+  $('edTitle').textContent=c.id?'Editar asignación':'Asignar trabajo';
+  $('edFields').innerHTML=`
+   <div class="f"><label>Fecha</label><input id="cr_fecha" type="date" value="${c.fecha}"></div>
+   <div class="f"><label>Máquina</label><select id="cr_maq">${MAQS.map(m=>`<option ${m===c.maq?'selected':''}>${m}</option>`).join('')}</select></div>
+   <div class="f"><label>Turno</label><select id="cr_turno">${['Mañana','Tarde','Noche','Todo el día'].map(t=>`<option ${t===c.turno?'selected':''}>${t}</option>`).join('')}</select></div>
+   <div class="f" style="flex-basis:100%"><label>OC</label><select id="cr_oc"><option value="">— sin OC (mantenimiento, limpieza, etc.) —</option>${ocs.map(o=>`<option value="${o.id}" ${o.id===c.ocId?'selected':''}>${ocLbl(o)} · ${o.desc||''} · ${fmt(o.kg)} kg${o.fecha?' · entrega '+o.fecha.slice(8,10)+'/'+o.fecha.slice(5,7):''}</option>`).join('')}</select></div>
+   <div class="f"><label>Operario</label><select id="cr_op"><option value="">—</option>${S.operarios.map(o=>`<option ${o.n===c.operario?'selected':''}>${o.n}</option>`).join('')}</select></div>
+   <div class="f"><label>Nota / kg objetivo</label><input id="cr_nota" value="${c.nota||''}" placeholder="ej: 600 kg, cambiar cuchillas"></div>
+   ${c.id?`<div class="f" style="flex-basis:100%"><button class="btn bad" onclick="croDel('${c.id}')">Borrar asignación</button></div>`:''}`;
+  edCtx={custom:true,save:()=>{const v={fecha:$('cr_fecha').value,maq:$('cr_maq').value,turno:$('cr_turno').value,ocId:$('cr_oc').value,operario:$('cr_op').value,nota:$('cr_nota').value.trim(),updatedAt:now(),por:who};
+    if(!v.fecha)return toast('Falta la fecha');if(c.id){Object.assign(S.cronograma.find(x=>x.id===c.id),v)}else S.cronograma.push({id:uid('CRO'),...v});save();edClose();toast('Cronograma guardado')}};
+  $('ed').classList.add('show');
+}
+async function croDel(id){edClose();if(await confirmUI('¿Borrar la asignación?')){const c=S.cronograma.find(x=>x.id===id);c.del=true;c.updatedAt=now();save()}}
+function renderCro(){
+  const dias=croDias();const hoy=now().slice(0,10);
+  $('croGrid').innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><b style="font-size:17px;color:var(--brand)">Semana del ${dias[0].slice(8,10)}/${dias[0].slice(5,7)} al ${dias[5].slice(8,10)}/${dias[5].slice(5,7)}</b><span class="muted">Winflex · Laminado y Refilado</span></div>
+  <table style="table-layout:fixed"><thead><tr><th style="width:130px">Máquina</th>${dias.map((d,i)=>`<th style="${d===hoy?'background:var(--cerr)':''}">${DIAS[i]} ${d.slice(8,10)}/${d.slice(5,7)}</th>`).join('')}</tr></thead><tbody>
+  ${MAQS.map(m=>`<tr><td style="font-weight:700;color:var(--brand);vertical-align:top;white-space:normal">${m}</td>${dias.map(d=>{const it=croItems(d,m);return`<td style="vertical-align:top;white-space:normal;padding:6px;${d===hoy?'background:#f6fbf7':''}"><div style="min-height:60px;cursor:pointer" onclick="if(event.target===this)croAdd('${d}','${m}')">${it.map(c=>`<div onclick="croEditItem('${c.id}')" style="background:${c.ocId?'var(--ref)':'#fff1cc'};border-left:4px solid ${c.ocId?'var(--brand2)':'var(--warn)'};border-radius:6px;padding:5px 7px;margin-bottom:5px;font-size:12.5px;line-height:1.3;cursor:pointer"><b>${croLbl(c)}</b><br><span class="muted">${c.turno}${c.operario?' · '+c.operario:''}${c.nota?' · '+c.nota:''}</span></div>`).join('')}</div></td>`}).join('')}</tr>`).join('')}</tbody></table>`;
+  const v=$('croOp').value;$('croOp').innerHTML='<option value="">— elegir —</option>'+S.operarios.filter(o=>o.rol!=='admin').map(o=>`<option>${o.n}</option>`).join('');$('croOp').value=v;
+}
+function croPrint(){document.body.classList.add('print-cro');window.print();setTimeout(()=>document.body.classList.remove('print-cro'),500)}
+function croTexto(op){
+  const dias=croDias();let t=`*Winflex · Cronograma ${op?op:'semana'}*\nSemana del ${dias[0].slice(8,10)}/${dias[0].slice(5,7)}\n`;
+  dias.forEach((d,i)=>{const its=MAQS.flatMap(m=>croItems(d,m).filter(c=>!op||c.operario===op).map(c=>({m,c})));if(!its.length)return;t+=`\n*${DIAS[i]} ${d.slice(8,10)}/${d.slice(5,7)}*\n`;its.forEach(({m,c})=>{t+=`• ${m}: ${croLbl(c)} (${c.turno}${!op&&c.operario?' · '+c.operario:''}${c.nota?' · '+c.nota:''})\n`})});
+  return t;
+}
+function croWA(){const op=$('croOp').value;if(!op)return;const t=croTexto(op);window.open('https://wa.me/?text='+encodeURIComponent(t),'_blank');$('croOp').value=''}
+function croPNG(){
+  const dias=croDias(),W=1400,colW=(W-200)/6,rowH=[],pad=10;const ctx0=document.createElement('canvas').getContext('2d');ctx0.font='13px sans-serif';
+  const lines=MAQS.map(m=>dias.map(d=>croItems(d,m).flatMap(c=>[croLbl(c),'   '+c.turno+(c.operario?' · '+c.operario:'')+(c.nota?' · '+c.nota:'')])));
+  MAQS.forEach((m,i)=>rowH[i]=Math.max(70,Math.max(...lines[i].map(l=>l.length))*18+pad*2));
+  const H=90+40+rowH.reduce((a,b)=>a+b,0)+20;const cv=document.createElement('canvas');cv.width=W;cv.height=H;const g=cv.getContext('2d');
+  g.fillStyle='#fff';g.fillRect(0,0,W,H);const grad=g.createLinearGradient(0,0,W,0);grad.addColorStop(0,'#2ebb62');grad.addColorStop(1,'#0a6b3a');g.fillStyle=grad;g.fillRect(0,0,W,70);
+  g.fillStyle='#fff';g.font='bold 26px sans-serif';g.fillText('Winflex · Cronograma Laminado y Refilado',20,44);g.font='18px sans-serif';g.textAlign='right';g.fillText(`Semana del ${dias[0].slice(8,10)}/${dias[0].slice(5,7)} al ${dias[5].slice(8,10)}/${dias[5].slice(5,7)}`,W-20,44);g.textAlign='left';
+  let y=90;g.fillStyle='#f6faf7';g.fillRect(0,y,W,40);g.fillStyle='#0a6b3a';g.font='bold 16px sans-serif';g.fillText('Máquina',20,y+26);dias.forEach((d,i)=>g.fillText(`${DIAS[i]} ${d.slice(8,10)}/${d.slice(5,7)}`,200+i*colW+10,y+26));y+=40;
+  MAQS.forEach((m,r)=>{g.strokeStyle='#dfe6e0';g.beginPath();g.moveTo(0,y);g.lineTo(W,y);g.stroke();g.fillStyle='#0a6b3a';g.font='bold 15px sans-serif';g.fillText(m,20,y+24);
+    dias.forEach((d,i)=>{let yy=y+pad+14;const x=200+i*colW+10;g.strokeStyle='#dfe6e0';g.beginPath();g.moveTo(200+i*colW,y);g.lineTo(200+i*colW,y+rowH[r]);g.stroke();
+      croItems(d,m).forEach(c=>{g.fillStyle=c.ocId?'#e1f3e8':'#fff1cc';const bh=36;g.fillRect(x-4,yy-14,colW-12,bh);g.fillStyle='#2f3634';g.font='bold 13px sans-serif';g.fillText(croLbl(c).slice(0,32),x,yy);g.font='12px sans-serif';g.fillStyle='#6f7a74';g.fillText((c.turno+(c.operario?' · '+c.operario:'')+(c.nota?' · '+c.nota:'')).slice(0,36),x,yy+16);yy+=bh+6})});y+=rowH[r]});
+  const a=document.createElement('a');a.href=cv.toDataURL('image/png');a.download=`cronograma-${dias[0]}.png`;a.click();toast('Imagen descargada — compartila por WhatsApp');
+}
+function progHoy(maq){return croItems(now().slice(0,10),maq)}
+
 /* ================= PARÁMETROS ================= */
 function paramSave(){S.params={t1:$('cfgT1').value.trim(),t2:$('cfgT2').value.trim(),t3:$('cfgT3').value.trim(),khLam:+$('cfgKhLam').value||null,khRef:+$('cfgKhRef').value||null,updatedAt:now()};save();toast('Parámetros guardados')}
 function turnos(){const P=S.params||{};return [['Mañana',P.t1],['Tarde',P.t2],['Noche',P.t3]].filter(t=>t[1]&&/^\d\d:\d\d-\d\d:\d\d$/.test(t[1])).map(([n,r])=>{const [a,b]=r.split('-');const m=s=>+s.slice(0,2)*60+ +s.slice(3);return{n,ini:m(a),fin:m(b)}})}
@@ -771,6 +854,7 @@ function render(){
   if(mode==='lam'){
     const card=o=>{const k=ocKgs(o),lams=S.laminadas.filter(l=>l.ocId===o.id&&!l.resto),pct=o.kg?Math.min(100,k.lam/o.kg*100):0;
       return`<div class="pick" onclick="lamOpen('${o.id}')"><b>${ocLbl(o)}</b>${lams.length?` <span class="tag ref">en curso</span>`:''}<small>${o.desc||''} · ${o.ancho||'?'} mm · ${o.espPet?o.espPet+'+'+o.espPe:o.esp||'?'} µ${o.fecha?' · entrega '+o.fecha.slice(8,10)+'/'+o.fecha.slice(5,7):''}</small><small>${lams.length?`${lams.length} laminadas · <b>${fmt(k.lam)}</b> / ${fmt(o.kg)} kg (${fmt(pct)} %)`:`${fmt(o.kg)} kg pedidos`}</small>${lams.length?`<div class="bar"><i style="width:${pct}%"></i></div>`:''}</div>`};
+    const pl=progHoy('Laminadora');$('lamProg').style.display=pl.length?'':'none';$('lamProg').innerHTML=`<h3>Programado para hoy · Laminadora</h3>`+pl.map(c=>`<div class="pick" style="cursor:${c.ocId?'pointer':'default'};margin-bottom:8px" ${c.ocId?`onclick="lamOpen('${c.ocId}')"`:''}><b>${croLbl(c)}</b> <span class="tag ref">${c.turno}</span>${c.operario?` <span class="tag rem">${c.operario}</span>`:''}${c.nota?`<small>${c.nota}</small>`:''}</div>`).join('');
     const act=abiertas.filter(o=>!o.lamCompleto),conLam=act.filter(o=>S.laminadas.some(l=>l.ocId===o.id)),sinLam=act.filter(o=>!S.laminadas.some(l=>l.ocId===o.id));
     $('lamCurso').innerHTML=conLam.map(card).join('')||'<p class="muted">Ninguna OC empezada.</p>';
     $('lamCompl').innerHTML=abiertas.filter(o=>o.lamCompleto).map(o=>{const k=ocKgs(o);return`<div class="pick" style="border-left-color:#c9d2cc" onclick="lamReabrirOC('${o.id}')"><b>${ocLbl(o)}</b> <span class="tag cerr">completo</span><small>${o.desc||''} · ${fmt(k.lam)} / ${fmt(o.kg)} kg laminados</small></div>`}).join('')||'<p class="muted">—</p>';
@@ -783,12 +867,13 @@ function render(){
   }
   if(mode==='ref'){paintMaq();
     $('refCerr').innerHTML=S.ops.filter(op=>op.estado==='cerrada').sort((a,b)=>b.fin>a.fin?1:-1).slice(0,12).map(op=>{const o=ocOf(op.ocId),c=opCalc(op);return`<div class="pick" style="border-left-color:#c9d2cc" onclick="opReabrir('${op.id}')"><b>${ocLbl(o)}</b> <span class="tag rem">cerrada ${fd(op.fin)}</span><small>${o.desc||''} · ${c.fin.length} bobinas · ${fmt(c.kf)} kg finales</small></div>`}).join('')||'<p class="muted">—</p>';
+    const pr=maq?progHoy('Refiladora '+maq):[];$('refProg').innerHTML=pr.length?`<h3>Programado para hoy · Refiladora ${maq}</h3><div class="grid" style="margin-bottom:12px">`+pr.map(c=>`<div class="pick" style="border-left-color:var(--warn);cursor:${c.ocId?'pointer':'default'}" ${c.ocId?`onclick="opOpen('${c.ocId}')"`:''}><b>${croLbl(c)}</b> <span class="tag ref">${c.turno}</span>${c.operario?` <span class="tag rem">${c.operario}</span>`:''}${c.nota?`<small>${c.nota}</small>`:''}</div>`).join('')+'</div><h3>Todas las OC con laminadas</h3>':'';
     $('refPend').innerHTML=abiertas.map(o=>{const lams=S.laminadas.filter(l=>l.ocId===o.id),pend=lams.filter(l=>l.estado!=='cerrada'),op=opOf(o.id),kf=sum(S.finales.filter(f=>f.ocId===o.id),f=>f.kg);
     if(!lams.length&&!op)return '';
     return`<div class="pick" onclick="opOpen('${o.id}')"><b>${ocLbl(o)}</b> ${op?tagOf('abierta'):''}<small>${o.desc||''} · ${o.ancho||'?'} mm × ${o.esp||'?'} µ${o.tiras>1?' · '+o.tiras+' tiras':''}${o.mxb?' · '+o.mxb+' m/bob':''}${o.kxb?' · ~'+o.kxb+' kg/bob':''}</small><small>${pend.length} laminadas por refilar (${fmt(sum(pend,l=>l.kg))} kg) · <b>${fmt(kf)}</b> / ${fmt(o.kg)} kg finales</small><div class="bar"><i style="width:${o.kg?Math.min(100,kf/o.kg*100):0}%"></i></div></div>`}).join('')||'<p class="muted">No hay OC con bobinas laminadas para refilar.</p>';}
   if(mode==='op'&&curOP)renderOP();
   if(mode==='pc'){
-    renderProd();
+    renderProd();renderCro();
     const pv=$('ocProd').value;$('ocProd').innerHTML='<option value="">— elegir producto —</option>'+S.catalogo.slice().sort((a,b)=>a.cliente.localeCompare(b.cliente)).map(p=>`<option value="${p.id}">${prodLbl(p)}</option>`).join('');$('ocProd').value=pv;
     $('catList').innerHTML=S.catalogo.slice().sort((a,b)=>a.cliente.localeCompare(b.cliente)).map(p=>`<tr><td>${p.cliente}</td><td><b>${p.medida}</b></td><td class="n">${p.anchoPet??''}</td><td class="n">${p.espPet??''}</td><td class="n">${p.anchoPe??''}</td><td class="n">${p.espPe??''}</td><td class="n">${p.anchoFinal}</td><td class="n">${p.tiras||1}</td><td class="n">${p.pesoBobinaPet?p.pesoBobinaPet+' kg / '+(p.metrosBobinaPet||'?')+' m':'—'}</td><td class="n">${p.pesoBobinaPe?p.pesoBobinaPe+' kg / '+(p.metrosBobinaPe||'?')+' m':'—'}</td><td class="n">${p.pesoBobinaFinal?p.pesoBobinaFinal+' kg':'—'}</td><td class="n">${p.cilindro||'—'}</td><td class="n">${p.kgHoraLam||'—'}</td><td class="n">${p.kgHoraRef||'—'}</td><td><button class="btn sec" onclick="catEdit('${p.id}')">✎</button> <button class="btn sec" onclick="catDel('${p.id}')">✕</button></td></tr>`).join('');
     const sOC=$('qOC').value,eOC=$('qOCEst').value;
