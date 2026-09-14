@@ -148,6 +148,10 @@ td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
     <h2>Laminado · pendientes (sin empezar)</h2>
     <div class="grid" id="lamPendOC"></div>
   </div>
+  <div class="card">
+    <h3>Laminado completo (tocá para reabrir)</h3>
+    <div class="grid" id="lamCompl"></div>
+  </div>
 </section>
 
 <!-- LAMINADO (tablet): cargar bobinas de una OC -->
@@ -155,7 +159,7 @@ td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
   <div class="card">
     <h2 id="lamocTitle"></h2>
     <div class="kpi" id="lamocKpi"></div>
-    <div class="row" style="margin-top:10px"><button class="btn sec" onclick="go('lam')">← Cambiar de OC</button></div>
+    <div class="row" style="margin-top:10px"><button class="btn sec" onclick="go('lam')">← Cambiar de OC</button><button class="btn ok" id="btnLamCompleta" style="margin-left:auto" onclick="lamCompletar()">Laminado completo · cerrar para laminado</button></div>
   </div>
   <div class="card">
     <h3>Nueva bobina laminada</h3>
@@ -167,13 +171,14 @@ td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
       <div class="f"><label>Ancho bruto (mm)</label><input id="lamAncho" type="number" inputmode="numeric"></div>
       <div class="f"><label>Espesor (µ)</label><input id="lamEsp" type="number" inputmode="numeric"></div>
     </div>
+    <div class="row"><div class="f"><label>Observaciones (defecto, problema, etc. — opcional)</label><input id="lamObs" placeholder="ej: arrugas en el borde izquierdo, cambio de PE a mitad"></div></div>
     <input type="hidden" id="lamOC"><input type="hidden" id="lamMaq" value="Laminadora">
     <p class="muted" id="lamRef"></p><p id="lamAlerta" style="margin:4px 0;font-weight:600"></p>
     <div class="row" style="margin-top:10px"><button class="btn big" onclick="lamSave()">Guardar bobina laminada</button></div>
   </div>
   <div class="card">
     <h3>Bobinas laminadas de esta OC</h3>
-    <table><thead><tr><th>Fecha</th><th>Hora</th><th class="n">Nº</th><th>Partida</th><th class="n">Kg</th><th class="n">m</th><th class="n">Ancho</th><th>Operario</th><th>Estado</th><th></th></tr></thead><tbody id="lamHoy"></tbody></table>
+    <table><thead><tr><th>Fecha</th><th>Hora</th><th class="n">Nº lam.</th><th>Partida</th><th class="n">Kg</th><th class="n">m</th><th class="n">Ancho</th><th>Operario</th><th>Obs.</th><th>Estado</th><th></th></tr></thead><tbody id="lamHoy"></tbody></table>
   </div>
 </section>
 
@@ -187,6 +192,10 @@ td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
       <button class="btn sec" id="maqGris" onclick="setMaq('Gris')">Gris</button>
     </div>
     <div class="grid" id="refPend"></div>
+  </div>
+  <div class="card">
+    <h3>OPs cerradas (tocá para reabrir)</h3>
+    <div class="grid" id="refCerr"></div>
   </div>
 </section>
 
@@ -303,7 +312,7 @@ td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
   <div id="pc-lam" class="pct" style="display:none">
     <div class="card">
       <div class="row noprint" style="margin-bottom:10px"><div class="f" style="max-width:320px"><label>Buscar (cliente, OC, partida, operario)</label><input id="qLam" oninput="render()"></div><div class="f" style="max-width:200px"><label>Estado</label><select id="qLamEst" onchange="render()"><option value="">Todos</option><option>pendiente</option><option>en refilado</option><option>cerrada</option></select></div></div>
-      <table><thead><tr><th>Fecha</th><th>Cliente / OC</th><th>Partida</th><th class="n">Nº</th><th class="n">Kg</th><th class="n">m</th><th class="n">Ancho</th><th class="n">Esp</th><th>Operario</th><th>Estado</th><th></th></tr></thead><tbody id="pcLam"></tbody></table>
+      <div id="pcLam"></div>
     </div>
   </div>
   <div id="pc-fin" class="pct" style="display:none">
@@ -326,6 +335,8 @@ td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
   </div>
   <div id="pc-ops" class="pct" style="display:none">
     <div class="card">
+      <h2>OPs de refilado · historial y balance por OC</h2>
+      <p class="muted" style="margin:0 0 12px">Cada fila es una OP de refilado (una por OC, se abre sola cuando el refilador toca la OC por primera vez). Muestra el balance de masa acumulado: kg laminados que entraron, cuántas laminadas ya se cerraron, bobinas y kg finales, trim, scrap, resto y la <b>diferencia sin justificar</b> (rojo si supera el 2 %). El rendimiento es kg finales / kg laminados. Sirve para ver cuánto material se perdió en cada OC y quién la trabajó.</p>
       <table><thead><tr><th>Inicio</th><th>Cliente / OC</th><th>Operario</th><th class="n">Laminadas</th><th class="n">Kg laminados</th><th class="n">Bob. finales</th><th class="n">Kg finales</th><th class="n">Trim</th><th class="n">Scrap</th><th class="n">Resto</th><th class="n">Dif</th><th class="n">Rend.</th><th class="n">Paradas</th><th>Estado</th><th></th></tr></thead><tbody id="pcOps"></tbody></table>
     </div>
   </div>
@@ -396,7 +407,7 @@ td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
 
 <script>
 /* ================= ESTADO ================= */
-const VERSION='v0.13';
+const VERSION='v0.14';
 const CATALOGO=[
  {id:'CAT-01',cliente:'Don Yeyo',medida:'321x300',anchoPet:350,espPet:250,anchoPe:370,espPe:50,anchoFinal:321,tiras:1,pesoBobinaPet:92,metrosBobinaPet:762,pesoBobinaPe:26,metrosBobinaPe:1550,pesoBobinaFinal:35,cilindro:340},
  {id:'CAT-02',cliente:'Molinos',medida:'472x235',anchoPet:500,espPet:200,anchoPe:530,espPe:35,anchoFinal:472,tiras:1,pesoBobinaPet:80,metrosBobinaPet:592,pesoBobinaPe:32,metrosBobinaPe:1900,pesoBobinaFinal:40,cilindro:490},
@@ -434,7 +445,7 @@ const ocOf=id=>S.ocs.find(o=>o.id===id)||{};
 const ocLbl=o=>o.cliente?`${o.cliente} · OC ${o.nro}`:'—';
 const lamLbl=l=>`L${l.nro} · ${l.partida}`;
 const finLbl=f=>`bob ${f.nro}`;
-let curLam=null;let maq=sessionStorage.getItem('wr_maq')||'';
+let curLam=null;const openOC=new Set();let maq=sessionStorage.getItem('wr_maq')||'';
 const sum=(a,f)=>a.reduce((t,x)=>t+(+f(x)||0),0);
 const minsAgo=iso=>Math.round((Date.now()-new Date(iso))/60000);
 const agoLbl=iso=>{const m=minsAgo(iso);return m<1?'recién':m<60?`hace ${m} min`:m<1440?`hace ${Math.floor(m/60)} h ${m%60} min`:`hace ${Math.floor(m/1440)} d`};
@@ -568,6 +579,9 @@ async function ocDel(id){if(S.laminadas.some(l=>l.ocId===id))return toast('Tiene
 
 /* ================= LAMINADO ================= */
 function refLam(p){if(!p||!p.pesoBobinaPet)return null;const pe=p.pesoBobinaPe&&p.metrosBobinaPe&&p.metrosBobinaPet?p.pesoBobinaPe*p.metrosBobinaPet/p.metrosBobinaPe:0;return p.pesoBobinaPet+pe}
+async function lamCheckCompleta(oc){const k=ocKgs(oc);if(oc.kg&&k.lam>=oc.kg&&!oc.lamCompleto){if(await confirmUI(`Ya laminaste <b>${fmt(k.lam)} kg</b> de los <b>${fmt(oc.kg)}</b> pedidos. ¿Dar el laminado de esta OC por completo? Deja de aparecer en la lista del laminador (el refilado sigue).`)){oc.lamCompleto=true;oc.lamCompletoAt=now();oc.updatedAt=now();save();go('lam')}}}
+async function lamCompletar(){const oc=ocOf($('lamOC').value),k=ocKgs(oc);if(await confirmUI(`Laminados <b>${fmt(k.lam)} kg</b> de <b>${fmt(oc.kg)}</b>. ¿Dar el laminado por completo?`)){oc.lamCompleto=true;oc.lamCompletoAt=now();oc.updatedAt=now();save();go('lam')}}
+async function lamReabrirOC(ocId){const oc=ocOf(ocId);if(await confirmUI(`¿Reabrir el laminado de ${ocLbl(oc)}? Vuelve a aparecer en la lista para cargar más bobinas.`)){oc.lamCompleto=false;oc.updatedAt=now();save()}}
 function lamOpen(ocId){$('lamOC').value=ocId;$('lamPartida').value='';lamOCChange();go('lamoc')}
 function lamOCChange(){
   const o=ocOf($('lamOC').value);
@@ -583,8 +597,8 @@ function lamSave(){
   if(!oc.id)return toast('Elegí la OC');if(!p)return toast('Falta la partida');
   const kg=+$('lamKg').value;if(!kg)return toast('Falta el peso');
   const nro=S.laminadas.filter(l=>l.ocId===oc.id).reduce((m,l)=>Math.max(m,l.nro),0)+1;
-  S.laminadas.push({id:uid('LAM'),ocId:oc.id,partida:p,nro,kg,m:+$('lamM').value,ancho:+$('lamAncho').value,esp:+$('lamEsp').value,maq:$('lamMaq').value,operario:who,estado:'pendiente',createdAt:now(),updatedAt:now()});
-  save();['lamKg','lamM'].forEach(i=>$(i).value='');lamNro();toast(`Laminada L${nro} guardada`);
+  S.laminadas.push({id:uid('LAM'),ocId:oc.id,partida:p,nro,kg,m:+$('lamM').value,ancho:+$('lamAncho').value,esp:+$('lamEsp').value,maq:$('lamMaq').value,obs:$('lamObs').value.trim(),operario:who,estado:'pendiente',createdAt:now(),updatedAt:now()});
+  save();['lamKg','lamM','lamObs'].forEach(i=>$(i).value='');lamNro();toast(`Laminada L${nro} guardada`);lamCheckCompleta(oc);
 }
 async function lamDel(id){const l=S.laminadas.find(x=>x.id===id);
   if(S.finales.some(f=>f.lamId===id))return toast('Tiene bobinas finales, borralas primero');
@@ -592,7 +606,7 @@ async function lamDel(id){const l=S.laminadas.find(x=>x.id===id);
   if(await confirmUI(`¿Borrar la laminada ${lamLbl(l)}?`)){S.laminadas=S.laminadas.filter(x=>x.id!==id);if(curLam===id)curLam=null;save()}}
 function lamEdit(id){const l=S.laminadas.find(x=>x.id===id);
   if(l.estado!=='pendiente'&&!isAdmin())return toast('Ya está en refilado, solo Administración puede editarla');
-  const f=[{k:'partida',l:'Partida',up:true},{k:'kg',l:'Kg',t:'number'},{k:'m',l:'Metros',t:'number'},{k:'ancho',l:'Ancho bruto (mm)',t:'number'},{k:'esp',l:'Espesor (µ)',t:'number'}];
+  const f=[{k:'partida',l:'Partida',up:true},{k:'kg',l:'Kg',t:'number'},{k:'m',l:'Metros',t:'number'},{k:'ancho',l:'Ancho bruto (mm)',t:'number'},{k:'esp',l:'Espesor (µ)',t:'number'},{k:'obs',l:'Observaciones'}];
   if(isAdmin()&&l.estado==='cerrada')f.push({k:'trim',l:'Trim (kg)',t:'number'},{k:'scrap',l:'Scrap (kg)',t:'number'},{k:'resto',l:'Resto (kg)',t:'number'});
   edit('Editar laminada '+lamLbl(l),f,l,x=>{if(x.estado==='cerrada'){const kf=sum(S.finales.filter(q=>q.lamId===x.id),q=>q.kg);x.dif=x.kg-kf-(+x.trim||0)-(+x.scrap||0)-(+x.resto||0)}})}
 async function lamReabrir(id){const l=S.laminadas.find(x=>x.id===id);if(!isAdmin())return toast('Solo Administración');if(await confirmUI(`¿Reabrir la laminada ${lamLbl(l)}? Vuelve a "en refilado".`)){l.estado='en refilado';l.updatedAt=now();save()}}
@@ -656,7 +670,10 @@ async function lamCerrar(){
   if(c.resto>0&&$('cRestoDest').value==='stock'){const nro=S.laminadas.filter(x=>x.ocId===l.ocId).reduce((m,x)=>Math.max(m,x.nro),0)+1;S.laminadas.push({...l,id:uid('LAM'),nro,kg:c.resto,m:0,estado:'pendiente',resto:true,origen:l.id,trim:undefined,scrap:undefined,dif:undefined,refFin:undefined,createdAt:now(),updatedAt:now()})}
   save();curLam=null;toast(`Laminada L${l.nro} cerrada`);renderOP();window.scrollTo(0,0);
 }
-async function opReabrir(id){const op=S.ops.find(o=>o.id===id);if(opOf(op.ocId))return toast('Esa OC ya tiene otra OP abierta');if(await confirmUI('¿Reabrir la OP?')){op.estado='abierta';op.fin=null;op.updatedAt=now();save()}}
+async function opReabrir(id){const op=S.ops.find(o=>o.id===id),oc=ocOf(op.ocId);if(opOf(op.ocId))return toast('Esa OC ya tiene otra OP abierta');
+  if(!await confirmUI(`¿Estás seguro de <b>reabrir</b> la OP de ${ocLbl(oc)}? Se cerró el ${fd(op.fin)} ${fh(op.fin)} por ${op.operario||''}.`))return;
+  if(!await confirmUI('Confirmá otra vez: la OP vuelve a estado abierta y se puede seguir cargando bobinas.'))return;
+  op.estado='abierta';op.fin=null;op.reabiertaPor=who;op.reabiertaAt=now();op.updatedAt=now();save();if(mode==='ref'){curOP=op.id;curLam=null;go('op')}}
 async function opDel(id){const op=S.ops.find(o=>o.id===id);if(S.finales.some(f=>f.opId===id))return toast('La OP tiene bobinas finales, no se puede borrar');
   if(await confirmUI('¿Borrar la OP? Las laminadas "en refilado" vuelven a pendiente.')){S.laminadas.filter(l=>l.ocId===op.ocId&&l.estado==='en refilado').forEach(l=>{l.estado='pendiente';l.refMaq=null;l.updatedAt=now()});S.ops=S.ops.filter(o=>o.id!==id);save()}}
 async function opCerrar(){
@@ -754,16 +771,19 @@ function render(){
   if(mode==='lam'){
     const card=o=>{const k=ocKgs(o),lams=S.laminadas.filter(l=>l.ocId===o.id&&!l.resto),pct=o.kg?Math.min(100,k.lam/o.kg*100):0;
       return`<div class="pick" onclick="lamOpen('${o.id}')"><b>${ocLbl(o)}</b>${lams.length?` <span class="tag ref">en curso</span>`:''}<small>${o.desc||''} · ${o.ancho||'?'} mm · ${o.espPet?o.espPet+'+'+o.espPe:o.esp||'?'} µ${o.fecha?' · entrega '+o.fecha.slice(8,10)+'/'+o.fecha.slice(5,7):''}</small><small>${lams.length?`${lams.length} laminadas · <b>${fmt(k.lam)}</b> / ${fmt(o.kg)} kg (${fmt(pct)} %)`:`${fmt(o.kg)} kg pedidos`}</small>${lams.length?`<div class="bar"><i style="width:${pct}%"></i></div>`:''}</div>`};
-    const conLam=abiertas.filter(o=>S.laminadas.some(l=>l.ocId===o.id)),sinLam=abiertas.filter(o=>!S.laminadas.some(l=>l.ocId===o.id));
+    const act=abiertas.filter(o=>!o.lamCompleto),conLam=act.filter(o=>S.laminadas.some(l=>l.ocId===o.id)),sinLam=act.filter(o=>!S.laminadas.some(l=>l.ocId===o.id));
     $('lamCurso').innerHTML=conLam.map(card).join('')||'<p class="muted">Ninguna OC empezada.</p>';
+    $('lamCompl').innerHTML=abiertas.filter(o=>o.lamCompleto).map(o=>{const k=ocKgs(o);return`<div class="pick" style="border-left-color:#c9d2cc" onclick="lamReabrirOC('${o.id}')"><b>${ocLbl(o)}</b> <span class="tag cerr">completo</span><small>${o.desc||''} · ${fmt(k.lam)} / ${fmt(o.kg)} kg laminados</small></div>`}).join('')||'<p class="muted">—</p>';
     $('lamPendOC').innerHTML=sinLam.map(card).join('')||'<p class="muted">No hay OC pendientes.</p>';
   }
   if(mode==='lamoc'){const o=ocOf($('lamOC').value),k=ocKgs(o),lams=S.laminadas.filter(l=>l.ocId===o.id&&!l.resto);
-    $('lamocTitle').textContent=`${ocLbl(o)} · ${o.desc||''}`;
+    $('lamocTitle').textContent=`${ocLbl(o)} · ${o.desc||''}`;$('btnLamCompleta').style.display=o.lamCompleto?'none':'';
     $('lamocKpi').innerHTML=`<div><b>${fmt(o.kg)}</b><span>kg pedidos</span></div><div><b>${fmt(k.lam)}</b><span>kg laminados</span></div><div><b>${fmt(Math.max(0,o.kg-k.lam))}</b><span>kg faltan</span></div><div><b>${lams.length}</b><span>laminadas</span></div><div><b>${o.ancho||'?'} mm</b><span>ancho final · ${o.espPet?o.espPet+'+'+o.espPe:o.esp||'?'} µ</span></div>`;
-    $('lamHoy').innerHTML=S.laminadas.filter(l=>l.ocId===o.id).sort((a,b)=>b.nro-a.nro).map(l=>`<tr><td>${fd(l.createdAt)}</td><td>${fh(l.createdAt)}</td><td class="n">L${l.nro}${l.resto?' (resto)':''}</td><td>${l.partida}</td><td class="n">${fmt(l.kg)}</td><td class="n">${l.m||''}</td><td class="n">${l.ancho||''}</td><td>${l.operario||''}</td><td>${tagOf(l.estado)}</td><td>${l.estado==='pendiente'||isAdmin()?`<button class="btn sec" onclick="lamEdit('${l.id}')">✎</button> <button class="btn sec" onclick="lamDel('${l.id}')">✕</button>`:''}</td></tr>`).join('')||'<tr><td colspan="10" class="muted">Todavía no hay bobinas laminadas en esta OC.</td></tr>';
+    $('lamHoy').innerHTML=S.laminadas.filter(l=>l.ocId===o.id).sort((a,b)=>b.nro-a.nro).map(l=>`<tr><td>${fd(l.createdAt)}</td><td>${fh(l.createdAt)}</td><td class="n">L${l.nro}${l.resto?' (resto)':''}</td><td>${l.partida}</td><td class="n">${fmt(l.kg)}</td><td class="n">${l.m||''}</td><td class="n">${l.ancho||''}</td><td>${l.operario||''}</td><td style="white-space:normal;max-width:200px">${l.obs?'⚠️ '+l.obs:''}</td><td>${tagOf(l.estado)}</td><td>${l.estado==='pendiente'||isAdmin()?`<button class="btn sec" onclick="lamEdit('${l.id}')">✎</button> <button class="btn sec" onclick="lamDel('${l.id}')">✕</button>`:''}</td></tr>`).join('')||'<tr><td colspan="11" class="muted">Todavía no hay bobinas laminadas en esta OC.</td></tr>';
   }
-  if(mode==='ref'){paintMaq();$('refPend').innerHTML=abiertas.map(o=>{const lams=S.laminadas.filter(l=>l.ocId===o.id),pend=lams.filter(l=>l.estado!=='cerrada'),op=opOf(o.id),kf=sum(S.finales.filter(f=>f.ocId===o.id),f=>f.kg);
+  if(mode==='ref'){paintMaq();
+    $('refCerr').innerHTML=S.ops.filter(op=>op.estado==='cerrada').sort((a,b)=>b.fin>a.fin?1:-1).slice(0,12).map(op=>{const o=ocOf(op.ocId),c=opCalc(op);return`<div class="pick" style="border-left-color:#c9d2cc" onclick="opReabrir('${op.id}')"><b>${ocLbl(o)}</b> <span class="tag rem">cerrada ${fd(op.fin)}</span><small>${o.desc||''} · ${c.fin.length} bobinas · ${fmt(c.kf)} kg finales</small></div>`}).join('')||'<p class="muted">—</p>';
+    $('refPend').innerHTML=abiertas.map(o=>{const lams=S.laminadas.filter(l=>l.ocId===o.id),pend=lams.filter(l=>l.estado!=='cerrada'),op=opOf(o.id),kf=sum(S.finales.filter(f=>f.ocId===o.id),f=>f.kg);
     if(!lams.length&&!op)return '';
     return`<div class="pick" onclick="opOpen('${o.id}')"><b>${ocLbl(o)}</b> ${op?tagOf('abierta'):''}<small>${o.desc||''} · ${o.ancho||'?'} mm × ${o.esp||'?'} µ${o.tiras>1?' · '+o.tiras+' tiras':''}${o.mxb?' · '+o.mxb+' m/bob':''}${o.kxb?' · ~'+o.kxb+' kg/bob':''}</small><small>${pend.length} laminadas por refilar (${fmt(sum(pend,l=>l.kg))} kg) · <b>${fmt(kf)}</b> / ${fmt(o.kg)} kg finales</small><div class="bar"><i style="width:${o.kg?Math.min(100,kf/o.kg*100):0}%"></i></div></div>`}).join('')||'<p class="muted">No hay OC con bobinas laminadas para refilar.</p>';}
   if(mode==='op'&&curOP)renderOP();
@@ -774,7 +794,11 @@ function render(){
     const sOC=$('qOC').value,eOC=$('qOCEst').value;
     $('ocList').innerHTML=S.ocs.slice().reverse().filter(o=>(!eOC||o.estado===eOC)&&q(sOC,o.cliente+' '+o.nro+' '+(o.desc||''))).map(o=>{const k=ocAvance(o),d=diasA(o.fecha);return`<tr><td>${o.cliente}</td><td>${o.nro}</td><td>${o.desc||''}</td><td class="n">${o.ancho||''}</td><td class="n">${o.espPet?o.espPet+'+'+o.espPe:o.esp||''}</td><td class="n">${o.mxb||''}</td><td class="n">${fmt(o.kg)}</td><td class="n">${fmt(k.lam)}</td><td class="n">${fmt(k.fin)}</td><td class="n">${fmt(k.rem)}</td><td style="min-width:120px"><div class="bar" style="height:7px;background:#e6ede8;border-radius:4px;overflow:hidden;position:relative"><i style="position:absolute;left:0;top:0;height:100%;width:${k.pctLam}%;background:#bfe3cc"></i><i style="position:absolute;left:0;top:0;height:100%;width:${k.pctFin}%;background:var(--brand3)"></i><i style="position:absolute;left:0;top:0;height:100%;width:${k.pctRem}%;background:var(--brand)"></i></div><span class="muted" style="font-size:11px">L ${fmt(k.pctLam)} % · F ${fmt(k.pctFin)} % · R ${fmt(k.pctRem)} %</span></td><td>${o.fecha?`${o.fecha.slice(8,10)}/${o.fecha.slice(5,7)} <span class="tag ${d<0?'rem':d<=3?'pend':'cerr'}" style="${d<0?'background:#fde3e1;color:var(--bad)':''}">${d<0?-d+' d atrasada':d===0?'hoy':'en '+d+' d'}</span>`:''}</td><td>${tagOf(o.estado)}</td><td><button class="btn sec" onclick="ocEdit('${o.id}')">✎</button> <button class="btn sec" onclick="ocToggle('${o.id}')">${o.estado==='abierta'?'Cerrar':'Reabrir'}</button> <button class="btn sec" onclick="ocDel('${o.id}')">✕</button></td></tr>`}).join('');
     const sL=$('qLam').value,eL=$('qLamEst').value;
-    $('pcLam').innerHTML=S.laminadas.slice().reverse().filter(l=>(!eL||l.estado===eL)&&q(sL,ocLbl(ocOf(l.ocId))+' '+l.partida+' '+(l.operario||'')+' L'+l.nro)).map(l=>`<tr><td>${fd(l.createdAt)}</td><td>${ocLbl(ocOf(l.ocId))}</td><td>${l.partida}</td><td class="n">${l.nro}${l.resto?' (resto)':''}</td><td class="n">${fmt(l.kg)}</td><td class="n">${l.m||''}</td><td class="n">${l.ancho||''}</td><td class="n">${l.esp||''}</td><td>${l.operario||''}</td><td>${tagOf(l.estado)}</td><td><button class="btn sec" onclick="lamEdit('${l.id}')">✎</button> ${l.estado==='cerrada'?`<button class="btn sec" onclick="lamReabrir('${l.id}')">Reabrir</button> `:''}<button class="btn sec" onclick="lamDel('${l.id}')">✕</button></td></tr>`).join('');
+    const lamsF=S.laminadas.filter(l=>(!eL||l.estado===eL)&&q(sL,ocLbl(ocOf(l.ocId))+' '+l.partida+' '+(l.operario||'')+' L'+l.nro+' '+(l.obs||'')));
+    const grupos=[...new Set(lamsF.map(l=>l.ocId))].map(id=>ocOf(id)).sort((a,b)=>(a.estado>b.estado?1:-1)||(b.createdAt>a.createdAt?1:-1));
+    $('pcLam').innerHTML=grupos.map(o=>{const ls=lamsF.filter(l=>l.ocId===o.id).sort((a,b)=>b.nro-a.nro),pend=ls.filter(l=>l.estado==='pendiente').length,open=openOC.has(o.id)||!!sL;
+      return`<details ${open?'open':''} ontoggle="openOC[this.open?'add':'delete']('${o.id}')" style="border:1px solid var(--line);border-radius:10px;margin-bottom:8px;background:#fff"><summary style="cursor:pointer;padding:10px 14px;display:flex;gap:14px;align-items:center;flex-wrap:wrap;list-style:none"><b style="color:var(--brand);font-size:16px">▸ ${ocLbl(o)}</b><span class="muted">${o.desc||''}</span>${tagOf(o.estado)}<span style="margin-left:auto" class="muted">${ls.length} laminadas · ${fmt(sum(ls,l=>l.kg))} kg${pend?` · <span class="tag pend">${pend} pendientes</span>`:''}</span></summary>
+      <div style="padding:0 10px 10px"><table><thead><tr><th>Fecha</th><th>Hora</th><th class="n">Nº lam.</th><th>Partida</th><th class="n">Kg</th><th class="n">m</th><th class="n">Ancho</th><th class="n">Esp</th><th>Operario</th><th>Obs.</th><th>Estado</th><th></th></tr></thead><tbody>${ls.map(l=>`<tr><td>${fd(l.createdAt)}</td><td>${fh(l.createdAt)}</td><td class="n">L${l.nro}${l.resto?' (resto)':''}</td><td>${l.partida}</td><td class="n">${fmt(l.kg)}</td><td class="n">${l.m||''}</td><td class="n">${l.ancho||''}</td><td class="n">${l.esp||''}</td><td>${l.operario||''}</td><td style="white-space:normal;max-width:220px">${l.obs?'⚠️ '+l.obs:''}</td><td>${tagOf(l.estado)}</td><td><button class="btn sec" onclick="lamEdit('${l.id}')">✎</button> ${l.estado==='cerrada'?`<button class="btn sec" onclick="lamReabrir('${l.id}')">Reabrir</button> `:''}<button class="btn sec" onclick="lamDel('${l.id}')">✕</button></td></tr>`).join('')}</tbody></table></div></details>`}).join('')||'<p class="muted">Sin bobinas laminadas.</p>';
     const v=$('remOC').value;$('remOC').innerHTML=`<option value="">Todas las OC</option>`+S.ocs.map(o=>`<option value="${o.id}">${ocLbl(o)}</option>`).join('');$('remOC').value=v;
     renderFin();
     $('pcOps').innerHTML=S.ops.slice().reverse().map(op=>{const c=opCalc(op);return`<tr><td>${fd(op.inicio)}</td><td>${ocLbl(ocOf(op.ocId))}</td><td>${op.operario}</td><td class="n">${c.cerr.length}/${c.lams.length}</td><td class="n">${fmt(c.kl)}</td><td class="n">${c.fin.length}</td><td class="n">${fmt(c.kf)}</td><td class="n">${fmt(c.trim)}</td><td class="n">${fmt(c.scrap)}</td><td class="n">${fmt(c.resto)}</td><td class="n bal ${c.kl&&Math.abs(c.dif)/c.kl>0.02?'bad':'ok'}">${fmt(c.dif)}</td><td class="n">${fmt(c.rend)} %</td><td class="n">${op.paradas.length?op.paradas.length+' / '+sum(op.paradas,p=>p.min)+' min':''}</td><td>${tagOf(op.estado)}</td><td>${op.estado==='cerrada'?`<button class="btn sec" onclick="opReabrir('${op.id}')">Reabrir</button> `:''}<button class="btn sec" onclick="opDel('${op.id}')">✕</button></td></tr>`}).join('');
@@ -789,7 +813,7 @@ function renderOP(){
   $('opTitle').textContent=`OP · ${ocLbl(o)} · ${o.desc||''} · Refiladora ${maq}`;
   $('opKpi').innerHTML=`<div><b>${fmt(o.kg)}</b><span>kg pedidos</span></div><div><b>${fmt(c.kl)}</b><span>kg laminados</span></div><div><b>${c.fin.length}</b><span>bobinas finales</span></div><div><b>${fmt(c.kf)}</b><span>kg finales</span></div><div><b>${c.cerr.length}/${c.lams.length}</b><span>laminadas cerradas</span></div><div><b>${o.ancho||'?'} mm</b><span>ancho final${o.mxb?' · '+o.mxb+' m/bob':''}</span></div>`;
   $('opPar').innerHTML=op.paradas.map((p,i)=>`${fh(p.t)} ${p.mot} (${p.min} min${p.maq?' · '+p.maq:''}) <a href="#" onclick="paradaDel('${op.id}',${i});return false">✕</a>`).join(' · ')||'Sin paradas.';
-  $('opLams').innerHTML=S.laminadas.filter(l=>l.ocId===op.ocId).sort((a,b)=>a.nro-b.nro).map(l=>{const k=lamCalc(l);return`<div class="pick" style="${l.id===curLam?'border-color:var(--brand2);background:#f6fbf7':''}" onclick="lamSel('${l.id}')"><b>${lamLbl(l)}</b> ${tagOf(l.estado)}${l.refMaq&&l.estado!=='pendiente'?` <span class="tag ref">${l.refMaq}</span>`:''}${l.resto?' <span class="tag pend">resto</span>':''}<small>${fmt(l.kg)} kg · ${l.m||'?'} m · ${l.ancho||'?'} mm</small><small>${k.fin.length} finales · ${fmt(k.kf)} kg${l.estado==='cerrada'?' · dif '+fmt(l.dif)+' kg':''}</small></div>`}).join('')||'<p class="muted">Esta OC todavía no tiene bobinas laminadas.</p>';
+  $('opLams').innerHTML=S.laminadas.filter(l=>l.ocId===op.ocId).sort((a,b)=>a.nro-b.nro).map(l=>{const k=lamCalc(l);return`<div class="pick" style="${l.id===curLam?'border-color:var(--brand2);background:#f6fbf7':''}" onclick="lamSel('${l.id}')"><b>${lamLbl(l)}</b> ${tagOf(l.estado)}${l.refMaq&&l.estado!=='pendiente'?` <span class="tag ref">${l.refMaq}</span>`:''}${l.resto?' <span class="tag pend">resto</span>':''}<small>${fmt(l.kg)} kg · ${l.m||'?'} m · ${l.ancho||'?'} mm</small><small>${k.fin.length} finales · ${fmt(k.kf)} kg${l.estado==='cerrada'?' · dif '+fmt(l.dif)+' kg':''}</small>${l.obs?`<small style="color:var(--warn)">⚠️ ${l.obs}</small>`:''}</div>`}).join('')||'<p class="muted">Esta OC todavía no tiene bobinas laminadas.</p>';
   const l=S.laminadas.find(x=>x.id===curLam);
   $('lamPanel').style.display=l?'':'none';if(!l)return;
   const k=lamCalc(l,true),bad=Math.abs(k.dif)/l.kg>0.02;
