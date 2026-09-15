@@ -448,14 +448,15 @@ td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
     <h2>Configuración</h2>
     <div class="row">
       <div class="f"><label>JSONBin · Bin ID</label><input id="cfgBin"></div>
-      <div class="f"><label>JSONBin · X-Master-Key</label><input id="cfgKey" type="password"></div>
+      <div class="f"><label>JSONBin · clave</label><input id="cfgKey" type="password"></div>
+      <div class="f" style="max-width:180px"><label>Tipo de clave</label><select id="cfgKeyType"><option value="master">Master Key</option><option value="access">Access Key</option></select></div>
     </div>
     <div class="row" style="margin-top:10px">
       <button class="btn" onclick="cfgSave()">Guardar y conectar</button>
       <button class="btn sec" onclick="loadRemote(true)">Recargar desde JSONBin</button>
       <button class="btn sec" onclick="exportJSON()">Backup JSON</button>
     </div>
-    <p class="muted">Sin credenciales la app trabaja solo en este dispositivo (localStorage). Con Bin ID y clave sincroniza con JSONBin cada vez que se guarda algo y cada 30 s.</p>
+    <p class="muted">Las credenciales del bin winflex-refilado ya vienen cargadas: todos los dispositivos sincronizan solos. Solo cambiá esto si migrás a otro bin o a una Access Key.</p>
     <h3>Turnos y objetivos por defecto</h3>
     <div class="row">
       <div class="f"><label>Turno mañana (inicio–fin)</label><input id="cfgT1" placeholder="06:00-14:00"></div>
@@ -484,7 +485,7 @@ td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
 
 <script>
 /* ================= ESTADO ================= */
-const VERSION='v0.21';
+const VERSION='v0.22';
 const CATALOGO=[
  {id:'CAT-01',cliente:'Don Yeyo',medida:'321x300',anchoPet:350,espPet:250,anchoPe:370,espPe:50,anchoFinal:321,tiras:1,pesoBobinaPet:92,metrosBobinaPet:762,pesoBobinaPe:26,metrosBobinaPe:1550,pesoBobinaFinal:35,cilindro:340},
  {id:'CAT-02',cliente:'Molinos',medida:'472x235',anchoPet:500,espPet:200,anchoPe:530,espPe:35,anchoFinal:472,tiras:1,pesoBobinaPet:80,metrosBobinaPet:592,pesoBobinaPe:32,metrosBobinaPe:1900,pesoBobinaFinal:40,cilindro:490},
@@ -511,7 +512,10 @@ const CATALOGO=[
 const EMPTY=()=>({ocs:[],laminadas:[],ops:[],finales:[],catalogo:CATALOGO.map(p=>({...p})),cronograma:[],params:{t1:'06:00-14:00',t2:'14:00-22:00',t3:'',khLam:null,khRef:null},operarios:[
  {n:'Matías',pin:'1205',rol:'admin'},{n:'Jonathan',pin:'3080',rol:'admin'},
  {n:'Alejandro Delelis',pin:'0035',rol:'tablet'},{n:'Juan Vera',pin:'0022',rol:'tablet'},{n:'Antonio Zayas',pin:'0059',rol:'tablet'},{n:'Juan Brest',pin:'0003',rol:'tablet'}],meta:{v:VERSION}});
-let S=EMPTY(), cfg=JSON.parse(localStorage.getItem('wr_cfg')||'{}'), who=null, mode='', curOP=null;
+// Credenciales por defecto (bin 'winflex-refilado'). Si en ⚙ se cargan otras, mandan las de ⚙.
+const DEFAULT_CFG={bin:'6aa94df9ffd5d160530a1a0b',key:'$2a$10$8p4t41BnTv.9Ls.4kFLhouDMqJGQEd5LQlBYEz8n1y6nH/3dFq27G',keyType:'master'};
+let S=EMPTY(), cfg={...DEFAULT_CFG,...JSON.parse(localStorage.getItem('wr_cfg')||'{}')}, who=null, mode='', curOP=null;
+const authH=()=>({[cfg.keyType==='access'?'X-Access-Key':'X-Master-Key']:cfg.key});
 const uid=p=>p+'-'+Date.now().toString(36).toUpperCase()+'-'+Math.random().toString(36).slice(2,6).toUpperCase();
 const now=()=>new Date().toISOString();
 const $=id=>document.getElementById(id);
@@ -562,7 +566,7 @@ async function loadRemote(force){
   if(!cfg.bin||!cfg.key){setSync('');return}
   setSync('busy');
   try{
-    const r=await fetch(`https://api.jsonbin.io/v3/b/${cfg.bin}/latest`,{headers:{'X-Master-Key':cfg.key,'X-Bin-Meta':'false'}});
+    const r=await fetch(`https://api.jsonbin.io/v3/b/${cfg.bin}/latest`,{headers:{...authH(),'X-Bin-Meta':'false'}});
     if(!r.ok)throw new Error(r.status);
     const rem=await r.json();
     S=mergeInto(S,rem);local();setSync('on');render();novedades();if(force)toast('Sincronizado');
@@ -574,15 +578,15 @@ async function save(){ // lectura → merge → escritura, nunca pisar a ciegas
   if(!cfg.bin||!cfg.key||saving)return;
   saving=true;setSync('busy');
   try{
-    const r=await fetch(`https://api.jsonbin.io/v3/b/${cfg.bin}/latest`,{headers:{'X-Master-Key':cfg.key,'X-Bin-Meta':'false'}});
+    const r=await fetch(`https://api.jsonbin.io/v3/b/${cfg.bin}/latest`,{headers:{...authH(),'X-Bin-Meta':'false'}});
     if(r.ok){S=mergeInto(S,await r.json());local()}
-    const w=await fetch(`https://api.jsonbin.io/v3/b/${cfg.bin}`,{method:'PUT',headers:{'Content-Type':'application/json','X-Master-Key':cfg.key},body:JSON.stringify(S)});
+    const w=await fetch(`https://api.jsonbin.io/v3/b/${cfg.bin}`,{method:'PUT',headers:{'Content-Type':'application/json',...authH()},body:JSON.stringify(S)});
     if(!w.ok)throw new Error(w.status);
     setSync('on');render();
   }catch(e){setSync('err');toast('Guardado local. JSONBin: '+e.message)}
   saving=false;
 }
-function cfgSave(){cfg={bin:$('cfgBin').value.trim(),key:$('cfgKey').value.trim()};localStorage.setItem('wr_cfg',JSON.stringify(cfg));loadRemote(true)}
+function cfgSave(){cfg={bin:$('cfgBin').value.trim()||DEFAULT_CFG.bin,key:$('cfgKey').value.trim()||DEFAULT_CFG.key,keyType:$('cfgKeyType').value};localStorage.setItem('wr_cfg',JSON.stringify(cfg));loadRemote(true)}
 function exportJSON(){const a=document.createElement('a');a.href='data:application/json,'+encodeURIComponent(JSON.stringify(S,null,1));a.download='winflex-refilado-backup.json';a.click()}
 
 /* ================= NAV ================= */
@@ -591,7 +595,7 @@ function go(v){
   if(!who&&v!=='login'){v='login'}
   if((v==='pc'||v==='config')&&rol!=='admin'){toast('Solo acceso total');return}
   document.querySelectorAll('.view').forEach(x=>x.classList.remove('active'));
-  if(v==='config'){$('cfgBin').value=cfg.bin||'';$('cfgKey').value=cfg.key||'';const p=S.params||{};$('cfgT1').value=p.t1||'';$('cfgT2').value=p.t2||'';$('cfgT3').value=p.t3||'';$('cfgKhLam').value=p.khLam??'';$('cfgKhRef').value=p.khRef??'';$('cfgT3in').value=p.tara3??'';$('cfgT6in').value=p.tara6??'';$('cfgTol').value=p.tol??'';$('cfgPP').value=petpeList().join(', ');$('cfgDir').value=dirList().join(', ')}
+  if(v==='config'){$('cfgBin').value=cfg.bin||'';$('cfgKey').value=cfg.key||'';$('cfgKeyType').value=cfg.keyType||'master';const p=S.params||{};$('cfgT1').value=p.t1||'';$('cfgT2').value=p.t2||'';$('cfgT3').value=p.t3||'';$('cfgKhLam').value=p.khLam??'';$('cfgKhRef').value=p.khRef??'';$('cfgT3in').value=p.tara3??'';$('cfgT6in').value=p.tara6??'';$('cfgTol').value=p.tol??'';$('cfgPP').value=petpeList().join(', ');$('cfgDir').value=dirList().join(', ')}
   if(v==='login'){$('loginPin').value='';setTimeout(()=>$('loginPin').focus(),50)}
   $('v-'+v).classList.add('active');mode=v;$('modeLbl').textContent={pc:'Administración',lam:'Laminado',lamoc:'Laminado',ref:'Refilado',op:'Refilado'}[v]||'';
   document.querySelectorAll('.adminOnly').forEach(x=>x.style.display=rol==='admin'?'':'none');
