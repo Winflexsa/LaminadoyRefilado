@@ -493,7 +493,7 @@ td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
 
 <script>
 /* ================= ESTADO ================= */
-const VERSION='v0.23';
+const VERSION='v0.24';
 const CATALOGO=[
  {id:'CAT-01',cliente:'Don Yeyo',medida:'321x300',anchoPet:350,espPet:250,anchoPe:370,espPe:50,anchoFinal:321,tiras:1,pesoBobinaPet:92,metrosBobinaPet:762,pesoBobinaPe:26,metrosBobinaPe:1550,pesoBobinaFinal:35,cilindro:340},
  {id:'CAT-02',cliente:'Molinos',medida:'472x235',anchoPet:500,espPet:200,anchoPe:530,espPe:35,anchoFinal:472,tiras:1,pesoBobinaPet:80,metrosBobinaPet:592,pesoBobinaPe:32,metrosBobinaPe:1900,pesoBobinaFinal:40,cilindro:490},
@@ -517,7 +517,7 @@ const CATALOGO=[
  {id:'CAT-20',cliente:'BarielPack',medida:'520x350',anchoPet:550,espPet:300,anchoPe:570,espPe:50,anchoFinal:520,tiras:1,pesoBobinaPet:92,metrosBobinaPet:413,pesoBobinaPe:37.92,metrosBobinaPe:1700,pesoBobinaFinal:31,cilindro:540},
  {id:'CAT-21',cliente:'BarielPack',medida:'520x600',anchoPet:550,espPet:550,anchoPe:570,espPe:50,anchoFinal:520,tiras:1,pesoBobinaPet:92,metrosBobinaPet:226,pesoBobinaPe:24.6,metrosBobinaPe:946,pesoBobinaFinal:45,cilindro:540}
 ];
-const EMPTY=()=>({ocs:[],laminadas:[],ops:[],finales:[],catalogo:CATALOGO.map(p=>({...p})),cronograma:[],params:{t1:'06:00-14:00',t2:'14:00-22:00',t3:'',khLam:null,khRef:null},operarios:[
+const EMPTY=()=>({ocs:[],laminadas:[],ops:[],finales:[],catalogo:CATALOGO.map(p=>({...p})),cronograma:[],tomb:{},params:{t1:'06:00-14:00',t2:'14:00-22:00',t3:'',khLam:null,khRef:null},operarios:[
  {n:'Matías',pin:'1205',rol:'admin'},{n:'Jonathan',pin:'3080',rol:'admin'},
  {n:'Alejandro Delelis',pin:'0035',rol:'tablet'},{n:'Juan Vera',pin:'0022',rol:'tablet'},{n:'Antonio Zayas',pin:'0059',rol:'tablet'},{n:'Juan Brest',pin:'0003',rol:'tablet'}],meta:{v:VERSION}});
 // Credenciales por defecto (bin 'winflex-refilado'). Si en ⚙ se cargan otras, mandan las de ⚙.
@@ -564,6 +564,8 @@ function mergeInto(base,inc){ // unión por id, gana updatedAt más nuevo
     for(const x of (inc[k]||[])){const b=map.get(x[key]);if(!b||(x.updatedAt||'')>(b.updatedAt||''))map.set(x[key],x)}
     base[k]=[...map.values()];
   }
+  base.tomb={...(base.tomb||{})};for(const [k,t] of Object.entries(inc.tomb||{}))if(!base.tomb[k]||t>base.tomb[k])base.tomb[k]=t;
+  for(const k of ['ocs','laminadas','ops','finales','operarios','catalogo']){const key=k==='operarios'?'pin':'id';base[k]=base[k].filter(x=>{const t=base.tomb[k+':'+x[key]];return !t||(x.updatedAt||'')>t})}
   base.operarios.forEach(o=>{if(!o.rol)o.rol='tablet'});
   if(!base.catalogo||!base.catalogo.length)base.catalogo=CATALOGO.map(p=>({...p}));
   base.cronograma=(base.cronograma||[]).filter(x=>!x.del);
@@ -634,6 +636,7 @@ function edSave(){
   Object.assign(obj,v,{updatedAt:now(),editadoPor:who});if(onSave)onSave(obj);save();edClose();toast('Guardado');
 }
 const isAdmin=()=>rol==='admin';
+function kill(k,id){const key=k==='operarios'?'pin':'id';S.tomb=S.tomb||{};S.tomb[k+':'+id]=now();S[k]=S[k].filter(x=>x[key]!==id)}
 
 /* ================= OC ================= */
 function prodLbl(p){return `${p.cliente} · ${p.medida} (${p.anchoFinal} mm · ${p.espPet}+${p.espPe} µ)`}
@@ -659,14 +662,14 @@ function catSave(){
   const id=$('catId').value;if(id){Object.assign(S.catalogo.find(x=>x.id===id),p)}else{S.catalogo.push({id:uid('CAT'),...p})}
   save();catNew();toast('Producto guardado');
 }
-async function catDel(id){if(S.ocs.some(o=>o.prodId===id))return toast('Hay OC que usan este producto');if(await confirmUI('¿Borrar el producto del catálogo?')){S.catalogo=S.catalogo.filter(x=>x.id!==id);save()}}
+async function catDel(id){if(S.ocs.some(o=>o.prodId===id))return toast('Hay OC que usan este producto');if(await confirmUI('¿Borrar el producto del catálogo?')){kill('catalogo',id);save()}}
 function ocKgs(o){
   const lam=S.laminadas.filter(l=>l.ocId===o.id),fin=S.finales.filter(f=>f.ocId===o.id);
   return{lam:sum(lam,l=>l.kg),fin:sum(fin,f=>f.kg),rem:sum(fin.filter(f=>f.estado==='remitida'),f=>f.kg)};
 }
 function ocEdit(id){const o=ocOf(id);edit('Editar OC '+o.nro,[{k:'cliente',l:'Cliente'},{k:'nro',l:'Nº OC'},{k:'desc',l:'Medida / descripción'},{k:'ancho',l:'Ancho final (mm)',t:'number'},{k:'espPet',l:'Esp. PET (µ)',t:'number'},{k:'espPe',l:'Esp. PE (µ)',t:'number'},{k:'tiras',l:'Tiras',t:'number'},{k:'bxp',l:'Bobinas por pallet',t:'number'},{k:'kxb',l:'Kg por bobina (ref)',t:'number'},{k:'kg',l:'Kg totales',t:'number'},{k:'fecha',l:'Fecha entrega',t:'date'},{k:'color',l:'Color',opts:['Cristal','Negro','Blanco','Azulino','Gris']},{k:'trat',l:'Tratamiento',opts:['Sin Silicona','Con Silicona']},{k:'lamina',l:'Lámina',opts:['Lamina PET/PE','Lamina PET','Lamina PE']},{k:'solicitudChiv',l:'Solicitud de pedido Chivilcoy'}],o,x=>{x.esp=(+x.espPet||0)+(+x.espPe||0)})}
 async function ocToggle(id){const o=ocOf(id);o.estado=o.estado==='abierta'?'cerrada':'abierta';o.updatedAt=now();save()}
-async function ocDel(id){if(S.laminadas.some(l=>l.ocId===id))return toast('Tiene bobinas cargadas, no se puede borrar');if(await confirmUI('¿Borrar la OC?')){S.ocs=S.ocs.filter(o=>o.id!==id);save()}}
+async function ocDel(id){if(S.laminadas.some(l=>l.ocId===id))return toast('Tiene bobinas cargadas, no se puede borrar');if(await confirmUI('¿Borrar la OC?')){kill('ocs',id);save()}}
 
 /* ================= LAMINADO ================= */
 function refLam(p){if(!p||!p.pesoBobinaPet)return null;const pe=p.pesoBobinaPe&&p.metrosBobinaPe&&p.metrosBobinaPet?p.pesoBobinaPe*p.metrosBobinaPet/p.metrosBobinaPe:0;return p.pesoBobinaPet+pe}
@@ -695,7 +698,7 @@ function lamSave(){
 async function lamDel(id){const l=S.laminadas.find(x=>x.id===id);
   if(S.finales.some(f=>f.lamId===id))return toast('Tiene bobinas finales, borralas primero');
   if(l.estado!=='pendiente'&&!isAdmin())return toast('Ya está en refilado, solo Administración puede borrarla');
-  if(await confirmUI(`¿Borrar la laminada ${lamLbl(l)}?`)){S.laminadas=S.laminadas.filter(x=>x.id!==id);if(curLam===id)curLam=null;save()}}
+  if(await confirmUI(`¿Borrar la laminada ${lamLbl(l)}?`)){kill('laminadas',id);if(curLam===id)curLam=null;save()}}
 function lamEdit(id){const l=S.laminadas.find(x=>x.id===id);
   if(l.estado!=='pendiente'&&!isAdmin())return toast('Ya está en refilado, solo Administración puede editarla');
   const f=[{k:'partida',l:'Partida',up:true},{k:'nroOrigen',l:'Nº bobina PET (Chivilcoy)'},{k:'kg',l:'Kg',t:'number'},{k:'ancho',l:'Ancho bruto (mm)',t:'number'},{k:'esp',l:'Espesor (µ)',t:'number'},{k:'obs',l:'Observaciones'}];
@@ -747,7 +750,7 @@ function finEdit(id){const f=S.finales.find(x=>x.id===id);const l=S.laminadas.fi
   edit('Editar bobina '+f.nro,[{k:'kgB',l:'Kg bruto',t:'number'},{k:'kg',l:'Kg neto',t:'number'},{k:'pallet',l:'Pallet'},{k:'ancho',l:'Ancho (mm)',t:'number'},{k:'cono',l:'Cono',opts:['3"','6"']},{k:'etiqueta',l:'Etiqueta'}],f,x=>{if(l&&l.estado==='cerrada')recalcLam(l)})}
 async function finDel(id){const f=S.finales.find(x=>x.id===id);const l=S.laminadas.find(x=>x.id===f.lamId);
   if((f.estado==='remitida'||l?.estado==='cerrada')&&!isAdmin())return toast('Solo Administración puede borrarla');
-  if(await confirmUI(`¿Borrar la bobina final ${f.nro}${f.estado==='remitida'?' (ya remitida en '+f.remito+')':''}?`)){S.finales=S.finales.filter(x=>x.id!==id);if(l&&l.estado==='cerrada')recalcLam(l);save()}}
+  if(await confirmUI(`¿Borrar la bobina final ${f.nro}${f.estado==='remitida'?' (ya remitida en '+f.remito+')':''}?`)){kill('finales',id);if(l&&l.estado==='cerrada')recalcLam(l);save()}}
 async function finDesremitir(id){const f=S.finales.find(x=>x.id===id);if(await confirmUI(`¿Sacar la bobina ${f.nro} del remito ${f.remito}? Vuelve a stock.`)){f.estado='en stock';f.remito=null;f.remFecha=null;f.updatedAt=now();save()}}
 async function paradaDel(opId,i){const op=S.ops.find(o=>o.id===opId);if(await confirmUI('¿Borrar la parada?')){op.paradas.splice(i,1);op.updatedAt=now();save()}}
 async function paradaAdd(){
@@ -783,7 +786,7 @@ async function opReabrir(id){const op=S.ops.find(o=>o.id===id),oc=ocOf(op.ocId);
   if(!await confirmUI('Confirmá otra vez: la OP vuelve a estado abierta y se puede seguir cargando bobinas.'))return;
   op.estado='abierta';op.fin=null;op.reabiertaPor=who;op.reabiertaAt=now();op.updatedAt=now();save();if(mode==='ref'){curOP=op.id;curLam=null;go('op')}}
 async function opDel(id){const op=S.ops.find(o=>o.id===id);if(S.finales.some(f=>f.opId===id))return toast('La OP tiene bobinas finales, no se puede borrar');
-  if(await confirmUI('¿Borrar la OP? Las laminadas "en refilado" vuelven a pendiente.')){S.laminadas.filter(l=>l.ocId===op.ocId&&l.estado==='en refilado').forEach(l=>{l.estado='pendiente';l.refMaq=null;l.updatedAt=now()});S.ops=S.ops.filter(o=>o.id!==id);save()}}
+  if(await confirmUI('¿Borrar la OP? Las laminadas "en refilado" vuelven a pendiente.')){S.laminadas.filter(l=>l.ocId===op.ocId&&l.estado==='en refilado').forEach(l=>{l.estado='pendiente';l.refMaq=null;l.updatedAt=now()});kill('ops',id);save()}}
 async function opCerrar(){
   const op=S.ops.find(o=>o.id===curOP),c=opCalc(op),oc=ocOf(op.ocId);
   const ab=c.lams.filter(l=>l.estado!=='cerrada').length;
@@ -1088,7 +1091,7 @@ function renderProd(){
 
 /* ================= OPERARIOS ================= */
 function opAdd(){const n=$('opNom').value.trim(),p=$('opPin').value.trim();if(!n||!p)return;if(S.operarios.some(o=>o.pin===p))return toast('Ese PIN ya existe');S.operarios.push({n,pin:p,rol:$('opRol').value,updatedAt:now()});save();$('opNom').value='';$('opPin').value=''}
-async function opRm(pin){if(S.operarios.filter(o=>o.rol==='admin').length<=1&&S.operarios.find(o=>o.pin===pin)?.rol==='admin')return toast('Tiene que quedar al menos un acceso total');if(await confirmUI('¿Quitar operario?')){S.operarios=S.operarios.filter(o=>o.pin!==pin);save()}}
+async function opRm(pin){if(S.operarios.filter(o=>o.rol==='admin').length<=1&&S.operarios.find(o=>o.pin===pin)?.rol==='admin')return toast('Tiene que quedar al menos un acceso total');if(await confirmUI('¿Quitar operario?')){kill('operarios',pin);save()}}
 
 /* ================= RENDER ================= */
 function pcTab(t,b){document.querySelectorAll('.pct').forEach(x=>x.style.display='none');$('pc-'+t).style.display='';document.querySelectorAll('.tabs button').forEach(x=>x.classList.remove('on'));b.classList.add('on')}
