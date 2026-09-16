@@ -295,7 +295,7 @@ td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
     <button onclick="pcTab('oc',this)">Órdenes de compra</button>
     <button onclick="pcTab('lam',this)">Bobinas laminadas</button>
     <button onclick="pcTab('desp',this)">Despachos</button>
-    <button onclick="pcTab('fin',this)">Bobinas (detalle)</button>
+    <button onclick="pcTab('fin',this)">Stock</button>
     <button onclick="pcTab('ops',this)">OPs de refilado</button>
     <button onclick="pcTab('cat',this)">Catálogo</button>
     <button onclick="pcTab('cro',this)">Cronograma</button>
@@ -378,7 +378,7 @@ td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
       </div>
       <div class="row" style="margin-top:10px">
         <span class="muted" id="dpSel">Nada tildado</span><span style="flex:1"></span>
-        <label class="muted" style="align-self:center"><input type="checkbox" id="dpCert" checked> incluir certificado de calidad (solo OC que lo piden)</label>
+        <label class="muted" style="align-self:center"><input type="checkbox" id="dpCert" onchange="this.dataset.touched=1"> incluir certificado de calidad en el PDF</label>
         <button class="btn" onclick="dpGenerar()">📄 Generar despacho (PDF)</button>
       </div>
     </div>
@@ -389,7 +389,14 @@ td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
     </div>
   </div>
   <div id="pc-fin" class="pct" style="display:none">
-    <div class="card noprint">
+    <div class="card">
+      <h2>Stock de bobinas finales</h2>
+      <div class="row noprint" style="margin-bottom:8px"><div class="f" style="max-width:260px"><label>Buscar cliente / OC / medida</label><input id="qStk" oninput="renderStock()"></div><label class="muted" style="align-self:center"><input type="checkbox" id="stkDesp" onchange="renderStock()"> incluir OC ya despachadas por completo</label></div>
+      <div id="stkKpi" class="kpi" style="margin-bottom:12px"></div>
+      <div id="stkRes"></div>
+    </div>
+    <details class="card"><summary style="cursor:pointer;font-weight:700;color:var(--brand)">Detalle bobina por bobina · búsqueda, edición, remitos sueltos</summary>
+    <div class="card noprint" style="margin-top:12px">
       <h2>Remitir bobinas finales</h2>
       <div class="row">
         <div class="f"><label>OC</label><select id="remOC" onchange="renderFin()"></select></div>
@@ -411,6 +418,7 @@ td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
     <div class="card">
       <table id="finTable"><thead><tr><th class="noprint"><input type="checkbox" onchange="finAll(this)"></th><th>Cliente / OC</th><th class="n">Bob.</th><th>Partida</th><th class="n">Lam.</th><th class="n">Ancho</th><th class="n">Esp</th><th class="n">Metros</th><th class="n">Bruto</th><th class="n">Neto</th><th>Cono</th><th>Etiqueta</th><th class="n">Pallet</th><th>Máq.</th><th>Fecha</th><th>Estado</th><th>Remito</th><th class="noprint"></th></tr></thead><tbody id="pcFin"></tbody></table>
     </div>
+  </details>
   </div>
   <div id="pc-ops" class="pct" style="display:none">
     <div class="card">
@@ -550,7 +558,7 @@ td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
 
 <script>
 /* ================= ESTADO ================= */
-const VERSION='v0.28';
+const VERSION='v0.29';
 const CATALOGO=[
  {id:'CAT-01',cliente:'Don Yeyo',medida:'321x300',anchoPet:350,espPet:250,anchoPe:370,espPe:50,anchoFinal:321,tiras:1,pesoBobinaPet:92,metrosBobinaPet:762,pesoBobinaPe:26,metrosBobinaPe:1550,pesoBobinaFinal:35,cilindro:340},
  {id:'CAT-02',cliente:'Molinos',medida:'472x235',anchoPet:500,espPet:200,anchoPe:530,espPe:35,anchoFinal:472,tiras:1,pesoBobinaPet:80,metrosBobinaPet:592,pesoBobinaPe:32,metrosBobinaPe:1900,pesoBobinaFinal:40,cilindro:490},
@@ -1031,7 +1039,7 @@ function palGroups(){ // pallets en stock, agrupados por cliente > OC > pallet
 }
 function dpKey(ocId,pk){return ocId+'§'+pk}
 function dpSelected(){return [...document.querySelectorAll('#dpStock input.dpp:checked')].map(c=>c.value)}
-function dpCount(){const sel=dpSelected();const g=palGroups();let fs=[];for(const k of sel){const [ocId,pk]=k.split('§');const o=ocOf(ocId);fs=fs.concat(((g[o.cliente]||{})[ocId]||{pallets:{}}).pallets[pk]||[])}
+function dpCount(){const sel=dpSelected();if(sel.length){const anyCert=sel.some(k=>ocOf(k.split('§')[0]).cert);if(!$('dpCert').dataset.touched)$('dpCert').checked=anyCert}const g=palGroups();let fs=[];for(const k of sel){const [ocId,pk]=k.split('§');const o=ocOf(ocId);fs=fs.concat(((g[o.cliente]||{})[ocId]||{pallets:{}}).pallets[pk]||[])}
   const clis=[...new Set(fs.map(f=>ocOf(f.ocId).cliente))];
   $('dpSel').innerHTML=fs.length?`<b>${sel.length} pallet${sel.length>1?'s':''} · ${fs.length} bobinas · ${fmt(sum(fs,f=>f.kg))} kg neto · ${fmt(sum(fs,f=>f.kgB||f.kg))} kg bruto</b>${clis.length>1?' · <span style="color:var(--bad)">⚠ más de un cliente</span>':''}`:'Nada tildado';return fs}
 function renderDesp(){
@@ -1039,8 +1047,8 @@ function renderDesp(){
   const g=palGroups();const clis=Object.keys(g).sort();
   $('dpStock').innerHTML=clis.map(cli=>`<div class="card"><h2>${cli}</h2>${Object.values(g[cli]).map(({oc,pallets})=>{const pks=Object.keys(pallets).sort((a,b)=>(+a||0)-(+b||0));const all=Object.values(pallets).flat();
     return`<div style="border:1px solid var(--line);border-radius:10px;padding:10px 14px;margin-bottom:10px"><div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:8px"><label style="display:flex;gap:8px;align-items:center;font-weight:700;color:var(--brand);font-size:16px"><input type="checkbox" onchange="this.closest('div').parentElement.querySelectorAll('input.dpp').forEach(c=>c.checked=this.checked);dpCount()"> OC ${oc.nro}</label><span class="tag ref">${oc.desc||''} · ${oc.ancho||'?'} mm · ${oc.esp||'?'} µ</span>${oc.cert?'<span class="tag cerr">pide certificado</span>':''}<span class="muted" style="margin-left:auto">${all.length} bobinas en stock · ${fmt(sum(all,f=>f.kg))} kg neto${oc.kg?` · pedido ${fmt(oc.kg)} kg`:''}</span></div>
-     <table><thead><tr><th></th><th>Pallet</th><th class="n">Bobinas</th><th>Nº bobinas</th><th class="n">Kg bruto</th><th class="n">Kg neto</th><th>Partida</th><th>Refilada</th></tr></thead><tbody>${pks.map(pk=>{const fs=pallets[pk].sort((a,b)=>a.nro-b.nro);const nros=fs.map(f=>f.nro);const rango=nros.length>1&&nros[nros.length-1]-nros[0]===nros.length-1?`${nros[0]} – ${nros[nros.length-1]}`:nros.join(', ');return`<tr><td><input type="checkbox" class="dpp" value="${dpKey(oc.id,pk)}" onchange="dpCount()"></td><td><b>${pk}</b></td><td class="n">${fs.length}</td><td>${rango}</td><td class="n">${fmt(sum(fs,f=>f.kgB||f.kg))}</td><td class="n">${fmt(sum(fs,f=>f.kg))}</td><td>${[...new Set(fs.map(f=>f.partida))].join(', ')}</td><td>${fd(fs[fs.length-1].createdAt)}</td></tr>`}).join('')}</tbody></table></div>`}).join('')}</div>`).join('')||'<div class="card"><p class="muted">No hay bobinas en stock para despachar.</p></div>';
-  $('dpHist').innerHTML=S.despachos.slice().sort((a,b)=>b.createdAt>a.createdAt?1:-1).slice(0,40).map(dp=>`<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:8px 0;border-bottom:1px solid var(--line)"><b style="color:var(--brand)">Despacho ${dp.nro}</b><span>${dp.fecha.slice(8,10)}/${dp.fecha.slice(5,7)}/${dp.fecha.slice(0,4)}</span><span>${dp.cliente}</span><span class="muted">OC ${dp.ocNros.join(', ')} · pallets ${dp.pallets.join(', ')} · ${dp.nBob} bob · ${fmt(dp.kgN)} kg neto</span>${dp.remito?`<span class="tag cerr">remito ${dp.remito}</span>`:''}<span style="margin-left:auto"></span><button class="btn sec" onclick="dpRemito('${dp.id}')">Nº remito</button><button class="btn sec" onclick="dpPDF('${dp.id}',true)">PDF</button><button class="btn sec" onclick="dpMail('${dp.id}')">✉ Mail</button><button class="btn sec" onclick="dpAnular('${dp.id}')">✕</button></div>`).join('')||'<p class="muted">Todavía no hay despachos.</p>';
+     <table><thead><tr><th></th><th>Pallet</th><th class="n">Bobinas</th><th>Nº bobinas</th><th class="n">Kg bruto</th><th class="n">Kg neto</th><th>Partida</th><th>Refilada</th><th class="noprint"></th></tr></thead><tbody>${pks.map(pk=>{const fs=pallets[pk].sort((a,b)=>a.nro-b.nro);const nros=fs.map(f=>f.nro);const rango=nros.length>1&&nros[nros.length-1]-nros[0]===nros.length-1?`${nros[0]} – ${nros[nros.length-1]}`:nros.join(', ');return`<tr><td><input type="checkbox" class="dpp" value="${dpKey(oc.id,pk)}" onchange="dpCount()"></td><td><b>${pk}</b></td><td class="n">${fs.length}</td><td>${rango}</td><td class="n">${fmt(sum(fs,f=>f.kgB||f.kg))}</td><td class="n">${fmt(sum(fs,f=>f.kg))}</td><td>${[...new Set(fs.map(f=>f.partida))].join(', ')}</td><td>${fd(fs[fs.length-1].createdAt)}</td><td class="noprint"><button class="btn sec" title="Etiqueta grande para pegar en el pallet" onclick="palEtiq('${oc.id}','${pk}')">🏷 Etiqueta</button> <button class="btn sec" title="Lista de empaque + etiqueta" onclick="palDetalle('${oc.id}','${pk}')">📋 Detalle</button></td></tr>`}).join('')}</tbody></table></div>`}).join('')}</div>`).join('')||'<div class="card"><p class="muted">No hay bobinas en stock para despachar.</p></div>';
+  $('dpHist').innerHTML=S.despachos.slice().sort((a,b)=>b.createdAt>a.createdAt?1:-1).slice(0,40).map(dp=>`<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:8px 0;border-bottom:1px solid var(--line)"><b style="color:var(--brand)">Despacho ${dp.nro}</b><span>${dp.fecha.slice(8,10)}/${dp.fecha.slice(5,7)}/${dp.fecha.slice(0,4)}</span><span>${dp.cliente}</span><span class="muted">OC ${dp.ocNros.join(', ')} · pallets ${dp.pallets.join(', ')} · ${dp.nBob} bob · ${fmt(dp.kgN)} kg neto</span>${dp.remito?`<span class="tag cerr">remito ${dp.remito}</span>`:''}<span style="margin-left:auto"></span><button class="btn sec" onclick="dpRemito('${dp.id}')">Nº remito</button><button class="btn sec" onclick="dpPDF('${dp.id}')">PDF despacho</button><button class="btn sec" onclick="dpCertPDF('${dp.id}')">Certificado</button><button class="btn sec" onclick="dpEtiq('${dp.id}')">🏷 Etiquetas</button><button class="btn sec" onclick="dpMail('${dp.id}')">✉ Mail</button><button class="btn sec" onclick="dpAnular('${dp.id}')">✕</button></div>`).join('')||'<p class="muted">Todavía no hay despachos.</p>';
   dpCount();
 }
 function dpGenerar(){
@@ -1075,9 +1083,13 @@ function dpPDF(id,soloVer){
   det.forEach(f=>{if(y>270){d.addPage();y=20;th()}x=15;const o=ocOf(f.ocId);[o.nro,f.pallet||'',f.nro,f.ancho||'',f.kgB?fmt(f.kgB):'',fmt(f.kg),f.partida,f.cono].forEach((v,i)=>{d.text(String(v),x+2,y+4.3);x+=cw[i]});y+=5.5});
   d.setDrawColor(G);d.setLineWidth(.6);d.line(15,282,195,282);d.setFontSize(7.5);d.setTextColor('#333');d.text('Winflex S.A. · Planta Lanús · Parte de despacho generado por la app Laminado y Refilado',105,287,{align:'center'});
   // ---- CERTIFICADO por OC (si la OC lo pide y el despacho lo incluye) ----
-  if(dp.cert){for(const ocId of dp.ocIds){const o=ocOf(ocId);if(!o.cert)continue;certDraw(d,fs.filter(f=>f.ocId===ocId),o,{calidad:true,empaque:true,etiqueta:true})}}
+  if(dp.cert){for(const ocId of dp.ocIds){const o=ocOf(ocId);certDraw(d,fs.filter(f=>f.ocId===ocId),o,{calidad:true,empaque:true,etiqueta:true})}}
   d.save(`despacho-${dp.nro}-${dp.cliente}-${dp.fecha}.pdf`);
 }
+function dpCertPDF(id){const dp=S.despachos.find(x=>x.id===id);const fs=dpFins(dp);const d=newPDF();for(const ocId of dp.ocIds)certDraw(d,fs.filter(f=>f.ocId===ocId),ocOf(ocId),{calidad:true,empaque:true,etiqueta:true});d.save(`certificado-despacho-${dp.nro}-${dp.cliente}.pdf`)}
+function dpEtiq(id){const dp=S.despachos.find(x=>x.id===id);const fs=dpFins(dp);const d=newPDF();for(const ocId of dp.ocIds){const pks=[...new Set(fs.filter(f=>f.ocId===ocId).map(f=>String(f.pallet||'')))];for(const pk of pks)certDraw(d,fs.filter(f=>f.ocId===ocId&&String(f.pallet||'')===pk),ocOf(ocId),{etiqueta:true})}d.save(`etiquetas-despacho-${dp.nro}.pdf`)}
+function palEtiq(ocId,pk){if(!window.jspdf)return toast('Sin librería PDF');const fs=S.finales.filter(f=>f.ocId===ocId&&String(f.pallet||'sin pallet')===pk);if(!fs.length)return;const d=newPDF();certDraw(d,fs,ocOf(ocId),{etiqueta:true});d.save(`etiqueta-pallet-${pk}-OC${ocOf(ocId).nro}.pdf`)}
+function palDetalle(ocId,pk){if(!window.jspdf)return toast('Sin librería PDF');const fs=S.finales.filter(f=>f.ocId===ocId&&String(f.pallet||'sin pallet')===pk);if(!fs.length)return;const d=newPDF();certDraw(d,fs,ocOf(ocId),{empaque:true,etiqueta:true});d.save(`detalle-pallet-${pk}-OC${ocOf(ocId).nro}.pdf`)}
 function dpMail(id){const dp=S.despachos.find(x=>x.id===id);const fs=dpFins(dp);
   const lines=[];for(const ocId of dp.ocIds){const o=ocOf(ocId);const pks=[...new Set(fs.filter(f=>f.ocId===ocId).map(f=>String(f.pallet||'')))];for(const pk of pks){const g=fs.filter(f=>f.ocId===ocId&&String(f.pallet||'')===pk);lines.push(`OC ${o.nro} · ${o.desc||''} ${o.ancho||''} mm · pallet ${pk}: ${g.length} bobinas (${g.map(f=>f.nro).sort((a,b)=>a-b).join(', ')}) · ${fmt(sum(g,f=>f.kgB||f.kg))} kg bruto · ${fmt(sum(g,f=>f.kg))} kg neto`)}}
   const body=`Despacho ${dp.nro} · ${dp.fecha.slice(8,10)}/${dp.fecha.slice(5,7)}\nCliente: ${dp.cliente}\nOC: ${dp.ocNros.join(', ')}\n${dp.remito?'Remito: '+dp.remito+'\n':''}${dp.obs?'Obs.: '+dp.obs+'\n':''}\n${lines.join('\n')}\n\nTOTAL: ${dp.pallets.length} pallets · ${dp.nBob} bobinas · ${fmt(dp.kgB)} kg bruto · ${fmt(dp.kgN)} kg neto\n${dp.cert?'Se adjunta certificado de calidad.\n':''}\n(Adjuntar el PDF descargado desde la app)`;
@@ -1361,10 +1373,22 @@ function render(){
       <div style="padding:0 10px 10px"><table><thead><tr><th>Fecha</th><th>Hora</th><th>Partida</th><th class="n">Nº PET</th><th class="n">Kg</th><th class="n">Ancho</th><th class="n">Esp</th><th>Operario</th><th>Obs.</th><th></th></tr></thead><tbody>${ls.map(l=>`<tr><td>${fd(l.createdAt)}</td><td>${fh(l.createdAt)}</td><td>${l.partida}</td><td class="n">${l.nroOrigen||'L'+l.nro}${l.resto?' (resto)':''}</td><td class="n">${fmt(l.kg)}</td><td class="n">${l.ancho||''}</td><td class="n">${l.esp||''}</td><td>${l.operario||''}</td><td style="white-space:normal;max-width:220px">${l.obs?'⚠️ '+l.obs:''}</td><td><button class="btn sec" onclick="lamEdit('${l.id}')">✎</button> ${l.estado==='cerrada'?`<button class="btn sec" onclick="lamReabrir('${l.id}')">Reabrir</button> `:''}<button class="btn sec" onclick="lamDel('${l.id}')">✕</button></td></tr>`).join('')}</tbody></table></div></details>`}).join('')||'<p class="muted">Sin bobinas laminadas.</p>';
     const pv2=$('palSel').value,pals=[...new Set(S.finales.filter(f=>f.pallet&&(!$('remOC').value||f.ocId===$('remOC').value)).map(f=>String(f.pallet)))].sort((a,b)=>a-b);$('palSel').innerHTML='<option value="">Todos</option>'+pals.map(p=>`<option>${p}</option>`).join('');$('palSel').value=pv2;
     const v=$('remOC').value;$('remOC').innerHTML=`<option value="">Todas las OC</option>`+S.ocs.map(o=>`<option value="${o.id}">${ocLbl(o)}</option>`).join('');$('remOC').value=v;
-    renderFin();
+    renderFin();renderStock();
     $('pcOps').innerHTML=S.ops.slice().reverse().map(op=>{const c=opCalc(op);return`<tr><td>${fd(op.inicio)}</td><td>${ocLbl(ocOf(op.ocId))}</td><td>${op.operario}</td><td class="n">${c.cerr.length}/${c.lams.length}</td><td class="n">${fmt(c.kl)}</td><td class="n">${c.fin.length}</td><td class="n">${fmt(c.kf)}</td><td class="n">${fmt(c.scrap)}</td><td class="n bal ${c.rend&&c.rend<90?'bad':'ok'}">${c.cerr.length?fmt(100-c.rend)+' %':''}</td><td class="n">${fmt(c.resto)}</td><td class="n">${c.cerr.length?fmt(c.rend)+' %':''}</td><td class="n">${op.paradas.length?op.paradas.length+' / '+sum(op.paradas,p=>p.min)+' min':''}</td><td>${tagOf(op.estado)}</td><td>${op.estado==='cerrada'?`<button class="btn sec" onclick="opReabrir('${op.id}')">Reabrir</button> `:''}<button class="btn sec" onclick="opDel('${op.id}')">✕</button></td></tr>`}).join('');
   }
   if(mode==='config'){$('cfgOps').innerHTML='<table>'+S.operarios.map(o=>`<tr><td>${o.n}</td><td class="n">${o.pin}</td><td>${o.rol==='admin'?'Todo':'Solo tablets'}</td><td><button class="btn sec" onclick="opRm('${o.pin}')">✕</button></td></tr>`).join('')+'</table>'}
+}
+function renderStock(){
+  const s=$('qStk').value,inc=$('stkDesp').checked;const enS=S.finales.filter(f=>f.estado==='en stock');
+  $('stkKpi').innerHTML=`<div><b>${fmt(sum(enS,f=>f.kg))}</b><span>kg neto en stock</span></div><div><b>${enS.length}</b><span>bobinas</span></div><div><b>${[...new Set(enS.map(f=>f.ocId+'|'+f.pallet))].length}</b><span>pallets</span></div><div><b>${[...new Set(enS.map(f=>ocOf(f.ocId).cliente))].length}</b><span>clientes</span></div>`;
+  const ocs=S.ocs.filter(o=>S.finales.some(f=>f.ocId===o.id)).filter(o=>q(s,o.cliente+' '+o.nro+' '+(o.desc||''))).filter(o=>inc||S.finales.some(f=>f.ocId===o.id&&f.estado==='en stock'));
+  const byCli={};ocs.forEach(o=>{(byCli[o.cliente]=byCli[o.cliente]||[]).push(o)});
+  $('stkRes').innerHTML=Object.keys(byCli).sort().map(cli=>{const os=byCli[cli];const fsC=S.finales.filter(f=>os.some(o=>o.id===f.ocId));const st=fsC.filter(f=>f.estado==='en stock');
+    return`<details open style="border:1px solid var(--line);border-radius:10px;margin-bottom:8px;background:#fff"><summary style="cursor:pointer;padding:10px 14px;display:flex;gap:12px;align-items:center;list-style:none;flex-wrap:wrap"><b style="color:var(--brand);font-size:16px">▸ ${cli}</b><span class="muted" style="margin-left:auto">en stock: <b>${st.length}</b> bobinas · <b>${fmt(sum(st,f=>f.kg))}</b> kg neto · despachado: ${fmt(sum(fsC.filter(f=>f.estado==='remitida'),f=>f.kg))} kg</span></summary><div style="padding:0 14px 12px">
+    ${os.map(o=>{const fs=S.finales.filter(f=>f.ocId===o.id),st=fs.filter(f=>f.estado==='en stock'),dp=fs.filter(f=>f.estado==='remitida');const pks=[...new Set(fs.map(f=>String(f.pallet||'sin pallet')))].sort((a,b)=>(+a||0)-(+b||0));
+      return`<div style="margin:8px 0;padding:8px 10px;background:var(--soft);border-radius:8px"><div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center"><b>OC ${o.nro}</b><span class="tag ref">${o.desc||''} · ${o.ancho||'?'} mm · ${o.esp||'?'} µ</span><span class="muted">pedido ${fmt(o.kg)} kg · en stock <b>${fmt(sum(st,f=>f.kg))}</b> kg (${st.length} bob) · despachado ${fmt(sum(dp,f=>f.kg))} kg · falta producir ${fmt(Math.max(0,o.kg-sum(fs,f=>f.kg)))} kg</span></div>
+      <div class="bar" style="margin:6px 0;height:7px;background:#e6ede8;border-radius:4px;overflow:hidden;position:relative"><i style="position:absolute;left:0;top:0;height:100%;width:${o.kg?Math.min(100,sum(fs,f=>f.kg)/o.kg*100):0}%;background:var(--brand3)"></i><i style="position:absolute;left:0;top:0;height:100%;width:${o.kg?Math.min(100,sum(dp,f=>f.kg)/o.kg*100):0}%;background:var(--brand)"></i></div>
+      <table style="font-size:13px"><thead><tr><th>Pallet</th><th class="n">Bob.</th><th>Nº</th><th class="n">Bruto</th><th class="n">Neto</th><th>Estado</th><th>Despacho / remito</th></tr></thead><tbody>${pks.map(pk=>{const g=fs.filter(f=>String(f.pallet||'sin pallet')===pk).sort((a,b)=>a.nro-b.nro);const rem=g.every(f=>f.estado==='remitida');const nros=g.map(f=>f.nro);const dpx=S.despachos.find(x=>x.id===g[0].despachoId);return`<tr><td><b>${pk}</b></td><td class="n">${g.length}</td><td>${nros.length>1?nros[0]+' – '+nros[nros.length-1]:nros[0]}</td><td class="n">${fmt(sum(g,f=>f.kgB||f.kg))}</td><td class="n">${fmt(sum(g,f=>f.kg))}</td><td>${rem?'<span class="tag rem">despachado</span>':g.some(f=>f.estado==='remitida')?'<span class="tag pend">parcial</span>':'<span class="tag cerr">en stock</span>'}</td><td>${dpx?`Desp. ${dpx.nro} · ${dpx.fecha.slice(8,10)}/${dpx.fecha.slice(5,7)}${dpx.remito?' · remito '+dpx.remito:''}`:(g[0].remito||'')}</td></tr>`}).join('')}</tbody></table></div>`}).join('')}</div></details>`}).join('')||'<p class="muted">Sin bobinas finales.</p>';
 }
 function renderFin(){
   $('pcFin').innerHTML=finFiltered().map(f=>{const o=ocOf(f.ocId);return`<tr><td class="noprint">${f.estado==='en stock'?`<input type="checkbox" value="${f.id}">`:''}</td><td>${ocLbl(o)}</td><td class="n">${f.nro}</td><td>${f.partida}</td><td class="n">L${f.lamNro}</td><td class="n">${f.ancho||''}</td><td class="n">${f.esp||''}</td><td class="n">${f.m||''}</td><td class="n">${f.kgB?fmt(f.kgB):''}</td><td class="n">${fmt(f.kg)}</td><td>${f.cono}</td><td>${f.etiqueta||''}</td><td class="n">${f.pallet||''}</td><td>${f.maq||''}</td><td>${fd(f.createdAt)}</td><td>${tagOf(f.estado)}</td><td>${f.remito?`${f.remito} (${f.remFecha})`:''}</td><td class="noprint"><button class="btn sec" onclick="finEdit('${f.id}')">✎</button> ${f.estado==='remitida'?`<button class="btn sec" onclick="finDesremitir('${f.id}')">↩</button> `:''}<button class="btn sec" onclick="finDel('${f.id}')">✕</button></td></tr>`}).join('')||'<tr><td colspan="17" class="muted">Sin bobinas finales.</td></tr>';
