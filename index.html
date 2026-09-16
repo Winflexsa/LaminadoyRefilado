@@ -563,7 +563,7 @@ td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
 
 <script>
 /* ================= ESTADO ================= */
-const VERSION='v0.32';
+const VERSION='v0.33';
 const CATALOGO=[
  {id:'CAT-01',cliente:'Don Yeyo',medida:'321x300',anchoPet:350,espPet:250,anchoPe:370,espPe:50,anchoFinal:321,tiras:1,pesoBobinaPet:92,metrosBobinaPet:762,pesoBobinaPe:26,metrosBobinaPe:1550,pesoBobinaFinal:35,cilindro:340},
  {id:'CAT-02',cliente:'Molinos',medida:'472x235',anchoPet:500,espPet:200,anchoPe:530,espPe:35,anchoFinal:472,tiras:1,pesoBobinaPet:80,metrosBobinaPet:592,pesoBobinaPe:32,metrosBobinaPe:1900,pesoBobinaFinal:40,cilindro:490},
@@ -997,8 +997,8 @@ function certDraw(d,fs,o,opts){ // dibuja en el doc d: calidad / empaque / etiqu
    bloques.forEach((rows,bi)=>{np();cab('CALIDAD');
     let y=46;kv(50,y,'Cliente:',o.cliente);y+=8;kv(50,y,'OC Cliente / ME:',o.nro);kv(150,y,'Fecha:',hoy);y+=8;
     kv(95,y,'Producto:',o.lamina||'Lamina PET/PE');y+=6;kv(95,y,'Color:',o.color||'Cristal');y+=6;kv(95,y,'Ancho Plano:',(o.ancho||'')+' mm');y+=6;kv(95,y,'Espesor:',(o.esp||'')+' micrones');y+=6;kv(95,y,'Tratamiento:',o.trat||'Sin Silicona');y+=6;kv(95,y,'Cono:',sorted[0]?.cono||'');y+=6;kv(95,y,'Etiquetas:','Info. Detallada');y+=6;kv(95,y,'Partida:',partidas);y+=6;kv(95,y,'Fecha de Fabricación:',fFab);y+=6;kv(95,y,'Fecha de Rebobinado:',fReb);y+=10;
-    d.setDrawColor('#444');d.setLineWidth(.4);d.rect(15,y,180,86);d.setFontSize(10);d.setFont('helvetica','bold');d.setTextColor('#b00');d.text(`PALLET N: ${pallet}`,105,y+6,{align:'center'});d.setTextColor(T);d.setFont('helvetica','normal');d.text(`Unidades:  ${rows.length}`,105,y+12,{align:'center'});d.setFont('helvetica','bold');d.text(`KG NETO TOTAL:  ${fmt(sum(rows,f=>f.kg))}`,105,y+18,{align:'center'});d.setFont('helvetica','normal');
-    tablaBob(y+22,rows);y+=92;
+    d.setDrawColor('#444');d.setLineWidth(.4);d.rect(15,y,180,94);d.setFontSize(10);d.setFont('helvetica','bold');d.setTextColor('#b00');d.text(`PALLET N: ${pallet}`,105,y+6,{align:'center'});d.setTextColor(T);d.setFont('helvetica','normal');d.text(`Unidades:  ${rows.length}`,105,y+12,{align:'center'});d.setFont('helvetica','bold');d.text(`KG NETO TOTAL:  ${fmt(sum(rows,f=>f.kg))}`,105,y+18,{align:'center'});d.setFont('helvetica','normal');
+    tablaBob(y+22,rows);y+=100;
     d.setFontSize(8);d.setFont('helvetica','bold');const apro=d.splitTextToSize('Aprobación:  Resolución SENASA nº E-1435 - RESINA DE PET LASER + (AD650). Cumple con la declaración jurada que diera origen a su autorización, habiendo sido verificada analiticamente respecto al cumplimiento de los requisitos estipulados en el Capitulo IV- UTENSILIOS, RECIPIENTES, ENVASES, ENVOLTURA, APARATOS Y ACCESORIOS DEL CODIGO ALIMENTARIO ARGENTINO PARA LAS CONDICIONES EN QUE SE ACONSEJA SU USO.',170);d.text(apro,105,y+4,{align:'center'});y+=apro.length*3.6+6;d.text('Cumple: con MERCOSUR GMC-RESOLUCIÓN N°: 3/92.',105,y,{align:'center'});
     pie()});
   }
@@ -1007,7 +1007,7 @@ function certDraw(d,fs,o,opts){ // dibuja en el doc d: calidad / empaque / etiqu
    bloques.forEach((rows)=>{np();cab('LISTA DE EMPAQUE');let y=46;kv(50,y,'Cliente:',o.cliente);y+=10;
     kv(55,y,'Partida:',partidas);kv(145,y,'Ancho Plano:',(o.ancho||'')+' mm');y+=6;kv(55,y,'Producto:',o.lamina||'Lamina PET/PE');kv(145,y,'Espesor:',(o.esp||'')+' micrones');y+=6;kv(55,y,'Cono:',sorted[0]?.cono||'');kv(145,y,'Color:',o.color||'Cristal');y+=6;kv(55,y,'Etiquetas:','Info. Detallada.');kv(145,y,'Tratamiento:',o.trat||'Sin Silicona');y+=9;
     d.setFont('helvetica','bold');d.setFontSize(10);d.text(`BOBINAS  ${fs.length}`,60,y,{align:'center'});d.text(`TOTAL KILOS  ${fmt(kgN)}`,150,y,{align:'center'});y+=6;
-    d.setDrawColor('#444');d.setLineWidth(.4);d.rect(15,y,180,86);d.setTextColor('#b00');d.text(`PALLET N: ${pallet}`,105,y+6,{align:'center'});d.setTextColor(T);d.setFont('helvetica','normal');d.text(`Unidades:  ${rows.length}`,105,y+12,{align:'center'});d.setFont('helvetica','bold');d.text(`KG NETO TOTAL:  ${fmt(sum(rows,f=>f.kg))}`,105,y+18,{align:'center'});d.setFont('helvetica','normal');tablaBob(y+22,rows);y+=94;
+    d.setDrawColor('#444');d.setLineWidth(.4);d.rect(15,y,180,94);d.setTextColor('#b00');d.text(`PALLET N: ${pallet}`,105,y+6,{align:'center'});d.setTextColor(T);d.setFont('helvetica','normal');d.text(`Unidades:  ${rows.length}`,105,y+12,{align:'center'});d.setFont('helvetica','bold');d.text(`KG NETO TOTAL:  ${fmt(sum(rows,f=>f.kg))}`,105,y+18,{align:'center'});d.setFont('helvetica','normal');tablaBob(y+22,rows);y+=102;
     d.setFontSize(8.5);d.text('Empaque y Estiba:',20,y);y+=5;['1. Cada bobina se envuelve con lámina plástica para conservar la hermeticidad.','2. Cada bobina se recubre con cartón corrugado.','3. Estiba horizonal en forma piramidal envuelto con film plástico protector.','4. Rótulos "NO GOLPEAR" - "FRÁGIL" - "CLIENTE" de fácil reconocimiento.'].forEach(t=>{d.text(t,35,y);y+=5});y+=4;
     d.setFont('helvetica','bold');d.text('AUTORIZO',150,y,{align:'center'});d.setFont('helvetica','normal');d.text('Stancato Jonathan',150,y+5,{align:'center'});pie()});
   }
@@ -1240,11 +1240,18 @@ function petRender(){
      </summary>
      <div style="padding:0 14px 12px">
        <div class="row" style="margin-bottom:8px"><div class="f" style="flex:2"><label>OC de destino ${oc.id?'<span class="tag cerr">sugerida</span>':'<span class="tag pend">elegir</span>'}</label><select class="petOC"><option value="">— elegir OC —</option>${ocOpts}</select></div>
-       <div class="muted" style="align-self:end;padding-bottom:12px">${oc.id?`OC ${fmt(oc.kg)} kg · ya recibidos ${fmt(sum(S.laminadas.filter(l=>l.ocId===oc.id&&l.tipo==='PET'),l=>l.kg))} kg · con este envío ${fmt(sum(S.laminadas.filter(l=>l.ocId===oc.id&&l.tipo==='PET'),l=>l.kg)+sum(nuevas,x=>x.kg))} kg`:(g[0].interno?'Destino interno (termoformado): normalmente no se carga acá.':'No encontré una OC abierta que coincida; creala en Órdenes de compra o elegí una.')}</div></div>
+       <div class="muted" style="align-self:end;padding-bottom:12px">${oc.id?`OC ${fmt(oc.kg)} kg · ya recibidos ${fmt(sum(S.laminadas.filter(l=>l.ocId===oc.id&&l.tipo==='PET'),l=>l.kg))} kg · con este envío ${fmt(sum(S.laminadas.filter(l=>l.ocId===oc.id&&l.tipo==='PET'),l=>l.kg)+sum(nuevas,x=>x.kg))} kg`:(g[0].interno?'Destino interno (termoformado): normalmente no se carga acá.':'Sin OC que coincida.')}</div>${g[0].interno?'':`<button class="btn sec" style="align-self:end;margin-bottom:12px" onclick="petNuevaOC(${gi})">＋ Crear OC con estas bobinas</button>`}</div>
        <table><thead><tr><th></th><th>Pallet</th><th>Partida</th><th class="n">Bobina N°</th><th class="n">Kg</th><th>Estado</th></tr></thead><tbody>${g.map(x=>`<tr><td><input type="checkbox" value="${x.i}" ${x.dup?'disabled':'checked'} onchange="petCount()"></td><td>${x.pallet}</td><td>${x.partida}</td><td class="n">${x.nro}</td><td class="n">${fmt(x.kg)}</td><td>${x.dup?'<span class="tag cerr">ya cargada</span>':''}</td></tr>`).join('')}</tbody></table>
      </div></details>`}).join('')||'<p class="muted">Nada que coincida con el filtro.</p>';
   document.querySelectorAll('.petg').forEach(d=>{const [destino,medida,pedido]=keys[+d.dataset.g].split('§');d.querySelector('.petOC').value=petMatchOC({destino,medida,pedido})});
   petCount();
+}
+function petNuevaOC(gi){
+  const d=document.querySelector(`.petg[data-g="${gi}"]`);const sel=[...d.querySelectorAll('tbody input:not(:disabled)')].map(c=>petRows[+c.value]);if(!sel.length)return toast('Ese grupo no tiene bobinas nuevas');
+  const r0=sel[0];const destino=String(petVal(r0,'destino')).trim(),medida=String(petVal(r0,'medida')).trim(),pedido=String(petVal(r0,'pedido')).trim();const [an,es]=medida.split(/x/i).map(Number);const kgT=sum(sel,r=>+String(petVal(r,'kg')).replace(',','.'));
+  const cli=S.ocs.find(o=>o.cliente.toLowerCase()===destino.toLowerCase())?.cliente||destino;
+  const o={id:uid('OC'),cliente:cli,nro:'',desc:medida,ancho:an||0,espPet:es||0,espPe:0,esp:es||0,tiras:1,bxp:0,kxb:0,color:'Cristal',trat:'Sin Silicona',lamina:'Lamina PET',solicitudChiv:pedido,cert:false,kg:Math.round(kgT),fecha:'',estado:'abierta',createdAt:now(),updatedAt:now(),por:who,fromChiv:true};
+  edit(`Nueva OC · ${destino} · ${medida} · pedido Chivilcoy ${pedido||'—'}`,[{k:'cliente',l:'Cliente'},{k:'nro',l:'Nº OC del cliente'},{k:'desc',l:'Medida'},{k:'ancho',l:'Ancho final a refilar (mm)',t:'number'},{k:'esp',l:'Espesor (µ)',t:'number'},{k:'tiras',l:'Tiras',t:'number'},{k:'bxp',l:'Bobinas por pallet',t:'number'},{k:'kg',l:'Kg pedidos (por defecto: lo recibido)',t:'number'},{k:'fecha',l:'Fecha entrega',t:'date'},{k:'color',l:'Color',opts:['Cristal','Negro','Blanco','Azulino','Gris']},{k:'certTxt',l:'Certificado',opts:['No pide','Sí, pide certificado']}],Object.assign(o,{certTxt:'No pide'}),x=>{x.cert=x.certTxt==='Sí, pide certificado';delete x.certTxt;x.espPet=x.esp;if(!x.nro)x.nro='CHIV-'+(pedido||Date.now().toString(36).toUpperCase());S.ocs.push(x);petRender();setTimeout(()=>{const dd=document.querySelector(`.petg[data-g="${gi}"]`);if(dd){dd.querySelector('.petOC').value=x.id;dd.querySelectorAll('tbody input:not(:disabled)').forEach(c=>c.checked=true);petCount()}},100);toast(`OC ${x.nro} creada · ahora cargá las bobinas`)});
 }
 function petCount(){const n=document.querySelectorAll('#petGroups tbody input:checked').length;const kg=sum([...document.querySelectorAll('#petGroups tbody input:checked')],c=>+String(petVal(petRows[+c.value],'kg')).replace(',','.'));$('petInfo').textContent=$('petInfo').textContent.replace(/ · tildadas.*$/,'')+(n?` · tildadas ${n} (${fmt(kg)} kg)`:'')}
 function petImport(){
