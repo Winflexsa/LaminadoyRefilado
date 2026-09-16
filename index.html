@@ -294,7 +294,8 @@ td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
     <button class="on" onclick="pcTab('prod',this)">Producción en vivo</button>
     <button onclick="pcTab('oc',this)">Órdenes de compra</button>
     <button onclick="pcTab('lam',this)">Bobinas laminadas</button>
-    <button onclick="pcTab('fin',this)">Bobinas finales / remitos</button>
+    <button onclick="pcTab('desp',this)">Despachos</button>
+    <button onclick="pcTab('fin',this)">Bobinas (detalle)</button>
     <button onclick="pcTab('ops',this)">OPs de refilado</button>
     <button onclick="pcTab('cat',this)">Catálogo</button>
     <button onclick="pcTab('cro',this)">Cronograma</button>
@@ -350,6 +351,7 @@ td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
         <div class="f"><label>Tratamiento</label><select id="ocTrat"><option>Sin Silicona</option><option>Con Silicona</option></select></div>
         <div class="f"><label>Lámina</label><select id="ocLam"><option>Lamina PET/PE</option><option>Lamina PET</option><option>Lamina PE</option></select></div>
         <div class="f"><label>Solicitud pedido Chivilcoy (opcional)</label><input id="ocSol" placeholder="ej: 10-0926"></div>
+        <div class="f" style="max-width:220px"><label>Certificado de calidad</label><select id="ocCert"><option value="">No pide</option><option value="1">Sí, pide certificado</option></select></div>
       </div>
       <p class="muted">Elegí el producto y se completan las medidas; podés corregirlas para esta OC sin tocar el catálogo.</p>
       <div class="row" style="margin-top:10px"><button class="btn" onclick="ocSave()">Guardar OC</button></div>
@@ -363,6 +365,27 @@ td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
     <div class="card">
       <div class="row noprint" style="margin-bottom:10px"><div class="f" style="max-width:320px"><label>Buscar (cliente, OC, partida, operario)</label><input id="qLam" oninput="render()"></div><div class="f" style="max-width:200px"><label>Estado</label><select id="qLamEst" onchange="render()"><option value="">Todos</option><option>pendiente</option><option>en refilado</option><option>cerrada</option></select></div></div>
       <div id="pcLam"></div>
+    </div>
+  </div>
+  <div id="pc-desp" class="pct" style="display:none">
+    <div class="card noprint">
+      <h2>Armar despacho para facturar</h2>
+      <p class="muted" style="margin:0 0 10px">Tildá los pallets que salen (de una misma OC o de varias OC del mismo cliente), poné la fecha y generá el <b>parte de despacho</b> en PDF para Administración: cliente, OC, medida, pallets, bobinas, kg bruto y neto. Si la OC pide certificado de calidad, se agrega al mismo PDF (o lo sacás aparte).</p>
+      <div class="row">
+        <div class="f" style="max-width:170px"><label>Fecha de despacho</label><input id="dpFecha" type="date"></div>
+        <div class="f" style="max-width:200px"><label>Nº remito (si ya lo tenés)</label><input id="dpRem"></div>
+        <div class="f" style="flex:2"><label>Observación para Administración</label><input id="dpObs" placeholder="ej: retira el cliente, facturar a…"></div>
+      </div>
+      <div class="row" style="margin-top:10px">
+        <span class="muted" id="dpSel">Nada tildado</span><span style="flex:1"></span>
+        <label class="muted" style="align-self:center"><input type="checkbox" id="dpCert" checked> incluir certificado de calidad (solo OC que lo piden)</label>
+        <button class="btn" onclick="dpGenerar()">📄 Generar despacho (PDF)</button>
+      </div>
+    </div>
+    <div id="dpStock"></div>
+    <div class="card">
+      <h3>Despachos generados</h3>
+      <div id="dpHist"></div>
     </div>
   </div>
   <div id="pc-fin" class="pct" style="display:none">
@@ -527,7 +550,7 @@ td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
 
 <script>
 /* ================= ESTADO ================= */
-const VERSION='v0.27';
+const VERSION='v0.28';
 const CATALOGO=[
  {id:'CAT-01',cliente:'Don Yeyo',medida:'321x300',anchoPet:350,espPet:250,anchoPe:370,espPe:50,anchoFinal:321,tiras:1,pesoBobinaPet:92,metrosBobinaPet:762,pesoBobinaPe:26,metrosBobinaPe:1550,pesoBobinaFinal:35,cilindro:340},
  {id:'CAT-02',cliente:'Molinos',medida:'472x235',anchoPet:500,espPet:200,anchoPe:530,espPe:35,anchoFinal:472,tiras:1,pesoBobinaPet:80,metrosBobinaPet:592,pesoBobinaPe:32,metrosBobinaPe:1900,pesoBobinaFinal:40,cilindro:490},
@@ -551,7 +574,7 @@ const CATALOGO=[
  {id:'CAT-20',cliente:'BarielPack',medida:'520x350',anchoPet:550,espPet:300,anchoPe:570,espPe:50,anchoFinal:520,tiras:1,pesoBobinaPet:92,metrosBobinaPet:413,pesoBobinaPe:37.92,metrosBobinaPe:1700,pesoBobinaFinal:31,cilindro:540},
  {id:'CAT-21',cliente:'BarielPack',medida:'520x600',anchoPet:550,espPet:550,anchoPe:570,espPe:50,anchoFinal:520,tiras:1,pesoBobinaPet:92,metrosBobinaPet:226,pesoBobinaPe:24.6,metrosBobinaPe:946,pesoBobinaFinal:45,cilindro:540}
 ];
-const EMPTY=()=>({ocs:[],laminadas:[],ops:[],finales:[],catalogo:CATALOGO.map(p=>({...p})),cronograma:[],tomb:{},params:{t1:'06:00-14:00',t2:'14:00-22:00',t3:'',khLam:null,khRef:null},operarios:[
+const EMPTY=()=>({ocs:[],laminadas:[],ops:[],finales:[],catalogo:CATALOGO.map(p=>({...p})),cronograma:[],despachos:[],tomb:{},params:{t1:'06:00-14:00',t2:'14:00-22:00',t3:'',khLam:null,khRef:null},operarios:[
  {n:'Matías',pin:'1205',rol:'admin'},{n:'Jonathan',pin:'3080',rol:'admin'},
  {n:'Alejandro Delelis',pin:'0035',rol:'tablet'},{n:'Juan Vera',pin:'0022',rol:'tablet'},{n:'Antonio Zayas',pin:'0059',rol:'tablet'},{n:'Juan Brest',pin:'0003',rol:'tablet'}],meta:{v:VERSION}});
 // Credenciales por defecto (bin 'winflex-refilado'). Si en ⚙ se cargan otras, mandan las de ⚙.
@@ -592,14 +615,14 @@ function local(){localStorage.setItem('wr_state',JSON.stringify(S))}
 function setSync(c){$('sync').className=c}
 let lastCount=null;function novedades(){const c=S.laminadas.length+S.finales.length;if(lastCount!=null&&c>lastCount&&(mode==='pc'||mode==='home'))toast(`+${c-lastCount} bobina(s) nueva(s) en planta`);lastCount=c}
 function mergeInto(base,inc){ // unión por id, gana updatedAt más nuevo
-  for(const k of ['ocs','laminadas','ops','finales','operarios','catalogo','cronograma']){
+  for(const k of ['ocs','laminadas','ops','finales','operarios','catalogo','cronograma','despachos']){
     const key=k==='operarios'?'pin':'id';
     const map=new Map((base[k]||[]).map(x=>[x[key],x]));
     for(const x of (inc[k]||[])){const b=map.get(x[key]);if(!b||(x.updatedAt||'')>(b.updatedAt||''))map.set(x[key],x)}
     base[k]=[...map.values()];
   }
   base.tomb={...(base.tomb||{})};for(const [k,t] of Object.entries(inc.tomb||{}))if(!base.tomb[k]||t>base.tomb[k])base.tomb[k]=t;
-  for(const k of ['ocs','laminadas','ops','finales','operarios','catalogo']){const key=k==='operarios'?'pin':'id';base[k]=base[k].filter(x=>{const t=base.tomb[k+':'+x[key]];return !t||(x.updatedAt||'')>t})}
+  for(const k of ['ocs','laminadas','ops','finales','operarios','catalogo','despachos']){const key=k==='operarios'?'pin':'id';base[k]=(base[k]||[]).filter(x=>{const t=base.tomb[k+':'+x[key]];return !t||(x.updatedAt||'')>t})}
   base.operarios.forEach(o=>{if(!o.rol)o.rol='tablet'});
   if(!base.catalogo||!base.catalogo.length)base.catalogo=CATALOGO.map(p=>({...p}));
   base.cronograma=(base.cronograma||[]).filter(x=>!x.del);
@@ -776,7 +799,7 @@ function ocProdChange(){
 }
 function ocSave(){
   const espPet=+$('ocEspPet').value,espPe=+$('ocEspPe').value;
-  const o={id:uid('OC'),prodId:$('ocProd').value||null,cliente:$('ocCli').value.trim(),nro:$('ocNro').value.trim(),desc:$('ocDesc').value.trim(),ancho:+$('ocAncho').value,espPet,espPe,esp:espPet+espPe,tiras:+$('ocTiras').value||1,mxb:+$('ocMxB').value,bxp:+$('ocBxP').value,kxb:+$('ocKxB').value,color:$('ocColor').value,trat:$('ocTrat').value,lamina:$('ocLam').value,solicitudChiv:$('ocSol').value.trim(),kg:+$('ocKg').value,fecha:$('ocFecha').value,estado:'abierta',createdAt:now(),updatedAt:now(),por:who||'PC'};
+  const o={id:uid('OC'),prodId:$('ocProd').value||null,cliente:$('ocCli').value.trim(),nro:$('ocNro').value.trim(),desc:$('ocDesc').value.trim(),ancho:+$('ocAncho').value,espPet,espPe,esp:espPet+espPe,tiras:+$('ocTiras').value||1,mxb:+$('ocMxB').value,bxp:+$('ocBxP').value,kxb:+$('ocKxB').value,color:$('ocColor').value,trat:$('ocTrat').value,lamina:$('ocLam').value,solicitudChiv:$('ocSol').value.trim(),cert:$('ocCert').value==='1',kg:+$('ocKg').value,fecha:$('ocFecha').value,estado:'abierta',createdAt:now(),updatedAt:now(),por:who||'PC'};
   if(!o.cliente||!o.nro)return toast('Falta cliente o nº OC');
   S.ocs.push(o);save();['ocCli','ocNro','ocDesc','ocAncho','ocEspPet','ocEspPe','ocBxP','ocKxB','ocKg','ocFecha','ocSol'].forEach(i=>$(i).value='');$('ocProd').value='';$('ocTiras').value=1;toast('OC guardada');
 }
@@ -797,7 +820,7 @@ function ocKgs(o){
   const lam=S.laminadas.filter(l=>l.ocId===o.id),fin=S.finales.filter(f=>f.ocId===o.id);
   return{lam:sum(lam,l=>l.kg),fin:sum(fin,f=>f.kg),rem:sum(fin.filter(f=>f.estado==='remitida'),f=>f.kg)};
 }
-function ocEdit(id){const o=ocOf(id);edit('Editar OC '+o.nro,[{k:'cliente',l:'Cliente'},{k:'nro',l:'Nº OC'},{k:'desc',l:'Medida / descripción'},{k:'ancho',l:'Ancho final (mm)',t:'number'},{k:'espPet',l:'Esp. PET (µ)',t:'number'},{k:'espPe',l:'Esp. PE (µ)',t:'number'},{k:'tiras',l:'Tiras',t:'number'},{k:'bxp',l:'Bobinas por pallet',t:'number'},{k:'kxb',l:'Kg por bobina (ref)',t:'number'},{k:'kg',l:'Kg totales',t:'number'},{k:'fecha',l:'Fecha entrega',t:'date'},{k:'color',l:'Color',opts:['Cristal','Negro','Blanco','Azulino','Gris']},{k:'trat',l:'Tratamiento',opts:['Sin Silicona','Con Silicona']},{k:'lamina',l:'Lámina',opts:['Lamina PET/PE','Lamina PET','Lamina PE']},{k:'solicitudChiv',l:'Solicitud de pedido Chivilcoy'}],o,x=>{x.esp=(+x.espPet||0)+(+x.espPe||0)})}
+function ocEdit(id){const o=ocOf(id);edit('Editar OC '+o.nro,[{k:'cliente',l:'Cliente'},{k:'nro',l:'Nº OC'},{k:'desc',l:'Medida / descripción'},{k:'ancho',l:'Ancho final (mm)',t:'number'},{k:'espPet',l:'Esp. PET (µ)',t:'number'},{k:'espPe',l:'Esp. PE (µ)',t:'number'},{k:'tiras',l:'Tiras',t:'number'},{k:'bxp',l:'Bobinas por pallet',t:'number'},{k:'kxb',l:'Kg por bobina (ref)',t:'number'},{k:'kg',l:'Kg totales',t:'number'},{k:'fecha',l:'Fecha entrega',t:'date'},{k:'color',l:'Color',opts:['Cristal','Negro','Blanco','Azulino','Gris']},{k:'trat',l:'Tratamiento',opts:['Sin Silicona','Con Silicona']},{k:'lamina',l:'Lámina',opts:['Lamina PET/PE','Lamina PET','Lamina PE']},{k:'solicitudChiv',l:'Solicitud de pedido Chivilcoy'},{k:'certTxt',l:'Certificado de calidad',opts:['No pide','Sí, pide certificado']}],Object.assign(o,{certTxt:o.cert?'Sí, pide certificado':'No pide'}),x=>{x.cert=x.certTxt==='Sí, pide certificado';delete x.certTxt;x.esp=(+x.espPet||0)+(+x.espPe||0)})}
 async function ocToggle(id){const o=ocOf(id);o.estado=o.estado==='abierta'?'cerrada':'abierta';o.updatedAt=now();save()}
 async function ocDel(id){if(S.laminadas.some(l=>l.ocId===id))return toast('Tiene bobinas cargadas, no se puede borrar');if(await confirmUI('¿Borrar la OC?')){kill('ocs',id);save()}}
 
@@ -939,11 +962,8 @@ function finFiltered(){const oc=$('remOC').value,es=$('remEst').value,s=$('qFin'
 function selFin(){const ids=[...document.querySelectorAll('#pcFin input:checked')].map(c=>c.value);const all=finFiltered();return ids.length?all.filter(f=>ids.includes(f.id)):all}
 function palAsignar(){const ids=[...document.querySelectorAll('#pcFin input:checked')].map(c=>c.value),n=$('palNro').value.trim();if(!ids.length)return toast('Seleccioná bobinas');if(!n)return toast('Falta el nº de pallet');ids.forEach(id=>{const f=S.finales.find(x=>x.id===id);f.pallet=n;f.updatedAt=now()});save();toast(`${ids.length} bobinas en pallet ${n}`)}
 const LOGO=()=>document.querySelector('header img').src;
-function certPDF(soloEtiqueta){
-  if(!window.jspdf)return toast('No cargó la librería PDF (sin internet)');
-  const fs=selFin();if(!fs.length)return toast('No hay bobinas para el certificado');
-  const ocIds=[...new Set(fs.map(f=>f.ocId))];if(ocIds.length>1)return toast('Las bobinas tienen que ser de una sola OC');
-  const o=ocOf(ocIds[0]),{jsPDF}=window.jspdf,d=new jsPDF({unit:'mm',format:'a4'});
+function certDraw(d,fs,o,opts){ // dibuja en el doc d: calidad / empaque / etiqueta según opts
+  const np=()=>{if(d._fresh)d._fresh=false;else d.addPage('a4','portrait')};
   const sorted=fs.slice().sort((a,b)=>a.nro-b.nro),pallet=[...new Set(fs.map(f=>f.pallet).filter(Boolean))].join(', ')||'—';
   const partidas=[...new Set(fs.map(f=>f.partida))].join(', ');
   const lams=S.laminadas.filter(l=>fs.some(f=>f.lamId===l.id));
@@ -959,38 +979,111 @@ function certPDF(soloEtiqueta){
       for(let r=0;r<rowsPer;r++){const f=rows[c*rowsPer+r],y=y0+6+r*6;d.setDrawColor('#444');d.setLineWidth(.2);d.rect(x,y,w[0],6);d.rect(x+w[0],y,w[1],6);if(f){d.text(String(f.nro),x+w[0]/2,y+4.2,{align:'center'});d.text(fmt(f.kg),x+w[0]+w[1]/2,y+4.2,{align:'center'})}}}
     return y0+6+rowsPer*6};
   const bloques=[];for(let i=0;i<sorted.length;i+=40)bloques.push(sorted.slice(i,i+40));
-  if(!soloEtiqueta){
+  if(opts.calidad){
    // ---- CALIDAD ----
-   bloques.forEach((rows,bi)=>{if(bi)d.addPage();cab('CALIDAD');
+   bloques.forEach((rows,bi)=>{np();cab('CALIDAD');
     let y=46;kv(50,y,'Cliente',o.cliente);y+=8;kv(50,y,'OC Cliente / ME:',o.nro);kv(140,y,'Fecha:',hoy);y+=8;
     kv(70,y,'Producto:',o.lamina||'Lamina PET/PE');y+=6;kv(70,y,'Color:',o.color||'Cristal');y+=6;kv(70,y,'Ancho Plano:',(o.ancho||'')+' mm');y+=6;kv(70,y,'Espesor',(o.esp||'')+' micrones');y+=6;kv(70,y,'Tratamiento:',o.trat||'Sin Silicona');y+=6;kv(70,y,'Cono:',sorted[0]?.cono||'');y+=6;kv(70,y,'Etiquetas:','Info. Detallada');y+=6;kv(70,y,'Partida:',partidas);y+=6;kv(70,y,'Fecha de Fabricación',fFab);y+=6;kv(70,y,'Fecha de Rebobinado',fReb);y+=10;
     d.setDrawColor('#444');d.setLineWidth(.4);d.rect(18,y,174,84);d.setFontSize(10);d.setFont('helvetica','bold');d.setTextColor('#b00');d.text(`PALLET N: ${pallet}`,105,y+6,{align:'center'});d.setTextColor(T);d.setFont('helvetica','normal');d.text(`Unidades:  ${rows.length}`,105,y+12,{align:'center'});d.setFont('helvetica','bold');d.text(`KG NETO TOTAL:  ${fmt(sum(rows,f=>f.kg))}`,105,y+18,{align:'center'});d.setFont('helvetica','normal');
     tablaBob(y+22,rows);y+=92;
     d.setFontSize(8);d.setFont('helvetica','bold');const apro=d.splitTextToSize('Aprobación:  Resolución SENASA nº E-1435 - RESINA DE PET LASER + (AD650). Cumple con la declaración jurada que diera origen a su autorización, habiendo sido verificada analiticamente respecto al cumplimiento de los requisitos estipulados en el Capitulo IV- UTENSILIOS, RECIPIENTES, ENVASES, ENVOLTURA, APARATOS Y ACCESORIOS DEL CODIGO ALIMENTARIO ARGENTINO PARA LAS CONDICIONES EN QUE SE ACONSEJA SU USO.',170);d.text(apro,105,y+4,{align:'center'});y+=apro.length*3.6+6;d.text('Cumple: con MERCOSUR GMC-RESOLUCIÓN N°: 3/92.',105,y,{align:'center'});
     pie()});
+  }
+  if(opts.empaque){
    // ---- LISTA DE EMPAQUE ----
-   bloques.forEach((rows)=>{d.addPage();cab('LISTA DE EMPAQUE');let y=46;kv(50,y,'Cliente',o.cliente);y+=10;
+   bloques.forEach((rows)=>{np();cab('LISTA DE EMPAQUE');let y=46;kv(50,y,'Cliente',o.cliente);y+=10;
     kv(60,y,'Partida:',partidas);kv(150,y,'Ancho Plano:',(o.ancho||'')+' mm');y+=6;kv(60,y,'Producto:',o.lamina||'Lamina PET/PE');kv(150,y,'Espesor',(o.esp||'')+' micrones');y+=6;kv(60,y,'Cono:',sorted[0]?.cono||'');kv(150,y,'Color:',o.color||'Cristal');y+=6;kv(60,y,'Etiquetas:','Info. Detallada.');kv(150,y,'Tratamiento:',o.trat||'Sin Silicona');y+=9;
     d.setFont('helvetica','bold');d.setFontSize(10);d.text(`BOBINAS  ${fs.length}`,60,y,{align:'center'});d.text(`TOTAL KILOS  ${fmt(kgN)}`,150,y,{align:'center'});y+=6;
     d.setDrawColor('#444');d.setLineWidth(.4);d.rect(18,y,174,84);d.setTextColor('#b00');d.text(`PALLET N: ${pallet}`,105,y+6,{align:'center'});d.setTextColor(T);d.setFont('helvetica','normal');d.text(`Unidades:  ${rows.length}`,105,y+12,{align:'center'});d.setFont('helvetica','bold');d.text(`KG NETO TOTAL:  ${fmt(sum(rows,f=>f.kg))}`,105,y+18,{align:'center'});d.setFont('helvetica','normal');tablaBob(y+22,rows);y+=94;
     d.setFontSize(8.5);d.text('Empaque y Estiba:',20,y);y+=5;['1. Cada bobina se envuelve con lámina plástica para conservar la hermeticidad.','2. Cada bobina se recubre con cartón corrugado.','3. Estiba horizonal en forma piramidal envuelto con film plástico protector.','4. Rótulos "NO GOLPEAR" - "FRÁGIL" - "CLIENTE" de fácil reconocimiento.'].forEach(t=>{d.text(t,35,y);y+=5});y+=4;
     d.setFont('helvetica','bold');d.text('AUTORIZO',150,y,{align:'center'});d.setFont('helvetica','normal');d.text('Stancato Jonathan',150,y+5,{align:'center'});pie()});
   }
+  if(opts.etiqueta){
   // ---- ETIQUETA PALLET ----
-  if(soloEtiqueta)d.deletePage(1);d.addPage('a4','portrait');
+  np();
   d.addImage(LOGO(),'PNG',20,20,45,0);d.setFontSize(14);d.setFont('helvetica','normal');d.text('Fecha:',110,32);d.setFontSize(13);d.text(hoy,150,32);d.setDrawColor('#333');d.setLineWidth(.5);d.line(100,36,190,36);d.line(20,50,190,50);
   const fila=(y,k,v,big)=>{d.setFontSize(20);d.setFont('helvetica','normal');d.text(k,55,y,{align:'center'});d.setFontSize(big||22);d.setFont('helvetica','bold');d.text(String(v),150,y,{align:'center'});d.setDrawColor('#333');d.line(20,y+12,190,y+12)};
   d.setFontSize(20);d.text('Ancho - Espesor',105,68,{align:'center'});d.setFontSize(44);d.setFont('helvetica','bold');d.text(`${o.ancho||''} · ${o.esp||''}`,105,90,{align:'center'});d.line(20,98,190,98);
   fila(118,'Bobina Inicio - Fin',`${sorted[0]?.nro||''}  -  ${sorted[sorted.length-1]?.nro||''}`,26);
   fila(148,'Peso Bruto:',`${fmt(kgB)} KG`);fila(178,'Peso Neto:',`${fmt(kgN)} KG`);fila(208,'Partida:',partidas,20);fila(238,'Ocompra:',o.nro,22);
   d.setFontSize(12);d.setFont('helvetica','normal');d.text(`Cliente: ${o.cliente}   ·   Pallet N° ${pallet}   ·   ${fs.length} bobinas`,105,262,{align:'center'});d.setDrawColor('#999');d.setLineWidth(.3);d.rect(10,8,190,283);
-  d.save(`${soloEtiqueta?'etiqueta':'certificado'}-${o.cliente}-OC${o.nro}${pallet!=='—'?'-pallet'+pallet.replace(/[^\w]/g,'_'):''}.pdf`);
+  }
+}
+function newPDF(){const {jsPDF}=window.jspdf;const d=new jsPDF({unit:'mm',format:'a4'});d._fresh=true;return d}
+function certPDF(soloEtiqueta){
+  if(!window.jspdf)return toast('No cargó la librería PDF (sin internet)');
+  const fs=selFin();if(!fs.length)return toast('No hay bobinas para el certificado');
+  const ocIds=[...new Set(fs.map(f=>f.ocId))];if(ocIds.length>1)return toast('Las bobinas tienen que ser de una sola OC');
+  const o=ocOf(ocIds[0]),d=newPDF();certDraw(d,fs,o,soloEtiqueta?{etiqueta:true}:{calidad:true,empaque:true,etiqueta:true});
+  const pallet=[...new Set(fs.map(f=>f.pallet).filter(Boolean))].join('_');d.save(`${soloEtiqueta?'etiqueta':'certificado'}-${o.cliente}-OC${o.nro}${pallet?'-pallet'+pallet.replace(/[^\w]/g,'_'):''}.pdf`);
 }
 function exportCSV(){
   const rows=[['Cliente','OC','Bobina','Partida','Laminada','Ancho mm','Espesor u','Metros','Kg bruto','Kg neto','Cono','Etiqueta','Fecha','Estado','Remito']];
   finFiltered().forEach(f=>{const o=ocOf(f.ocId);rows.push([o.cliente,o.nro,f.nro,f.partida,'L'+f.lamNro,f.ancho,f.esp,f.m,f.kgB||'',f.kg,f.cono,f.etiqueta,fd(f.createdAt),f.estado,f.remito||''])});
   const a=document.createElement('a');a.href='data:text/csv;charset=utf-8,\uFEFF'+encodeURIComponent(rows.map(r=>r.join(';')).join('\n'));a.download='bobinas-finales.csv';a.click();
 }
+
+/* ================= DESPACHOS ================= */
+function palGroups(){ // pallets en stock, agrupados por cliente > OC > pallet
+  const fs=S.finales.filter(f=>f.estado==='en stock');const g={};
+  for(const f of fs){const o=ocOf(f.ocId);const cli=o.cliente||'—',pk=String(f.pallet||'sin pallet');g[cli]=g[cli]||{};g[cli][o.id]=g[cli][o.id]||{oc:o,pallets:{}};g[cli][o.id].pallets[pk]=g[cli][o.id].pallets[pk]||[];g[cli][o.id].pallets[pk].push(f)}
+  return g;
+}
+function dpKey(ocId,pk){return ocId+'§'+pk}
+function dpSelected(){return [...document.querySelectorAll('#dpStock input.dpp:checked')].map(c=>c.value)}
+function dpCount(){const sel=dpSelected();const g=palGroups();let fs=[];for(const k of sel){const [ocId,pk]=k.split('§');const o=ocOf(ocId);fs=fs.concat(((g[o.cliente]||{})[ocId]||{pallets:{}}).pallets[pk]||[])}
+  const clis=[...new Set(fs.map(f=>ocOf(f.ocId).cliente))];
+  $('dpSel').innerHTML=fs.length?`<b>${sel.length} pallet${sel.length>1?'s':''} · ${fs.length} bobinas · ${fmt(sum(fs,f=>f.kg))} kg neto · ${fmt(sum(fs,f=>f.kgB||f.kg))} kg bruto</b>${clis.length>1?' · <span style="color:var(--bad)">⚠ más de un cliente</span>':''}`:'Nada tildado';return fs}
+function renderDesp(){
+  if(!$('dpFecha').value)$('dpFecha').value=now().slice(0,10);
+  const g=palGroups();const clis=Object.keys(g).sort();
+  $('dpStock').innerHTML=clis.map(cli=>`<div class="card"><h2>${cli}</h2>${Object.values(g[cli]).map(({oc,pallets})=>{const pks=Object.keys(pallets).sort((a,b)=>(+a||0)-(+b||0));const all=Object.values(pallets).flat();
+    return`<div style="border:1px solid var(--line);border-radius:10px;padding:10px 14px;margin-bottom:10px"><div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:8px"><label style="display:flex;gap:8px;align-items:center;font-weight:700;color:var(--brand);font-size:16px"><input type="checkbox" onchange="this.closest('div').parentElement.querySelectorAll('input.dpp').forEach(c=>c.checked=this.checked);dpCount()"> OC ${oc.nro}</label><span class="tag ref">${oc.desc||''} · ${oc.ancho||'?'} mm · ${oc.esp||'?'} µ</span>${oc.cert?'<span class="tag cerr">pide certificado</span>':''}<span class="muted" style="margin-left:auto">${all.length} bobinas en stock · ${fmt(sum(all,f=>f.kg))} kg neto${oc.kg?` · pedido ${fmt(oc.kg)} kg`:''}</span></div>
+     <table><thead><tr><th></th><th>Pallet</th><th class="n">Bobinas</th><th>Nº bobinas</th><th class="n">Kg bruto</th><th class="n">Kg neto</th><th>Partida</th><th>Refilada</th></tr></thead><tbody>${pks.map(pk=>{const fs=pallets[pk].sort((a,b)=>a.nro-b.nro);const nros=fs.map(f=>f.nro);const rango=nros.length>1&&nros[nros.length-1]-nros[0]===nros.length-1?`${nros[0]} – ${nros[nros.length-1]}`:nros.join(', ');return`<tr><td><input type="checkbox" class="dpp" value="${dpKey(oc.id,pk)}" onchange="dpCount()"></td><td><b>${pk}</b></td><td class="n">${fs.length}</td><td>${rango}</td><td class="n">${fmt(sum(fs,f=>f.kgB||f.kg))}</td><td class="n">${fmt(sum(fs,f=>f.kg))}</td><td>${[...new Set(fs.map(f=>f.partida))].join(', ')}</td><td>${fd(fs[fs.length-1].createdAt)}</td></tr>`}).join('')}</tbody></table></div>`}).join('')}</div>`).join('')||'<div class="card"><p class="muted">No hay bobinas en stock para despachar.</p></div>';
+  $('dpHist').innerHTML=S.despachos.slice().sort((a,b)=>b.createdAt>a.createdAt?1:-1).slice(0,40).map(dp=>`<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:8px 0;border-bottom:1px solid var(--line)"><b style="color:var(--brand)">Despacho ${dp.nro}</b><span>${dp.fecha.slice(8,10)}/${dp.fecha.slice(5,7)}/${dp.fecha.slice(0,4)}</span><span>${dp.cliente}</span><span class="muted">OC ${dp.ocNros.join(', ')} · pallets ${dp.pallets.join(', ')} · ${dp.nBob} bob · ${fmt(dp.kgN)} kg neto</span>${dp.remito?`<span class="tag cerr">remito ${dp.remito}</span>`:''}<span style="margin-left:auto"></span><button class="btn sec" onclick="dpRemito('${dp.id}')">Nº remito</button><button class="btn sec" onclick="dpPDF('${dp.id}',true)">PDF</button><button class="btn sec" onclick="dpMail('${dp.id}')">✉ Mail</button><button class="btn sec" onclick="dpAnular('${dp.id}')">✕</button></div>`).join('')||'<p class="muted">Todavía no hay despachos.</p>';
+  dpCount();
+}
+function dpGenerar(){
+  if(!window.jspdf)return toast('No cargó la librería PDF (sin internet)');
+  const fs=dpCount();if(!fs.length)return toast('Tildá al menos un pallet');
+  const clis=[...new Set(fs.map(f=>ocOf(f.ocId).cliente))];if(clis.length>1)return toast('Un despacho es de un solo cliente');
+  const ocIds=[...new Set(fs.map(f=>f.ocId))];const nro=S.despachos.reduce((m,d)=>Math.max(m,+d.nro||0),0)+1;
+  const dp={id:uid('DP'),nro,fecha:$('dpFecha').value||now().slice(0,10),remito:$('dpRem').value.trim(),obs:$('dpObs').value.trim(),cliente:clis[0],ocIds,ocNros:ocIds.map(i=>ocOf(i).nro),pallets:[...new Set(fs.map(f=>String(f.pallet||'')))],finIds:fs.map(f=>f.id),nBob:fs.length,kgN:sum(fs,f=>f.kg),kgB:sum(fs,f=>f.kgB||f.kg),cert:$('dpCert').checked,por:who,createdAt:now(),updatedAt:now()};
+  fs.forEach(f=>{f.estado='remitida';f.despachoId=dp.id;f.remito=dp.remito||('DESP-'+nro);f.remFecha=dp.fecha;f.updatedAt=now()});
+  S.despachos.push(dp);save();toast(`Despacho ${nro} generado`);$('dpRem').value='';$('dpObs').value='';
+  dpPDF(dp.id);
+}
+function dpFins(dp){return S.finales.filter(f=>dp.finIds.includes(f.id))}
+function dpPDF(id,soloVer){
+  const dp=S.despachos.find(x=>x.id===id);const fs=dpFins(dp);const d=newPDF();const G='#0a6b3a',T='#222';
+  // ---- PARTE DE DESPACHO ----
+  d._fresh=false;d.addImage(LOGO(),'PNG',15,12,34,0);d.setFontSize(9);d.setTextColor(T);d.text('DOCUMENTO',105,16,{align:'center'});d.text('FECHA',185,16,{align:'center'});d.setFontSize(18);d.setFont('helvetica','bold');d.text('PARTE DE DESPACHO',105,25,{align:'center'});d.setFontSize(11);d.text(`Nº ${dp.nro}`,105,32,{align:'center'});d.setTextColor('#b00');d.text(`${dp.fecha.slice(8,10)}/${dp.fecha.slice(5,7)}/${dp.fecha.slice(0,4)}`,185,25,{align:'center'});d.setTextColor(T);d.setFont('helvetica','normal');d.setDrawColor(G);d.setLineWidth(.6);d.line(15,36,195,36);
+  let y=46;d.setFontSize(11);d.setFont('helvetica','bold');d.text('Cliente:',20,y);d.setFont('helvetica','normal');d.text(dp.cliente,42,y);d.setFont('helvetica','bold');d.text('Remito:',120,y);d.setFont('helvetica','normal');d.text(dp.remito||'(a completar por Administración)',140,y);y+=7;
+  d.setFont('helvetica','bold');d.text('OC:',20,y);d.setFont('helvetica','normal');d.text(dp.ocNros.join(', '),42,y);d.setFont('helvetica','bold');d.text('Generó:',120,y);d.setFont('helvetica','normal');d.text(`${dp.por||''} · ${fh(dp.createdAt)}`,140,y);y+=7;
+  if(dp.obs){d.setFont('helvetica','bold');d.text('Obs.:',20,y);d.setFont('helvetica','normal');d.text(d.splitTextToSize(dp.obs,150),42,y);y+=7}
+  y+=4;d.setFontSize(12);d.setFont('helvetica','bold');d.text('Resumen para facturar',20,y);y+=4;
+  // tabla por OC / pallet
+  const rows=[];for(const ocId of dp.ocIds){const o=ocOf(ocId);const pks=[...new Set(fs.filter(f=>f.ocId===ocId).map(f=>String(f.pallet||'')))].sort((a,b)=>(+a||0)-(+b||0));for(const pk of pks){const g=fs.filter(f=>f.ocId===ocId&&String(f.pallet||'')===pk).sort((a,b)=>a.nro-b.nro);rows.push([o.nro,`${o.desc||''} · ${o.ancho||''} mm · ${o.esp||''} µ`,pk,String(g.length),g.length>1?`${g[0].nro} – ${g[g.length-1].nro}`:String(g[0].nro),fmt(sum(g,f=>f.kgB||f.kg)),fmt(sum(g,f=>f.kg)),[...new Set(g.map(f=>f.partida))].join(' ')])}}
+  const cols=[['OC',18],['Medida',48],['Pallet',14],['Bob.',12],['Nº bobinas',26],['Kg bruto',20],['Kg neto',20],['Partida',30]];let x=15;
+  d.setFontSize(9);d.setFillColor('#eef4ef');d.rect(15,y,180,7,'F');d.setFont('helvetica','bold');cols.forEach(([c,w])=>{d.text(c,x+2,y+5);x+=w});y+=7;d.setFont('helvetica','normal');
+  rows.forEach(r=>{x=15;d.setDrawColor('#bbb');d.setLineWidth(.2);d.line(15,y+7,195,y+7);cols.forEach(([c,w],i)=>{const al=i>=3&&i<=6?'right':'left';d.text(String(r[i]).slice(0,i===1?34:40),al==='right'?x+w-2:x+2,y+5,{align:al});x+=w});y+=7;if(y>250){d.addPage();y=20}});
+  y+=3;d.setFont('helvetica','bold');d.setFontSize(11);d.text(`TOTAL: ${dp.pallets.length} pallet${dp.pallets.length>1?'s':''} · ${dp.nBob} bobinas · ${fmt(dp.kgB)} kg bruto · ${fmt(dp.kgN)} kg neto`,195,y+4,{align:'right'});y+=14;
+  // detalle por bobina
+  d.setFontSize(11);d.text('Detalle de bobinas',20,y);y+=4;d.setFontSize(8.5);d.setFont('helvetica','normal');
+  const det=fs.slice().sort((a,b)=>(a.ocId>b.ocId?1:-1)||(+a.pallet-+b.pallet)||(a.nro-b.nro));const cw=[14,14,14,16,18,18,30,16];const hd=['OC','Pallet','Bob.','Ancho','Bruto','Neto','Partida','Cono'];
+  const th=()=>{x=15;d.setFillColor('#f6f6f6');d.rect(15,y,180,6,'F');d.setFont('helvetica','bold');hd.forEach((c,i)=>{d.text(c,x+2,y+4.3);x+=cw[i]});y+=6;d.setFont('helvetica','normal')};th();
+  det.forEach(f=>{if(y>270){d.addPage();y=20;th()}x=15;const o=ocOf(f.ocId);[o.nro,f.pallet||'',f.nro,f.ancho||'',f.kgB?fmt(f.kgB):'',fmt(f.kg),f.partida,f.cono].forEach((v,i)=>{d.text(String(v),x+2,y+4.3);x+=cw[i]});y+=5.5});
+  d.setDrawColor(G);d.setLineWidth(.6);d.line(15,282,195,282);d.setFontSize(7.5);d.setTextColor('#333');d.text('Winflex S.A. · Planta Lanús · Parte de despacho generado por la app Laminado y Refilado',105,287,{align:'center'});
+  // ---- CERTIFICADO por OC (si la OC lo pide y el despacho lo incluye) ----
+  if(dp.cert){for(const ocId of dp.ocIds){const o=ocOf(ocId);if(!o.cert)continue;certDraw(d,fs.filter(f=>f.ocId===ocId),o,{calidad:true,empaque:true,etiqueta:true})}}
+  d.save(`despacho-${dp.nro}-${dp.cliente}-${dp.fecha}.pdf`);
+}
+function dpMail(id){const dp=S.despachos.find(x=>x.id===id);const fs=dpFins(dp);
+  const lines=[];for(const ocId of dp.ocIds){const o=ocOf(ocId);const pks=[...new Set(fs.filter(f=>f.ocId===ocId).map(f=>String(f.pallet||'')))];for(const pk of pks){const g=fs.filter(f=>f.ocId===ocId&&String(f.pallet||'')===pk);lines.push(`OC ${o.nro} · ${o.desc||''} ${o.ancho||''} mm · pallet ${pk}: ${g.length} bobinas (${g.map(f=>f.nro).sort((a,b)=>a-b).join(', ')}) · ${fmt(sum(g,f=>f.kgB||f.kg))} kg bruto · ${fmt(sum(g,f=>f.kg))} kg neto`)}}
+  const body=`Despacho ${dp.nro} · ${dp.fecha.slice(8,10)}/${dp.fecha.slice(5,7)}\nCliente: ${dp.cliente}\nOC: ${dp.ocNros.join(', ')}\n${dp.remito?'Remito: '+dp.remito+'\n':''}${dp.obs?'Obs.: '+dp.obs+'\n':''}\n${lines.join('\n')}\n\nTOTAL: ${dp.pallets.length} pallets · ${dp.nBob} bobinas · ${fmt(dp.kgB)} kg bruto · ${fmt(dp.kgN)} kg neto\n${dp.cert?'Se adjunta certificado de calidad.\n':''}\n(Adjuntar el PDF descargado desde la app)`;
+  window.location.href=`mailto:?subject=${encodeURIComponent(`Despacho ${dp.nro} · ${dp.cliente} · OC ${dp.ocNros.join(', ')} · para facturar`)}&body=${encodeURIComponent(body)}`}
+async function dpRemito(id){const dp=S.despachos.find(x=>x.id===id);const v=prompt('Nº de remito',dp.remito||'');if(v===null)return;dp.remito=v.trim();dp.updatedAt=now();dpFins(dp).forEach(f=>{f.remito=dp.remito||('DESP-'+dp.nro);f.updatedAt=now()});save()}
+async function dpAnular(id){const dp=S.despachos.find(x=>x.id===id);if(!await confirmUI(`¿Anular el despacho ${dp.nro}? Las ${dp.nBob} bobinas vuelven a stock.`))return;dpFins(dp).forEach(f=>{f.estado='en stock';f.remito=null;f.remFecha=null;f.despachoId=null;f.updatedAt=now()});kill('despachos',id);save()}
 
 /* ================= CRONOGRAMA ================= */
 const MAQS=['Laminadora','Refiladora Verde','Refiladora Gris'];
@@ -1255,7 +1348,7 @@ function render(){
     return`<div class="pick" onclick="opOpen('${o.id}')"><b>${ocLbl(o)}</b> ${op?tagOf('abierta'):''}<small>${o.desc||''} · ${o.ancho||'?'} mm × ${o.esp||'?'} µ${o.tiras>1?' · '+o.tiras+' tiras':''}${o.kxb?' · ~'+o.kxb+' kg/bob':''}${o.bxp?' · '+o.bxp+' bob/pallet':''}</small><small>${pend.length} bobinas por refilar (${fmt(sum(pend,l=>l.kg))} kg) · <b>${fmt(kf)}</b> / ${fmt(o.kg)} kg finales</small><div class="bar"><i style="width:${o.kg?Math.min(100,kf/o.kg*100):0}%"></i></div></div>`}).join('')||'<p class="muted">No hay OC con bobinas laminadas para refilar.</p>';}
   if(mode==='op'&&curOP)renderOP();
   if(mode==='pc'){
-    renderProd();renderCro();renderPet();
+    renderProd();renderCro();renderPet();renderDesp();
     const pv=$('ocProd').value;$('ocProd').innerHTML='<option value="">— elegir producto —</option>'+S.catalogo.slice().sort((a,b)=>a.cliente.localeCompare(b.cliente)).map(p=>`<option value="${p.id}">${prodLbl(p)}</option>`).join('');$('ocProd').value=pv;
     $('catList').innerHTML=S.catalogo.slice().sort((a,b)=>a.cliente.localeCompare(b.cliente)).map(p=>`<tr><td>${p.cliente}</td><td><b>${p.medida}</b></td><td class="n">${p.anchoPet??''}</td><td class="n">${p.espPet??''}</td><td class="n">${p.anchoPe??''}</td><td class="n">${p.espPe??''}</td><td class="n">${p.anchoFinal}</td><td class="n">${p.tiras||1}</td><td class="n">${p.pesoBobinaPet?p.pesoBobinaPet+' kg / '+(p.metrosBobinaPet||'?')+' m':'—'}</td><td class="n">${p.pesoBobinaPe?p.pesoBobinaPe+' kg / '+(p.metrosBobinaPe||'?')+' m':'—'}</td><td class="n">${p.pesoBobinaFinal?p.pesoBobinaFinal+' kg':'—'}</td><td class="n">${p.cilindro||'—'}</td><td class="n">${p.kgHoraLam||'—'}</td><td class="n">${p.kgHoraRef||'—'}</td><td><button class="btn sec" onclick="catEdit('${p.id}')">✎</button> <button class="btn sec" onclick="catDel('${p.id}')">✕</button></td></tr>`).join('');
     const sOC=$('qOC').value,eOC=$('qOCEst').value;
