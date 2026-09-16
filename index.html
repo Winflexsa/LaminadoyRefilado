@@ -563,7 +563,7 @@ td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
 
 <script>
 /* ================= ESTADO ================= */
-const VERSION='v0.31';
+const VERSION='v0.32';
 const CATALOGO=[
  {id:'CAT-01',cliente:'Don Yeyo',medida:'321x300',anchoPet:350,espPet:250,anchoPe:370,espPe:50,anchoFinal:321,tiras:1,pesoBobinaPet:92,metrosBobinaPet:762,pesoBobinaPe:26,metrosBobinaPe:1550,pesoBobinaFinal:35,cilindro:340},
  {id:'CAT-02',cliente:'Molinos',medida:'472x235',anchoPet:500,espPet:200,anchoPe:530,espPe:35,anchoFinal:472,tiras:1,pesoBobinaPet:80,metrosBobinaPet:592,pesoBobinaPe:32,metrosBobinaPe:1900,pesoBobinaFinal:40,cilindro:490},
@@ -1072,20 +1072,21 @@ function dpPDF(id,soloVer){
   // ---- PARTE DE DESPACHO ----
   d._fresh=false;d.addImage(LOGO(),'PNG',15,12,34,0);d.setFontSize(9);d.setTextColor(T);d.text('DOCUMENTO',105,16,{align:'center'});d.text('FECHA',185,16,{align:'center'});d.setFontSize(18);d.setFont('helvetica','bold');d.text('PARTE DE DESPACHO',105,25,{align:'center'});d.setFontSize(11);d.text(`Nº ${dp.nro}`,105,32,{align:'center'});d.setTextColor('#b00');d.text(`${dp.fecha.slice(8,10)}/${dp.fecha.slice(5,7)}/${dp.fecha.slice(0,4)}`,185,25,{align:'center'});d.setTextColor(T);d.setFont('helvetica','normal');d.setDrawColor(G);d.setLineWidth(.6);d.line(15,36,195,36);
   let y=46;d.setFontSize(11);d.setFont('helvetica','bold');d.text('Cliente:',20,y);d.setFont('helvetica','normal');d.text(dp.cliente,42,y);d.setFont('helvetica','bold');d.text('Remito:',120,y);d.setFont('helvetica','normal');d.text(dp.remito||'(a completar por Administración)',140,y);y+=7;
-  d.setFont('helvetica','bold');d.text('OC:',20,y);d.setFont('helvetica','normal');d.text(dp.ocNros.join(', '),42,y);d.setFont('helvetica','bold');d.text('Generó:',120,y);d.setFont('helvetica','normal');d.text(`${dp.por||''} · ${fh(dp.createdAt)}`,140,y);y+=7;
+  d.setFont('helvetica','bold');d.text('OC:',20,y);d.setFont('helvetica','normal');d.text(dp.ocNros.join(', '),42,y);y+=7;
   if(dp.obs){d.setFont('helvetica','bold');d.text('Obs.:',20,y);d.setFont('helvetica','normal');d.text(d.splitTextToSize(dp.obs,150),42,y);y+=7}
   y+=4;d.setFontSize(12);d.setFont('helvetica','bold');d.text('Resumen para facturar',20,y);y+=4;
   // tabla por OC / pallet
-  const rows=[];for(const ocId of dp.ocIds){const o=ocOf(ocId);const pks=[...new Set(fs.filter(f=>f.ocId===ocId).map(f=>String(f.pallet||'')))].sort((a,b)=>(+a||0)-(+b||0));for(const pk of pks){const g=fs.filter(f=>f.ocId===ocId&&String(f.pallet||'')===pk).sort((a,b)=>a.nro-b.nro);rows.push([o.nro,`${o.desc||''} · ${o.ancho||''} mm · ${o.esp||''} µ`,pk,String(g.length),g.length>1?`${g[0].nro} – ${g[g.length-1].nro}`:String(g[0].nro),fmt(sum(g,f=>f.kgB||f.kg)),fmt(sum(g,f=>f.kg)),[...new Set(g.map(f=>f.partida))].join(' ')])}}
-  const cols=[['OC',16],['Medida',46],['Pallet',14],['Bob.',12],['Nº bobinas',24],['Kg bruto',20],['Kg neto',20],['Partida',28]];let x=15;
-  d.setFontSize(9);d.setFillColor('#eef4ef');d.rect(15,y,180,7,'F');d.setFont('helvetica','bold');cols.forEach(([c,w])=>{d.text(c,x+2,y+5);x+=w});y+=7;d.setFont('helvetica','normal');
-  rows.forEach(r=>{x=15;d.setDrawColor('#bbb');d.setLineWidth(.2);d.line(15,y+7,195,y+7);cols.forEach(([c,w],i)=>{const al=i>=3&&i<=6?'right':'left';d.text(String(r[i]).slice(0,i===1?34:40),al==='right'?x+w-2:x+2,y+5,{align:al});x+=w});y+=7;if(y>250){d.addPage();y=20}});
+  const rows=[];for(const ocId of dp.ocIds){const o=ocOf(ocId);const pks=[...new Set(fs.filter(f=>f.ocId===ocId).map(f=>String(f.pallet||'')))].sort((a,b)=>(+a||0)-(+b||0));for(const pk of pks){const g=fs.filter(f=>f.ocId===ocId&&String(f.pallet||'')===pk).sort((a,b)=>a.nro-b.nro);rows.push([o.nro,o.desc||`${o.ancho||''} mm x ${o.esp||''} mic`,pk,String(g.length),g.length>1?`${g[0].nro} – ${g[g.length-1].nro}`:String(g[0].nro),fmt(sum(g,f=>f.kgB||f.kg)),fmt(sum(g,f=>f.kg)),[...new Set(g.map(f=>f.partida))].join(' ')])}}
+  const cols=[['OC',18],['Medida',34],['Pallet',16],['Bob.',14],['Nº bobinas',30],['Kg bruto',22],['Kg neto',22],['Partida',24]];let x=15;
+  d.setFontSize(9);d.setFillColor('#eef4ef');d.rect(15,y,180,7,'F');d.setFont('helvetica','bold');cols.forEach(([c,w],i)=>{const al=[3,5,6].includes(i)?'right':'left';d.text(c,al==='right'?x+w-2:x+2,y+5,{align:al});x+=w});y+=7;d.setFont('helvetica','normal');
+  const num=[3,5,6];x=15;cols.forEach(([c,w],i)=>{});
+  rows.forEach(r=>{x=15;d.setDrawColor('#bbb');d.setLineWidth(.2);d.line(15,y+7,195,y+7);cols.forEach(([c,w],i)=>{const al=num.includes(i)?'right':'left';let t=String(r[i]);while(d.getTextWidth(t)>w-4&&t.length>3)t=t.slice(0,-2)+'…';d.text(t,al==='right'?x+w-2:x+2,y+5,{align:al});x+=w});y+=7;if(y>250){d.addPage();y=20}});
   y+=3;d.setFont('helvetica','bold');d.setFontSize(11);d.text(`TOTAL: ${dp.pallets.length} pallet${dp.pallets.length>1?'s':''} · ${dp.nBob} bobinas · ${fmt(dp.kgB)} kg bruto · ${fmt(dp.kgN)} kg neto`,195,y+4,{align:'right'});y+=14;
   // detalle por bobina
   d.setFontSize(11);d.text('Detalle de bobinas',20,y);y+=4;d.setFontSize(8.5);d.setFont('helvetica','normal');
   const det=fs.slice().sort((a,b)=>(a.ocId>b.ocId?1:-1)||(+a.pallet-+b.pallet)||(a.nro-b.nro));const cw=[16,16,14,18,22,22,52,20];const hd=['OC','Pallet','Bob.','Ancho','Bruto','Neto','Partida','Cono'];
-  const th=()=>{x=15;d.setFillColor('#f6f6f6');d.rect(15,y,180,6,'F');d.setFont('helvetica','bold');hd.forEach((c,i)=>{d.text(c,x+2,y+4.3);x+=cw[i]});y+=6;d.setFont('helvetica','normal')};th();
-  det.forEach(f=>{if(y>270){d.addPage();y=20;th()}x=15;const o=ocOf(f.ocId);[o.nro,f.pallet||'',f.nro,f.ancho||'',f.kgB?fmt(f.kgB):'',fmt(f.kg),f.partida,f.cono].forEach((v,i)=>{d.text(String(v),x+2,y+4.3);x+=cw[i]});y+=5.5});
+  const th=()=>{x=15;d.setFillColor('#f6f6f6');d.rect(15,y,180,6,'F');d.setFont('helvetica','bold');hd.forEach((c,i)=>{const al=[2,3,4,5].includes(i)?'right':'left';d.text(c,al==='right'?x+cw[i]-2:x+2,y+4.3,{align:al});x+=cw[i]});y+=6;d.setFont('helvetica','normal')};th();
+  det.forEach(f=>{if(y>270){d.addPage();y=20;th()}x=15;const o=ocOf(f.ocId);[o.nro,f.pallet||'',f.nro,f.ancho||'',f.kgB?fmt(f.kgB):'',fmt(f.kg),f.partida,f.cono].forEach((v,i)=>{const al=[2,3,4,5].includes(i)?'right':'left';d.text(String(v),al==='right'?x+cw[i]-2:x+2,y+4.3,{align:al});x+=cw[i]});y+=5.5});
   d.setDrawColor(G);d.setLineWidth(.6);d.line(15,282,195,282);d.setFontSize(7.5);d.setTextColor('#333');d.text('Winflex S.A. · Planta Lanús · Parte de despacho generado por la app Laminado y Refilado',105,287,{align:'center'});
   // ---- CERTIFICADO por OC (si la OC lo pide y el despacho lo incluye) ----
   if(dp.cert){for(const ocId of dp.ocIds){const o=ocOf(ocId);certDraw(d,fs.filter(f=>f.ocId===ocId),o,{calidad:true,empaque:true})}}
