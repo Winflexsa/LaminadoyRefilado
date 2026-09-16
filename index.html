@@ -511,6 +511,7 @@ td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
         <div class="f"><label>Metros bob. PE</label><input id="catMPe" type="number"></div>
         <div class="f"><label>Peso bob. final (kg)</label><input id="catPLam" type="number" step="any"></div>
         <div class="f"><label>Cilindro (mm)</label><input id="catCil" type="number"></div>
+        <div class="f"><label>Bobinas por pallet</label><input id="catBxP" type="number"></div>
         <div class="f"><label>Peso cono 3" (kg)</label><input id="catCono3" type="number" step="any"></div>
         <div class="f"><label>Peso cono 6" (kg)</label><input id="catCono6" type="number" step="any"></div>
         <div class="f"><label>Objetivo laminado (kg/h)</label><input id="catKhLam" type="number" step="any"></div>
@@ -519,7 +520,7 @@ td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
       <div class="row" style="margin-top:10px"><button class="btn" onclick="catSave()">Guardar producto</button><button class="btn sec" onclick="catNew()">Limpiar</button></div>
     </div>
     <div class="card">
-      <table><thead><tr><th>Cliente</th><th>Medida</th><th class="n">A.PET</th><th class="n">E.PET</th><th class="n">A.PE</th><th class="n">E.PE</th><th class="n">Final</th><th class="n">Tiras</th><th class="n">Bob. PET</th><th class="n">Bob. PE</th><th class="n">Bob. final</th><th class="n">Cilindro</th><th class="n">Cono 3"</th><th class="n">Cono 6"</th><th class="n">Obj. lam.</th><th class="n">Obj. ref.</th><th></th></tr></thead><tbody id="catList"></tbody></table>
+      <table><thead><tr><th>Cliente</th><th>Medida</th><th class="n">A.PET</th><th class="n">E.PET</th><th class="n">A.PE</th><th class="n">E.PE</th><th class="n">Final</th><th class="n">Tiras</th><th class="n">Bob. PET</th><th class="n">Bob. PE</th><th class="n">Bob. final</th><th class="n">Cilindro</th><th class="n">Bob/pallet</th><th class="n">Cono 3"</th><th class="n">Cono 6"</th><th class="n">Obj. lam.</th><th class="n">Obj. ref.</th><th></th></tr></thead><tbody id="catList"></tbody></table>
     </div>
   </div>
 </section>
@@ -569,7 +570,7 @@ td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
 
 <script>
 /* ================= ESTADO ================= */
-const VERSION='v0.36';
+const VERSION='v0.37';
 const CATALOGO=[
  {id:'CAT-01',cliente:'Don Yeyo',medida:'321x300',anchoPet:350,espPet:250,anchoPe:370,espPe:50,anchoFinal:321,tiras:1,pesoBobinaPet:92,metrosBobinaPet:762,pesoBobinaPe:26,metrosBobinaPe:1550,pesoBobinaFinal:35,cilindro:340},
  {id:'CAT-02',cliente:'Molinos',medida:'472x235',anchoPet:500,espPet:200,anchoPe:530,espPe:35,anchoFinal:472,tiras:1,pesoBobinaPet:80,metrosBobinaPet:592,pesoBobinaPe:32,metrosBobinaPe:1900,pesoBobinaFinal:40,cilindro:490},
@@ -817,7 +818,7 @@ function kill(k,id){const key=k==='operarios'?'pin':'id';S.tomb=S.tomb||{};S.tom
 function prodLbl(p){return `${p.cliente} · ${p.medida} (${p.anchoFinal} mm · ${p.espPet}+${p.espPe} µ)`}
 function ocProdChange(){
   const p=S.catalogo.find(x=>x.id===$('ocProd').value);if(!p)return;
-  $('ocCli').value=p.cliente;$('ocDesc').value=p.medida;if(/negro/i.test(p.cliente))$('ocColor').value='Negro';$('ocAncho').value=p.anchoFinal;$('ocEspPet').value=p.espPet;$('ocEspPe').value=p.espPe;$('ocTiras').value=p.tiras||1;$('ocKxB').value=p.pesoBobinaFinal||'';
+  $('ocCli').value=p.cliente;$('ocDesc').value=p.medida;if(/negro/i.test(p.cliente))$('ocColor').value='Negro';$('ocAncho').value=p.anchoFinal;$('ocEspPet').value=p.espPet;$('ocEspPe').value=p.espPe;$('ocTiras').value=p.tiras||1;$('ocKxB').value=p.pesoBobinaFinal||'';$('ocBxP').value=p.bxp||'';
 }
 function ocSave(){
   const espPet=+$('ocEspPet').value,espPe=+$('ocEspPe').value;
@@ -826,13 +827,13 @@ function ocSave(){
   S.ocs.push(o);save();['ocCli','ocNro','ocDesc','ocAncho','ocEspPet','ocEspPe','ocBxP','ocKxB','ocKg','ocFecha','ocSol','ocInstr'].forEach(i=>$(i).value='');$('ocProd').value='';$('ocTiras').value=1;toast('OC guardada');
 }
 /* ---- catálogo ---- */
-function catNew(){$('catId').value='';$('catTitle').textContent='Nuevo producto';['catCli','catMed','catAPet','catEPet','catAPe','catEPe','catAF','catPPet','catMPet','catPPe','catMPe','catPLam','catCil','catKhLam','catKhRef','catCono3','catCono6'].forEach(i=>$(i).value='');$('catTiras').value=1}
+function catNew(){$('catId').value='';$('catTitle').textContent='Nuevo producto';['catCli','catMed','catAPet','catEPet','catAPe','catEPe','catAF','catPPet','catMPet','catPPe','catMPe','catPLam','catCil','catKhLam','catKhRef','catCono3','catCono6','catBxP'].forEach(i=>$(i).value='');$('catTiras').value=1}
 function catEdit(id){const p=S.catalogo.find(x=>x.id===id);$('catId').value=id;$('catTitle').textContent='Editar producto';
   $('catCli').value=p.cliente;$('catMed').value=p.medida;$('catAPet').value=p.anchoPet;$('catEPet').value=p.espPet;$('catAPe').value=p.anchoPe;$('catEPe').value=p.espPe;$('catAF').value=p.anchoFinal;$('catTiras').value=p.tiras||1;
-  $('catPPet').value=p.pesoBobinaPet??'';$('catMPet').value=p.metrosBobinaPet??'';$('catPPe').value=p.pesoBobinaPe??'';$('catMPe').value=p.metrosBobinaPe??'';$('catPLam').value=p.pesoBobinaFinal??'';$('catCil').value=p.cilindro??'';$('catKhLam').value=p.kgHoraLam??'';$('catKhRef').value=p.kgHoraRef??'';$('catCono3').value=p.cono3??'';$('catCono6').value=p.cono6??'';window.scrollTo(0,0)}
+  $('catPPet').value=p.pesoBobinaPet??'';$('catMPet').value=p.metrosBobinaPet??'';$('catPPe').value=p.pesoBobinaPe??'';$('catMPe').value=p.metrosBobinaPe??'';$('catPLam').value=p.pesoBobinaFinal??'';$('catCil').value=p.cilindro??'';$('catKhLam').value=p.kgHoraLam??'';$('catKhRef').value=p.kgHoraRef??'';$('catCono3').value=p.cono3??'';$('catCono6').value=p.cono6??'';$('catBxP').value=p.bxp??'';window.scrollTo(0,0)}
 function catSave(){
   const n=id=>{const v=parseFloat($(id).value);return isNaN(v)?null:v};
-  const p={cliente:$('catCli').value.trim(),medida:$('catMed').value.trim(),anchoPet:n('catAPet'),espPet:n('catEPet'),anchoPe:n('catAPe'),espPe:n('catEPe'),anchoFinal:n('catAF'),tiras:n('catTiras')||1,pesoBobinaPet:n('catPPet'),metrosBobinaPet:n('catMPet'),pesoBobinaPe:n('catPPe'),metrosBobinaPe:n('catMPe'),pesoBobinaFinal:n('catPLam'),cilindro:n('catCil'),kgHoraLam:n('catKhLam'),kgHoraRef:n('catKhRef'),cono3:n('catCono3'),cono6:n('catCono6'),updatedAt:now()};
+  const p={cliente:$('catCli').value.trim(),medida:$('catMed').value.trim(),anchoPet:n('catAPet'),espPet:n('catEPet'),anchoPe:n('catAPe'),espPe:n('catEPe'),anchoFinal:n('catAF'),tiras:n('catTiras')||1,pesoBobinaPet:n('catPPet'),metrosBobinaPet:n('catMPet'),pesoBobinaPe:n('catPPe'),metrosBobinaPe:n('catMPe'),pesoBobinaFinal:n('catPLam'),cilindro:n('catCil'),kgHoraLam:n('catKhLam'),kgHoraRef:n('catKhRef'),cono3:n('catCono3'),cono6:n('catCono6'),bxp:n('catBxP'),updatedAt:now()};
   if(!p.cliente||!p.medida||!p.anchoFinal)return toast('Falta cliente, medida o ancho final');
   const id=$('catId').value;if(id){Object.assign(S.catalogo.find(x=>x.id===id),p)}else{S.catalogo.push({id:uid('CAT'),...p})}
   save();catNew();toast('Producto guardado');
@@ -1399,7 +1400,7 @@ function render(){
   if(mode==='pc'){
     renderProd();renderCro();renderPet();renderDesp();
     const pv=$('ocProd').value;$('ocProd').innerHTML='<option value="">— elegir producto —</option>'+S.catalogo.slice().sort((a,b)=>a.cliente.localeCompare(b.cliente)).map(p=>`<option value="${p.id}">${prodLbl(p)}</option>`).join('');$('ocProd').value=pv;
-    $('catList').innerHTML=S.catalogo.slice().sort((a,b)=>a.cliente.localeCompare(b.cliente)).map(p=>`<tr><td>${p.cliente}</td><td><b>${p.medida}</b></td><td class="n">${p.anchoPet??''}</td><td class="n">${p.espPet??''}</td><td class="n">${p.anchoPe??''}</td><td class="n">${p.espPe??''}</td><td class="n">${p.anchoFinal}</td><td class="n">${p.tiras||1}</td><td class="n">${p.pesoBobinaPet?p.pesoBobinaPet+' kg / '+(p.metrosBobinaPet||'?')+' m':'—'}</td><td class="n">${p.pesoBobinaPe?p.pesoBobinaPe+' kg / '+(p.metrosBobinaPe||'?')+' m':'—'}</td><td class="n">${p.pesoBobinaFinal?p.pesoBobinaFinal+' kg':'—'}</td><td class="n">${p.cilindro||'—'}</td><td class="n">${p.cono3!=null?p.cono3:`<span class="muted">${taraKg('3"',p.anchoFinal)} est.</span>`}</td><td class="n">${p.cono6!=null?p.cono6:'—'}</td><td class="n">${p.kgHoraLam||'—'}</td><td class="n">${p.kgHoraRef||'—'}</td><td><button class="btn sec" onclick="catEdit('${p.id}')">✎</button> <button class="btn sec" onclick="catDel('${p.id}')">✕</button></td></tr>`).join('');
+    $('catList').innerHTML=S.catalogo.slice().sort((a,b)=>a.cliente.localeCompare(b.cliente)).map(p=>`<tr><td>${p.cliente}</td><td><b>${p.medida}</b></td><td class="n">${p.anchoPet??''}</td><td class="n">${p.espPet??''}</td><td class="n">${p.anchoPe??''}</td><td class="n">${p.espPe??''}</td><td class="n">${p.anchoFinal}</td><td class="n">${p.tiras||1}</td><td class="n">${p.pesoBobinaPet?p.pesoBobinaPet+' kg / '+(p.metrosBobinaPet||'?')+' m':'—'}</td><td class="n">${p.pesoBobinaPe?p.pesoBobinaPe+' kg / '+(p.metrosBobinaPe||'?')+' m':'—'}</td><td class="n">${p.pesoBobinaFinal?p.pesoBobinaFinal+' kg':'—'}</td><td class="n">${p.cilindro||'—'}</td><td class="n">${p.bxp||'—'}</td><td class="n">${p.cono3!=null?p.cono3:`<span class="muted">${taraKg('3"',p.anchoFinal)} est.</span>`}</td><td class="n">${p.cono6!=null?p.cono6:'—'}</td><td class="n">${p.kgHoraLam||'—'}</td><td class="n">${p.kgHoraRef||'—'}</td><td><button class="btn sec" onclick="catEdit('${p.id}')">✎</button> <button class="btn sec" onclick="catDel('${p.id}')">✕</button></td></tr>`).join('');
     const sOC=$('qOC').value,eOC=$('qOCEst').value;
     $('ocList').innerHTML=S.ocs.slice().reverse().filter(o=>(!eOC||o.estado===eOC)&&q(sOC,o.cliente+' '+o.nro+' '+(o.desc||''))).map(o=>{const k=ocAvance(o),d=diasA(o.fecha);return`<tr><td>${o.cliente}</td><td>${o.nro}</td><td>${o.desc||''}${o.instr||o.kxb||o.cono?`<br><span class="muted" style="font-size:12px">🛠 ${trabajoLbl(o)}</span>`:''}</td><td class="n">${o.ancho||''}</td><td class="n">${o.espPet?o.espPet+'+'+o.espPe:o.esp||''}</td><td class="n">${o.bxp||''}</td><td class="n">${fmt(o.kg)}</td><td class="n">${fmt(k.lam)}</td><td class="n">${fmt(k.fin)}</td><td class="n">${fmt(k.rem)}</td><td style="min-width:120px"><div class="bar" style="height:7px;background:#e6ede8;border-radius:4px;overflow:hidden;position:relative"><i style="position:absolute;left:0;top:0;height:100%;width:${k.pctLam}%;background:#bfe3cc"></i><i style="position:absolute;left:0;top:0;height:100%;width:${k.pctFin}%;background:var(--brand3)"></i><i style="position:absolute;left:0;top:0;height:100%;width:${k.pctRem}%;background:var(--brand)"></i></div><span class="muted" style="font-size:11px">L ${fmt(k.pctLam)} % · F ${fmt(k.pctFin)} % · R ${fmt(k.pctRem)} %</span></td><td>${o.fecha?`${o.fecha.slice(8,10)}/${o.fecha.slice(5,7)} <span class="tag ${d<0?'rem':d<=3?'pend':'cerr'}" style="${d<0?'background:#fde3e1;color:var(--bad)':''}">${d<0?-d+' d atrasada':d===0?'hoy':'en '+d+' d'}</span>`:''}</td><td>${tagOf(o.estado)}</td><td><button class="btn sec" onclick="ocEdit('${o.id}')">✎</button> <button class="btn sec" onclick="ocToggle('${o.id}')">${o.estado==='abierta'?'Cerrar':'Reabrir'}</button> <button class="btn sec" onclick="ocDel('${o.id}')">✕</button></td></tr>`}).join('');
     const sL=$('qLam').value,eL=$('qLamEst').value;
