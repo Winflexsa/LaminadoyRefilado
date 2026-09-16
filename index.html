@@ -292,14 +292,14 @@ td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
 <section id="v-pc" class="view">
   <div class="tabs">
     <button class="on" onclick="pcTab('prod',this)">Producción en vivo</button>
-    <button onclick="pcTab('oc',this)">Órdenes de compra</button>
-    <button onclick="pcTab('lam',this)">Bobinas laminadas</button>
-    <button onclick="pcTab('desp',this)">Despachos</button>
-    <button onclick="pcTab('fin',this)">Stock</button>
-    <button onclick="pcTab('ops',this)">OPs de refilado</button>
-    <button onclick="pcTab('cat',this)">Catálogo</button>
     <button onclick="pcTab('cro',this)">Cronograma</button>
+    <button onclick="pcTab('oc',this)">Órdenes de compra</button>
     <button onclick="pcTab('pet',this)">Recepción PET</button>
+    <button onclick="pcTab('lam',this)">Bobinas laminadas</button>
+    <button onclick="pcTab('ops',this)">OPs de refilado</button>
+    <button onclick="pcTab('fin',this)">Stock</button>
+    <button onclick="pcTab('desp',this)">Despachos</button>
+    <button onclick="pcTab('cat',this)">Catálogo</button>
   </div>
   <div id="pc-prod" class="pct">
     <div class="card">
@@ -558,7 +558,7 @@ td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
 
 <script>
 /* ================= ESTADO ================= */
-const VERSION='v0.29';
+const VERSION='v0.30';
 const CATALOGO=[
  {id:'CAT-01',cliente:'Don Yeyo',medida:'321x300',anchoPet:350,espPet:250,anchoPe:370,espPe:50,anchoFinal:321,tiras:1,pesoBobinaPet:92,metrosBobinaPet:762,pesoBobinaPe:26,metrosBobinaPe:1550,pesoBobinaFinal:35,cilindro:340},
  {id:'CAT-02',cliente:'Molinos',medida:'472x235',anchoPet:500,espPet:200,anchoPe:530,espPe:35,anchoFinal:472,tiras:1,pesoBobinaPet:80,metrosBobinaPet:592,pesoBobinaPe:32,metrosBobinaPe:1900,pesoBobinaFinal:40,cilindro:490},
@@ -1383,12 +1383,15 @@ function renderStock(){
   $('stkKpi').innerHTML=`<div><b>${fmt(sum(enS,f=>f.kg))}</b><span>kg neto en stock</span></div><div><b>${enS.length}</b><span>bobinas</span></div><div><b>${[...new Set(enS.map(f=>f.ocId+'|'+f.pallet))].length}</b><span>pallets</span></div><div><b>${[...new Set(enS.map(f=>ocOf(f.ocId).cliente))].length}</b><span>clientes</span></div>`;
   const ocs=S.ocs.filter(o=>S.finales.some(f=>f.ocId===o.id)).filter(o=>q(s,o.cliente+' '+o.nro+' '+(o.desc||''))).filter(o=>inc||S.finales.some(f=>f.ocId===o.id&&f.estado==='en stock'));
   const byCli={};ocs.forEach(o=>{(byCli[o.cliente]=byCli[o.cliente]||[]).push(o)});
-  $('stkRes').innerHTML=Object.keys(byCli).sort().map(cli=>{const os=byCli[cli];const fsC=S.finales.filter(f=>os.some(o=>o.id===f.ocId));const st=fsC.filter(f=>f.estado==='en stock');
-    return`<details open style="border:1px solid var(--line);border-radius:10px;margin-bottom:8px;background:#fff"><summary style="cursor:pointer;padding:10px 14px;display:flex;gap:12px;align-items:center;list-style:none;flex-wrap:wrap"><b style="color:var(--brand);font-size:16px">▸ ${cli}</b><span class="muted" style="margin-left:auto">en stock: <b>${st.length}</b> bobinas · <b>${fmt(sum(st,f=>f.kg))}</b> kg neto · despachado: ${fmt(sum(fsC.filter(f=>f.estado==='remitida'),f=>f.kg))} kg</span></summary><div style="padding:0 14px 12px">
-    ${os.map(o=>{const fs=S.finales.filter(f=>f.ocId===o.id),st=fs.filter(f=>f.estado==='en stock'),dp=fs.filter(f=>f.estado==='remitida');const pks=[...new Set(fs.map(f=>String(f.pallet||'sin pallet')))].sort((a,b)=>(+a||0)-(+b||0));
-      return`<div style="margin:8px 0;padding:8px 10px;background:var(--soft);border-radius:8px"><div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center"><b>OC ${o.nro}</b><span class="tag ref">${o.desc||''} · ${o.ancho||'?'} mm · ${o.esp||'?'} µ</span><span class="muted">pedido ${fmt(o.kg)} kg · en stock <b>${fmt(sum(st,f=>f.kg))}</b> kg (${st.length} bob) · despachado ${fmt(sum(dp,f=>f.kg))} kg · falta producir ${fmt(Math.max(0,o.kg-sum(fs,f=>f.kg)))} kg</span></div>
+  const ocBlock=o=>{const fs=S.finales.filter(f=>f.ocId===o.id),st=fs.filter(f=>f.estado==='en stock'),dp=fs.filter(f=>f.estado==='remitida');const pks=[...new Set(fs.map(f=>String(f.pallet||'sin pallet')))].sort((a,b)=>(+a||0)-(+b||0));
+      return`<div style="margin:8px 0;padding:8px 10px;background:#fff;border:1px solid var(--line);border-radius:8px"><div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center"><b>OC ${o.nro}</b>${o.fecha?`<span class="muted">entrega ${o.fecha.slice(8,10)}/${o.fecha.slice(5,7)}</span>`:''}<span class="muted">pedido ${fmt(o.kg)} kg · en stock <b>${fmt(sum(st,f=>f.kg))}</b> kg (${st.length} bob, ${[...new Set(st.map(f=>f.pallet))].length} pallets) · despachado ${fmt(sum(dp,f=>f.kg))} kg · falta producir ${fmt(Math.max(0,o.kg-sum(fs,f=>f.kg)))} kg</span></div>
       <div class="bar" style="margin:6px 0;height:7px;background:#e6ede8;border-radius:4px;overflow:hidden;position:relative"><i style="position:absolute;left:0;top:0;height:100%;width:${o.kg?Math.min(100,sum(fs,f=>f.kg)/o.kg*100):0}%;background:var(--brand3)"></i><i style="position:absolute;left:0;top:0;height:100%;width:${o.kg?Math.min(100,sum(dp,f=>f.kg)/o.kg*100):0}%;background:var(--brand)"></i></div>
-      <table style="font-size:13px"><thead><tr><th>Pallet</th><th class="n">Bob.</th><th>Nº</th><th class="n">Bruto</th><th class="n">Neto</th><th>Estado</th><th>Despacho / remito</th></tr></thead><tbody>${pks.map(pk=>{const g=fs.filter(f=>String(f.pallet||'sin pallet')===pk).sort((a,b)=>a.nro-b.nro);const rem=g.every(f=>f.estado==='remitida');const nros=g.map(f=>f.nro);const dpx=S.despachos.find(x=>x.id===g[0].despachoId);return`<tr><td><b>${pk}</b></td><td class="n">${g.length}</td><td>${nros.length>1?nros[0]+' – '+nros[nros.length-1]:nros[0]}</td><td class="n">${fmt(sum(g,f=>f.kgB||f.kg))}</td><td class="n">${fmt(sum(g,f=>f.kg))}</td><td>${rem?'<span class="tag rem">despachado</span>':g.some(f=>f.estado==='remitida')?'<span class="tag pend">parcial</span>':'<span class="tag cerr">en stock</span>'}</td><td>${dpx?`Desp. ${dpx.nro} · ${dpx.fecha.slice(8,10)}/${dpx.fecha.slice(5,7)}${dpx.remito?' · remito '+dpx.remito:''}`:(g[0].remito||'')}</td></tr>`}).join('')}</tbody></table></div>`}).join('')}</div></details>`}).join('')||'<p class="muted">Sin bobinas finales.</p>';
+      <table style="font-size:13px"><thead><tr><th>Pallet</th><th class="n">Bob.</th><th>Nº</th><th class="n">Bruto</th><th class="n">Neto</th><th>Partida</th><th>Estado</th><th>Despacho / remito</th></tr></thead><tbody>${pks.map(pk=>{const g=fs.filter(f=>String(f.pallet||'sin pallet')===pk).sort((a,b)=>a.nro-b.nro);const rem=g.every(f=>f.estado==='remitida');const nros=g.map(f=>f.nro);const dpx=S.despachos.find(x=>x.id===g[0].despachoId);return`<tr><td><b>${pk}</b></td><td class="n">${g.length}</td><td>${nros.length>1?nros[0]+' – '+nros[nros.length-1]:nros[0]}</td><td class="n">${fmt(sum(g,f=>f.kgB||f.kg))}</td><td class="n">${fmt(sum(g,f=>f.kg))}</td><td>${[...new Set(g.map(f=>f.partida))].join(', ')}</td><td>${rem?'<span class="tag rem">despachado</span>':g.some(f=>f.estado==='remitida')?'<span class="tag pend">parcial</span>':'<span class="tag cerr">en stock</span>'}</td><td>${dpx?`Desp. ${dpx.nro} · ${dpx.fecha.slice(8,10)}/${dpx.fecha.slice(5,7)}${dpx.remito?' · remito '+dpx.remito:''}`:(g[0].remito||'')}</td></tr>`}).join('')}</tbody></table></div>`};
+  $('stkRes').innerHTML=Object.keys(byCli).sort().map(cli=>{const os=byCli[cli];const fsC=S.finales.filter(f=>os.some(o=>o.id===f.ocId));const st=fsC.filter(f=>f.estado==='en stock');
+    const medKey=o=>`${o.desc||'?'} · ${o.ancho||'?'} mm · ${o.esp||'?'} µ${o.color&&o.color!=='Cristal'?' · '+o.color:''}`;const meds={};os.forEach(o=>{(meds[medKey(o)]=meds[medKey(o)]||[]).push(o)});
+    return`<details open style="border:1px solid var(--line);border-left:6px solid var(--brand3);border-radius:10px;margin-bottom:10px;background:#fff"><summary style="cursor:pointer;padding:10px 14px;display:flex;gap:12px;align-items:center;list-style:none;flex-wrap:wrap"><b style="color:var(--brand);font-size:17px">▸ ${cli}</b><span class="muted" style="margin-left:auto">en stock: <b>${st.length}</b> bobinas · <b>${fmt(sum(st,f=>f.kg))}</b> kg neto · ${[...new Set(st.map(f=>f.ocId+'|'+f.pallet))].length} pallets · despachado ${fmt(sum(fsC.filter(f=>f.estado==='remitida'),f=>f.kg))} kg</span></summary><div style="padding:0 14px 12px">
+    ${Object.keys(meds).sort().map(m=>{const oms=meds[m];const fsM=S.finales.filter(f=>oms.some(o=>o.id===f.ocId)),stM=fsM.filter(f=>f.estado==='en stock');
+      return`<div style="margin:10px 0;padding:10px 12px;background:var(--soft);border-radius:10px"><div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><span class="tag ref" style="font-size:13px">${m}</span><span class="muted">${oms.length} OC · en stock <b>${fmt(sum(stM,f=>f.kg))}</b> kg (${stM.length} bob) · pedido total ${fmt(sum(oms,o=>o.kg))} kg</span></div>${oms.sort((a,b)=>(a.fecha||'9')>(b.fecha||'9')?1:-1).map(ocBlock).join('')}</div>`}).join('')}</div></details>`}).join('')||'<p class="muted">Sin bobinas finales.</p>';
 }
 function renderFin(){
   $('pcFin').innerHTML=finFiltered().map(f=>{const o=ocOf(f.ocId);return`<tr><td class="noprint">${f.estado==='en stock'?`<input type="checkbox" value="${f.id}">`:''}</td><td>${ocLbl(o)}</td><td class="n">${f.nro}</td><td>${f.partida}</td><td class="n">L${f.lamNro}</td><td class="n">${f.ancho||''}</td><td class="n">${f.esp||''}</td><td class="n">${f.m||''}</td><td class="n">${f.kgB?fmt(f.kgB):''}</td><td class="n">${fmt(f.kg)}</td><td>${f.cono}</td><td>${f.etiqueta||''}</td><td class="n">${f.pallet||''}</td><td>${f.maq||''}</td><td>${fd(f.createdAt)}</td><td>${tagOf(f.estado)}</td><td>${f.remito?`${f.remito} (${f.remFecha})`:''}</td><td class="noprint"><button class="btn sec" onclick="finEdit('${f.id}')">✎</button> ${f.estado==='remitida'?`<button class="btn sec" onclick="finDesremitir('${f.id}')">↩</button> `:''}<button class="btn sec" onclick="finDel('${f.id}')">✕</button></td></tr>`}).join('')||'<tr><td colspan="17" class="muted">Sin bobinas finales.</td></tr>';
