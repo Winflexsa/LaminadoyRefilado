@@ -83,6 +83,12 @@ th{color:var(--ink2);font-weight:700;font-size:12.5px;letter-spacing:.2px;backgr
 td:last-child{white-space:nowrap}
 th:first-child{border-radius:8px 0 0 0}th:last-child{border-radius:0 8px 0 0}
 tbody tr:hover td{background:#fafcfa}
+tr.ocmain td{border-bottom:0}
+tr.ocsub td{padding:0 8px 10px;font-size:12.5px;color:var(--ink2);white-space:normal}
+tr.ocsub:hover td{background:transparent}
+.ocsub-l{font-weight:700;margin-right:8px}
+.ocsub-c{display:inline-block;background:var(--soft);border:1px solid var(--line);border-radius:999px;padding:2px 9px;margin-right:6px;white-space:nowrap}
+.ocsub-i{margin-left:4px;font-style:italic}
 td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
 .tag{display:inline-block;padding:3px 9px;border-radius:999px;font-size:11.5px;font-weight:700;letter-spacing:.3px;white-space:nowrap}
 .tag.pend{background:var(--pend);color:#7a4a00}.tag.ref{background:var(--ref);color:var(--brand)}
@@ -245,6 +251,10 @@ html.celu table.tc>tbody>tr>td.chk::after{content:'Seleccionar'}
 html.celu table.tc>tbody>tr.fila-rara{display:block;padding:11px 14px;background:var(--soft)}
 html.celu table.tc>tbody>tr.fila-rara>td{display:inline-block;margin-right:12px;font-weight:700}
 html.celu table.tc>tbody>tr.fila-rara>td[colspan]{display:block;margin:0}
+html.celu table.tc>tbody>tr.ocmain{margin-bottom:0;border-bottom:0;border-radius:16px 16px 0 0}
+html.celu table.tc>tbody>tr.ocsub.fila-rara{margin-bottom:10px;border-radius:0 0 16px 16px;border-top:1px dashed var(--line);line-height:2}
+html.celu table.tc>tbody>tr.ocsub.fila-rara>td:first-child{display:none}
+html.celu table.tc>tbody>tr.ocsub.fila-rara>td{font-weight:400}
 html.celu #v-pc table:not(.tc){display:block;overflow-x:auto;-webkit-overflow-scrolling:touch;white-space:nowrap}
 html.celu #v-pc th{position:static}
 /* ventanas a pantalla completa */
@@ -731,6 +741,7 @@ const fmt=n=>(+n||0).toLocaleString('es-AR',{maximumFractionDigits:1});
 const fd=iso=>iso?new Date(iso).toLocaleDateString('es-AR',{day:'2-digit',month:'2-digit'}):'';
 const fh=iso=>iso?new Date(iso).toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'}):'';
 const ocOf=id=>S.ocs.find(o=>o.id===id)||{};
+const ocSub=o=>{const c=[o.tiras>1?`${o.tiras} tiras`:'',o.kxb?`Bobinas ~${o.kxb} kg`:'',o.cono?`Cono ${o.cono}`:''].filter(Boolean);if(!c.length&&!o.instr)return'';return`<tr class="ocsub"><td></td><td colspan="13"><span class="ocsub-l">🛠 Trabajo</span>${c.map(x=>`<span class="ocsub-c">${x}</span>`).join('')}${o.instr?`<span class="ocsub-i">${o.instr}</span>`:''}</td></tr>`};
 const trabajoLbl=o=>[o.ancho?`refilar a ${o.ancho} mm`:'',o.tiras>1?`${o.tiras} tiras`:'',o.kxb?`bobinas de ~${o.kxb} kg`:'',o.cono?`cono ${o.cono}`:'',o.bxp?`${o.bxp} bob/pallet`:'',o.instr||''].filter(Boolean).join(' · ');
 const ocLbl=o=>o.cliente?`${o.cliente} · OC ${o.nro}`:'—';
 const lamLbl=l=>`${l.partida} · bob ${l.nroOrigen||('L'+l.nro)}${l.tipo==='PET'?' · PET':''}`;
@@ -1524,7 +1535,7 @@ function render(){
     const pv=$('ocProd').value;$('ocProd').innerHTML='<option value="">— elegir producto —</option>'+S.catalogo.slice().sort((a,b)=>a.cliente.localeCompare(b.cliente)).map(p=>`<option value="${p.id}">${prodLbl(p)}</option>`).join('');$('ocProd').value=pv;
     $('catList').innerHTML=S.catalogo.slice().sort((a,b)=>a.cliente.localeCompare(b.cliente)).map(p=>`<tr><td>${p.cliente}</td><td><b>${p.medida}</b></td><td class="n">${p.anchoPet??''}</td><td class="n">${p.espPet??''}</td><td class="n">${p.anchoPe??''}</td><td class="n">${p.espPe??''}</td><td class="n">${p.anchoFinal}</td><td class="n">${p.tiras||1}</td><td class="n">${p.pesoBobinaPet?p.pesoBobinaPet+' kg / '+(p.metrosBobinaPet||'?')+' m':'—'}</td><td class="n">${p.pesoBobinaPe?p.pesoBobinaPe+' kg / '+(p.metrosBobinaPe||'?')+' m':'—'}</td><td class="n">${p.pesoBobinaFinal?p.pesoBobinaFinal+' kg':'—'}</td><td class="n">${p.cilindro||'—'}</td><td class="n">${p.bxp||'—'}</td><td class="n">${p.cono3!=null?p.cono3:`<span class="muted">${taraKg('3"',p.anchoFinal)} est.</span>`}</td><td class="n">${p.cono6!=null?p.cono6:'—'}</td><td class="n">${p.kgHoraLam||'—'}</td><td class="n">${p.kgHoraRef||'—'}</td><td><button class="btn sec" onclick="catEdit('${p.id}')">✎</button> <button class="btn sec" onclick="catDel('${p.id}')">✕</button></td></tr>`).join('');
     const sOC=$('qOC').value,eOC=$('qOCEst').value;
-    $('ocList').innerHTML=S.ocs.slice().reverse().filter(o=>(!eOC||o.estado===eOC)&&q(sOC,o.cliente+' '+o.nro+' '+(o.desc||''))).map(o=>{const k=ocAvance(o),d=diasA(o.fecha);return`<tr><td>${o.cliente}</td><td>${o.nro}</td><td>${o.desc||''}${o.instr||o.kxb||o.cono?`<br><span class="muted" style="font-size:12px">🛠 ${trabajoLbl(o)}</span>`:''}</td><td class="n">${o.ancho||''}</td><td class="n">${o.espPet?o.espPet+'+'+o.espPe:o.esp||''}</td><td class="n">${o.bxp||''}</td><td class="n">${fmt(o.kg)}</td><td class="n">${fmt(k.lam)}</td><td class="n">${fmt(k.fin)}</td><td class="n">${fmt(k.rem)}</td><td style="min-width:120px"><div class="bar" style="height:7px;background:#e6ede8;border-radius:4px;overflow:hidden;position:relative"><i style="position:absolute;left:0;top:0;height:100%;width:${k.pctLam}%;background:#bfe3cc"></i><i style="position:absolute;left:0;top:0;height:100%;width:${k.pctFin}%;background:var(--brand3)"></i><i style="position:absolute;left:0;top:0;height:100%;width:${k.pctRem}%;background:var(--brand)"></i></div><span class="muted" style="font-size:11px">L ${fmt(k.pctLam)} % · F ${fmt(k.pctFin)} % · R ${fmt(k.pctRem)} %</span></td><td>${o.fecha?`${o.fecha.slice(8,10)}/${o.fecha.slice(5,7)} <span class="tag ${d<0?'rem':d<=3?'pend':'cerr'}" style="${d<0?'background:#fde3e1;color:var(--bad)':''}">${d<0?-d+' d atrasada':d===0?'hoy':'en '+d+' d'}</span>`:''}</td><td>${tagOf(o.estado)}</td><td><button class="btn sec" onclick="ocEdit('${o.id}')">✎</button> <button class="btn sec" onclick="ocToggle('${o.id}')">${o.estado==='abierta'?'Cerrar':'Reabrir'}</button> <button class="btn sec" onclick="ocDel('${o.id}')">✕</button></td></tr>`}).join('');
+    $('ocList').innerHTML=S.ocs.slice().reverse().filter(o=>(!eOC||o.estado===eOC)&&q(sOC,o.cliente+' '+o.nro+' '+(o.desc||''))).map(o=>{const k=ocAvance(o),d=diasA(o.fecha),sub=ocSub(o);return`<tr${sub?' class="ocmain"':''}><td>${o.cliente}</td><td>${o.nro}</td><td style="white-space:nowrap;font-weight:700">${o.desc||''}</td><td class="n">${o.ancho||''}</td><td class="n">${o.espPet?o.espPet+'+'+o.espPe:o.esp||''}</td><td class="n">${o.bxp||''}</td><td class="n">${fmt(o.kg)}</td><td class="n">${fmt(k.lam)}</td><td class="n">${fmt(k.fin)}</td><td class="n">${fmt(k.rem)}</td><td style="min-width:120px"><div class="bar" style="height:7px;background:#e6ede8;border-radius:4px;overflow:hidden;position:relative"><i style="position:absolute;left:0;top:0;height:100%;width:${k.pctLam}%;background:#bfe3cc"></i><i style="position:absolute;left:0;top:0;height:100%;width:${k.pctFin}%;background:var(--brand3)"></i><i style="position:absolute;left:0;top:0;height:100%;width:${k.pctRem}%;background:var(--brand)"></i></div><span class="muted" style="font-size:11px">L ${fmt(k.pctLam)} % · F ${fmt(k.pctFin)} % · R ${fmt(k.pctRem)} %</span></td><td>${o.fecha?`${o.fecha.slice(8,10)}/${o.fecha.slice(5,7)} <span class="tag ${d<0?'rem':d<=3?'pend':'cerr'}" style="${d<0?'background:#fde3e1;color:var(--bad)':''}">${d<0?-d+' d atrasada':d===0?'hoy':'en '+d+' d'}</span>`:''}</td><td>${tagOf(o.estado)}</td><td><button class="btn sec" onclick="ocEdit('${o.id}')">✎</button> <button class="btn sec" onclick="ocToggle('${o.id}')">${o.estado==='abierta'?'Cerrar':'Reabrir'}</button> <button class="btn sec" onclick="ocDel('${o.id}')">✕</button></td></tr>${sub}`}).join('');
     const sL=$('qLam').value,eL=$('qLamEst').value;
     const lamsF=S.laminadas.filter(l=>(!eL||l.estado===eL)&&q(sL,ocLbl(ocOf(l.ocId))+' '+l.partida+' '+(l.operario||'')+' L'+l.nro+' '+(l.obs||'')));
     const grupos=[...new Set(lamsF.map(l=>l.ocId))].map(id=>ocOf(id)).sort((a,b)=>(a.estado>b.estado?1:-1)||(b.createdAt>a.createdAt?1:-1));
