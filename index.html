@@ -451,9 +451,9 @@ html.celu .login{padding:34px 22px}
       <div id="prodChart"></div>
     </div>
     <div class="card">
-      <h3>Eficiencia por turno</h3>
-      <table><thead><tr><th>Turno</th><th>Máquina / operario</th><th class="n">Bobinas</th><th class="n">Kg</th><th class="n">Horas</th><th class="n">Kg/h real</th><th class="n">Kg/h objetivo</th><th class="n">Eficiencia</th><th class="n">Paradas</th></tr></thead><tbody id="prodTurnos"></tbody></table>
-      <p class="muted">Objetivo kg/h por producto se define en Catálogo; si el producto no tiene, usa el valor por defecto de ⚙ Configuración. La eficiencia es kg producidos / (horas del turno × kg/h objetivo).</p>
+      <h3>Eficiencia por máquina (un turno por día)</h3>
+      <table><thead><tr><th>Máquina / operario</th><th>Jornada</th><th class="n">Bobinas</th><th class="n">Kg</th><th class="n">Horas</th><th class="n">Kg/h real</th><th class="n">Kg/h objetivo</th><th class="n">Eficiencia</th><th class="n">Paradas</th></tr></thead><tbody id="prodTurnos"></tbody></table>
+      <p class="muted">Objetivo kg/h por producto se define en Catálogo; si el producto no tiene, usa el valor por defecto de ⚙ Configuración. La eficiencia es kg producidos / (horas de la jornada × kg/h objetivo). Hoy cuenta las horas transcurridas desde el inicio de la jornada; si hay bobinas fuera de horario, la jornada se estira hasta ellas.</p>
     </div>
     <div class="card">
       <h3>Bobinas del día, en orden de salida</h3>
@@ -673,11 +673,9 @@ html.celu .login{padding:34px 22px}
       <button class="btn bad" onclick="resetDatos()">Borrar todos los datos de prueba</button>
     </div>
     <p class="muted">Las credenciales del bin winflex-refilado ya vienen cargadas: todos los dispositivos sincronizan solos. Solo cambiá esto si migrás a otro bin o a una Access Key.</p>
-    <h3>Turnos y objetivos por defecto</h3>
+    <h3>Jornada y objetivos por defecto</h3>
     <div class="row">
-      <div class="f"><label>Turno mañana (inicio–fin)</label><input id="cfgT1" placeholder="06:00-14:00"></div>
-      <div class="f"><label>Turno tarde</label><input id="cfgT2" placeholder="14:00-22:00"></div>
-      <div class="f"><label>Turno noche (vacío si no hay)</label><input id="cfgT3" placeholder="22:00-06:00"></div>
+      <div class="f"><label>Jornada por máquina (inicio–fin, un turno por día)</label><input id="cfgJor" placeholder="07:00-19:00"></div>
       <div class="f"><label>Objetivo laminado (kg/h)</label><input id="cfgKhLam" type="number" step="any"></div>
       <div class="f"><label>Objetivo refilado (kg/h)</label><input id="cfgKhRef" type="number" step="any"></div>
       <div class="f" style="flex:2"><label>Cono 3": tabla ancho=kg (para otros anchos interpola)</label><input id="cfgT3tab" placeholder="312=0,6; 321=0,7; 520=1,1"></div>
@@ -702,7 +700,7 @@ html.celu .login{padding:34px 22px}
 
 <script>
 /* ================= ESTADO ================= */
-const VERSION='v0.37';
+const VERSION='v0.38';
 const CATALOGO=[
  {id:'CAT-01',cliente:'Don Yeyo',medida:'321x300',anchoPet:350,espPet:250,anchoPe:370,espPe:50,anchoFinal:321,tiras:1,pesoBobinaPet:92,metrosBobinaPet:762,pesoBobinaPe:26,metrosBobinaPe:1550,pesoBobinaFinal:35,cilindro:340},
  {id:'CAT-02',cliente:'Molinos',medida:'472x235',anchoPet:500,espPet:200,anchoPe:530,espPe:35,anchoFinal:472,tiras:1,pesoBobinaPet:80,metrosBobinaPet:592,pesoBobinaPe:32,metrosBobinaPe:1900,pesoBobinaFinal:40,cilindro:490},
@@ -727,7 +725,7 @@ const CATALOGO=[
  {id:'CAT-21',cliente:'BarielPack',medida:'520x600',anchoPet:550,espPet:550,anchoPe:570,espPe:50,anchoFinal:520,tiras:1,pesoBobinaPet:92,metrosBobinaPet:226,pesoBobinaPe:24.6,metrosBobinaPe:946,pesoBobinaFinal:45,cilindro:540}
 ];
 const CONO3_SEED={312:0.6,321:0.7,323:0.6,357:0.7,421:0.8,422:0.8,424:0.8,472:1.0,520:1.1};
-const EMPTY=()=>({ocs:[],laminadas:[],ops:[],finales:[],catalogo:CATALOGO.map(p=>({...p,cono3:CONO3_SEED[p.anchoFinal]??null})),cronograma:[],despachos:[],tomb:{},params:{t1:'06:00-14:00',t2:'14:00-22:00',t3:'',khLam:null,khRef:null},operarios:[
+const EMPTY=()=>({ocs:[],laminadas:[],ops:[],finales:[],catalogo:CATALOGO.map(p=>({...p,cono3:CONO3_SEED[p.anchoFinal]??null})),cronograma:[],despachos:[],tomb:{},params:{jornada:'07:00-19:00',khLam:null,khRef:null},operarios:[
  {n:'Matías',pin:'1205',rol:'admin'},{n:'Jonathan',pin:'3080',rol:'admin'},
  {n:'Alejandro Delelis',pin:'0035',rol:'tablet'},{n:'Juan Vera',pin:'0022',rol:'tablet'},{n:'Antonio Zayas',pin:'0059',rol:'tablet'},{n:'Juan Brest',pin:'0003',rol:'tablet'}],meta:{v:VERSION}});
 // Credenciales por defecto (bin 'winflex-refilado'). Si en ⚙ se cargan otras, mandan las de ⚙.
@@ -818,7 +816,7 @@ function go(v){
   if(!who&&v!=='login'){v='login'}
   if((v==='pc'||v==='config')&&rol!=='admin'){toast('Solo acceso total');return}
   document.querySelectorAll('.view').forEach(x=>x.classList.remove('active'));
-  if(v==='config'){$('cfgBin').value=cfg.bin||'';$('cfgKey').value=cfg.key||'';$('cfgKeyType').value=cfg.keyType||'master';const p=S.params||{};$('cfgT1').value=p.t1||'';$('cfgT2').value=p.t2||'';$('cfgT3').value=p.t3||'';$('cfgKhLam').value=p.khLam??'';$('cfgKhRef').value=p.khRef??'';$('cfgT3tab').value=Object.entries(taraTabla()).map(([a,k])=>`${a}=${String(k).replace('.',',')}`).join('; ');$('cfgT6in').value=p.tara6??'';$('cfgTol').value=p.tol??'';$('cfgPP').value=petpeList().join(', ');$('cfgDir').value=dirList().join(', ')}
+  if(v==='config'){$('cfgBin').value=cfg.bin||'';$('cfgKey').value=cfg.key||'';$('cfgKeyType').value=cfg.keyType||'master';const p=S.params||{};$('cfgJor').value=p.jornada||'07:00-19:00';$('cfgKhLam').value=p.khLam??'';$('cfgKhRef').value=p.khRef??'';$('cfgT3tab').value=Object.entries(taraTabla()).map(([a,k])=>`${a}=${String(k).replace('.',',')}`).join('; ');$('cfgT6in').value=p.tara6??'';$('cfgTol').value=p.tol??'';$('cfgPP').value=petpeList().join(', ');$('cfgDir').value=dirList().join(', ')}
   if(v==='login'){$('loginPin').value='';setTimeout(()=>$('loginPin').focus(),50)}
   $('v-'+v).classList.add('active');mode=v;$('modeLbl').textContent={pc:'Administración',lam:'Laminado',lamoc:'Laminado',ref:'Refilado',op:'Refilado',wiz:W.flow==='lam'?'Laminado':'Refilado'}[v]||'';
   document.querySelectorAll('.adminOnly').forEach(x=>x.style.display=rol==='admin'?'':'none');
@@ -1271,7 +1269,7 @@ function croWeek(n){$('croIni').value=addD($('croIni').value||lunes(now().slice(
 function croHoy(){$('croIni').value=lunes(now().slice(0,10));render()}
 function croItems(fecha,maq){return S.cronograma.filter(c=>!c.del&&c.fecha===fecha&&c.maq===maq).sort((a,b)=>(a.turno||'').localeCompare(b.turno||''))}
 function croLbl(c){const o=ocOf(c.ocId);return o.id?`${o.cliente} · OC ${o.nro}${o.desc?' · '+o.desc:''}`:(c.nota||'—')}
-function croAdd(fecha,maq){croForm({id:null,fecha:fecha||croDias()[0],maq:maq||MAQS[0],ocId:'',operario:'',turno:'Mañana',nota:''})}
+function croAdd(fecha,maq){croForm({id:null,fecha:fecha||croDias()[0],maq:maq||MAQS[0],ocId:'',operario:'',turno:'Todo el día',nota:''})}
 function croEditItem(id){const c=S.cronograma.find(x=>x.id===id);if(c)croForm({...c})}
 function croForm(c){
   const ocs=S.ocs.filter(o=>o.estado==='abierta').sort((a,b)=>(a.fecha||'9')>(b.fecha||'9')?1:-1);
@@ -1442,8 +1440,8 @@ function dirList(){return (S.params&&Array.isArray(S.params.directos))?S.params.
 function dirSave(){S.params={...(S.params||{}),directos:$('cfgDir').value.split(',').map(s=>s.trim()).filter(Boolean),updatedAt:now()};save();toast('Lista guardada')}
 function esDirecto(destino){const n=s=>String(s||'').toLowerCase().replace(/[^a-z0-9]/g,'');return dirList().some(c=>n(destino).includes(n(c).slice(0,6)))}
 function esPetPe(destino){const n=s=>String(s||'').toLowerCase().replace(/[^a-z0-9]/g,'');return petpeList().some(c=>n(destino).includes(n(c).slice(0,6)))}
-function paramSave(){S.params={...(S.params||{}),t1:$('cfgT1').value.trim(),t2:$('cfgT2').value.trim(),t3:$('cfgT3').value.trim(),khLam:+$('cfgKhLam').value||null,khRef:+$('cfgKhRef').value||null,tara3Tabla:(()=>{const T={};$('cfgT3tab').value.split(/[;\n]/).forEach(s=>{const m=s.trim().match(/^(\d+)\s*=\s*([\d.,]+)$/);if(m)T[+m[1]]=+m[2].replace(',','.')});return Object.keys(T).length?T:null})(),tara6:+$('cfgT6in').value||null,tol:+$('cfgTol').value||null,updatedAt:now()};save();toast('Parámetros guardados')}
-function turnos(){const P=S.params||{};return [['Mañana',P.t1],['Tarde',P.t2],['Noche',P.t3]].filter(t=>t[1]&&/^\d\d:\d\d-\d\d:\d\d$/.test(t[1])).map(([n,r])=>{const [a,b]=r.split('-');const m=s=>+s.slice(0,2)*60+ +s.slice(3);return{n,ini:m(a),fin:m(b)}})}
+function paramSave(){S.params={...(S.params||{}),jornada:(/^\d\d:\d\d-\d\d:\d\d$/.test($('cfgJor').value.trim())?$('cfgJor').value.trim():'07:00-19:00'),khLam:+$('cfgKhLam').value||null,khRef:+$('cfgKhRef').value||null,tara3Tabla:(()=>{const T={};$('cfgT3tab').value.split(/[;\n]/).forEach(s=>{const m=s.trim().match(/^(\d+)\s*=\s*([\d.,]+)$/);if(m)T[+m[1]]=+m[2].replace(',','.')});return Object.keys(T).length?T:null})(),tara6:+$('cfgT6in').value||null,tol:+$('cfgTol').value||null,updatedAt:now()};save();toast('Parámetros guardados')}
+function jornada(){const r=(S.params&&/^\d\d:\d\d-\d\d:\d\d$/.test(S.params.jornada||''))?S.params.jornada:'07:00-19:00';const [a,b]=r.split('-');const m=s=>+s.slice(0,2)*60+ +s.slice(3);return{txt:r,ini:m(a),fin:m(b)}}
 function objetivo(ocId,proc){const p=S.catalogo.find(x=>x.id===ocOf(ocId).prodId)||{};return (proc==='lam'?p.kgHoraLam:p.kgHoraRef)||(proc==='lam'?S.params?.khLam:S.params?.khRef)||null}
 function minOf(iso){const d=new Date(iso);return d.getHours()*60+d.getMinutes()}
 function enTurno(iso,t){const m=minOf(iso);return t.ini<t.fin?(m>=t.ini&&m<t.fin):(m>=t.ini||m<t.fin)}
@@ -1474,22 +1472,22 @@ function renderProd(){
   else $('prodChart').innerHTML='<p class="muted">Sin producción cargada ese día.</p>';
   $('prodUpd').textContent='Actualizado '+new Date().toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit',second:'2-digit'})+' · se refresca solo cada 30 s';
   const hoy=now().slice(0,10)===dia,nowMin=minOf(now());
-  let rows='';
-  for(const t of turnos()){
-    let dur=(t.fin-t.ini+1440)%1440;
-    if(hoy){const el=(nowMin-t.ini+1440)%1440;if(el<dur)dur=el;else if(t.ini<t.fin?nowMin<t.ini:false)dur=0}
-    const hrs=dur/60;
-    for(const [proc,nm,mq] of [['lam','Laminadora',null],['ref','Refiladora Verde','Verde'],['ref','Refiladora Gris','Gris']]){
-      const b=all.filter(x=>x.proc===proc&&(mq?x.maq===mq:true)&&enTurno(x.t,t));if(!b.length)continue;
-      const kg=sum(b,x=>x.kg);const ocs=[...new Set(b.map(x=>x.ocId))];
-      const objs=ocs.map(o=>objetivo(o,proc)).filter(Boolean);const obj=objs.length?objs.reduce((a,c)=>a+c,0)/objs.length:null;
-      const real=hrs?kg/hrs:null;const eff=obj&&hrs?real/obj*100:null;
-      const pm=sum(par.filter(p=>enTurno(p.t,t)&&(mq?p.maq===mq:false)),p=>p.min);
-      const ops=[...new Set(b.map(x=>x.op).filter(Boolean))].join(', ');
-      rows+=`<tr><td>${t.n}</td><td>${nm}<br><span class="muted">${ops}</span></td><td class="n">${b.length}</td><td class="n">${fmt(kg)}</td><td class="n">${fmt(hrs)}</td><td class="n">${real!=null?fmt(real):'—'}</td><td class="n">${obj?fmt(obj):'—'}</td><td class="n">${effBadge(eff)}</td><td class="n">${pm||''}</td></tr>`;
-    }
+  let rows='';const J=jornada();const mOf=x=>minOf(x.t);
+  for(const [proc,nm,mq] of [['lam','Laminadora',null],['ref','Refiladora Verde','Verde'],['ref','Refiladora Gris','Gris']]){
+    const b=all.filter(x=>x.proc===proc&&(mq?x.maq===mq:true));if(!b.length)continue;
+    let ini=Math.min(J.ini,...b.map(mOf)),fin=Math.max(J.fin,...b.map(mOf));
+    if(hoy)fin=Math.max(Math.min(fin,nowMin),...b.map(mOf));
+    const hrs=Math.max(0,fin-ini)/60;
+    const kg=sum(b,x=>x.kg);const ocs=[...new Set(b.map(x=>x.ocId))];
+    // objetivo ponderado por kg de cada OC
+    let pk=0,pw=0;ocs.forEach(o=>{const ob=objetivo(o,proc);if(!ob)return;const k=sum(b.filter(x=>x.ocId===o),x=>x.kg)||1;pk+=ob*k;pw+=k});const obj=pw?pk/pw:null;
+    const real=hrs?kg/hrs:null;const eff=obj&&hrs?real/obj*100:null;
+    const pm=sum(par.filter(p=>mq?p.maq===mq:p.maq==='Laminadora'),p=>p.min);
+    const ops=[...new Set(b.map(x=>x.op).filter(Boolean))].join(', ');
+    const hm=v=>String(Math.floor(v/60)).padStart(2,'0')+':'+String(v%60).padStart(2,'0');
+    rows+=`<tr><td>${nm}<br><span class="muted">${ops}</span></td><td>${hm(ini)}–${hm(fin)}${hoy&&fin<Math.max(J.fin,...b.map(mOf))?' <span class="muted">(en curso)</span>':''}</td><td class="n">${b.length}</td><td class="n">${fmt(kg)}</td><td class="n">${fmt(hrs)}</td><td class="n">${real!=null?fmt(real):'—'}</td><td class="n">${obj?fmt(obj):'—'}</td><td class="n">${effBadge(eff)}</td><td class="n">${pm||''}</td></tr>`;
   }
-  $('prodTurnos').innerHTML=rows||'<tr><td colspan="9" class="muted">Definí los turnos en ⚙ Configuración.</td></tr>';
+  $('prodTurnos').innerHTML=rows||'<tr><td colspan="9" class="muted">Sin producción cargada ese día.</td></tr>';
   const last={};
   $('prodLista').innerHTML=all.map(x=>{const k=x.proc+x.maq;const prev=last[k];last[k]=x.t;const dm=prev?(new Date(x.t)-new Date(prev))/60000:null;const kh=dm&&x.kg?x.kg/(dm/60):null;const obj=objetivo(x.ocId,x.proc);
     return`<tr><td>${fh(x.t)}</td><td>${x.proc==='lam'?'Laminadora':'Refiladora '+x.maq}</td><td>${x.op||''}</td><td>${ocLbl(ocOf(x.ocId))}</td><td>${x.lbl}</td><td class="n">${x.kg?fmt(x.kg):'<span class="tag pend">sin pesar</span>'}</td><td class="n">${x.m||''}</td><td class="n">${dm!=null?fmt(dm):''}</td><td class="n">${kh?fmt(kh):''}</td><td class="n">${obj?fmt(obj):''}</td></tr>`}).join('')||'<tr><td colspan="10" class="muted">Sin producción cargada ese día.</td></tr>';
