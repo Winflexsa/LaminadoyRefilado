@@ -174,8 +174,8 @@ input[type=file]{padding:9px 10px;font-size:14px}
 .pick>b+.tag,.pick>b~.tag{vertical-align:2px}
 .wz-info+.wz-sub{margin-top:10px}
 /* asistente con panel lateral (bobinas del dia / pallets) */
-#v-wiz .wz.has-side{max-width:1180px;display:grid;grid-template-columns:minmax(0,1fr) 370px;gap:18px;align-items:start}
-.wz-aside{background:#fff;border:1px solid var(--line);border-radius:16px;padding:14px 14px 10px;position:sticky;top:74px;max-height:calc(100vh - 92px);overflow:auto}
+#v-wiz .wz.has-side{max-width:720px}
+.wz-aside{background:#fff;border:1px solid var(--line);border-radius:16px;padding:14px 16px 10px;margin-top:18px}
 .wz-aside h4{margin:0 0 2px;font-size:17px;color:var(--brand)}
 .wz-aside .sub{color:var(--ink2);font-size:13.5px;margin-bottom:10px}
 .wz-aside .grp{font-size:12.5px;font-weight:700;color:var(--ink2);margin:12px 0 4px;display:flex;justify-content:space-between;gap:8px}
@@ -233,7 +233,6 @@ input[type=file]{padding:9px 10px;font-size:14px}
 .frm{display:grid;grid-template-columns:repeat(auto-fill,minmax(165px,1fr));gap:12px;align-items:end}
 .frm .f{min-width:0;max-width:none!important}
 .frm .w2{grid-column:span 2}
-@media (max-width:960px){#v-wiz .wz.has-side{grid-template-columns:1fr;max-width:720px}.wz-aside{position:static;max-height:none}}
 
 @media (max-width:640px){main{padding:12px 10px}.card{padding:14px}.kpi div{min-width:44%}.f{min-width:100px}}
 @media print{header,.tabs,.btn,.noprint{display:none!important}body{background:#fff}.card{border:0;box-shadow:none}th{position:static}
@@ -503,7 +502,7 @@ html.celu .login{padding:34px 22px}
     <button onclick="pcTab('cro',this)">Cronograma</button>
     <button onclick="pcTab('oc',this)">Órdenes de compra</button>
     <button onclick="pcTab('pet',this)">Recepción PET</button>
-    <button onclick="pcTab('lam',this)">Bobinas madre</button>
+    <button onclick="pcTab('lam',this)">Bobinas para refilar</button>
     <button onclick="pcTab('ops',this)">OPs de refilado</button>
     <button onclick="pcTab('fin',this)">Stock</button>
     <button onclick="pcTab('desp',this)">Despachos</button>
@@ -573,7 +572,7 @@ html.celu .login{padding:34px 22px}
   </div>
   <div id="pc-lam" class="pct" style="display:none">
     <div class="card">
-      <h2>Bobinas madre · para refilar o rebobinar</h2>
+      <h2>Bobinas para refilar o rebobinar</h2>
       <p class="muted" style="margin:0 0 12px">Todo lo que entra a las refiladoras: las <b>laminadas PET/PE</b> que salen de la laminadora y las <b>bobinas PET de Chivilcoy</b> que se rebobinan o refilan (se cargan en Recepción PET).</p>
       <div class="row noprint" style="margin-bottom:12px">
         <div class="seg" id="lamSeg"><button data-v="" class="on">Todas</button><button data-v="LAM">Laminadas PET/PE</button><button data-v="PET">PET Chivilcoy</button></div>
@@ -645,7 +644,7 @@ html.celu .login{padding:34px 22px}
   <div id="pc-ops" class="pct" style="display:none">
     <div class="card">
       <h2>OPs de refilado</h2>
-      <p class="muted" style="margin:0 0 12px">Una OP por OC: se abre sola cuando el refilador toca la OC. Tocá una OP para ver sus bobinas madre, las bobinas finales pallet por pallet y las paradas; todo se puede corregir desde acá.</p>
+      <p class="muted" style="margin:0 0 12px">Una OP por OC: se abre sola cuando el refilador toca la OC. Tocá una OP para ver las bobinas que entraron, las bobinas finales pallet por pallet y las paradas; todo se puede corregir desde acá.</p>
       <div class="row noprint" style="margin-bottom:12px">
         <div class="seg" id="opsSeg"><button data-v="abierta" class="on">Abiertas</button><button data-v="cerrada">Cerradas</button><button data-v="">Todas</button></div>
         <div class="f" style="max-width:320px"><label>Buscar cliente, OC, partida u operario</label><input id="qOps" oninput="renderOPs()"></div>
@@ -677,7 +676,7 @@ html.celu .login{padding:34px 22px}
   <div id="pc-pet" class="pct" style="display:none">
     <div class="card">
       <h2>Recepción de bobinas PET de Chivilcoy</h2>
-      <p class="muted" style="margin:0 0 10px">Subí el Excel que manda Agustín, filtrá por cliente o medida, tildá las bobinas que llegaron y asignales la OC. Entran a refilado como bobinas madre tipo PET (jumbo), igual que las laminadas.</p>
+      <p class="muted" style="margin:0 0 10px">Subí el Excel que manda Agustín, filtrá por cliente o medida, tildá las bobinas que llegaron y asignales la OC. Entran a refilado como bobinas PET (jumbo), igual que las laminadas.</p>
       <div class="row">
         <div class="f" style="max-width:330px"><label>Excel de Chivilcoy (.xlsx / .csv)</label><input id="petFile" type="file" accept=".xlsx,.xls,.csv" onchange="petLoad(this.files[0])"></div>
         <div class="f" style="max-width:180px"><label>Hoja</label><select id="petSheet" onchange="petParse()"></select></div>
@@ -788,7 +787,7 @@ html.celu .login{padding:34px 22px}
 
 <script>
 /* ================= ESTADO ================= */
-const VERSION='v0.39';
+const VERSION='v0.40';
 const CATALOGO=[
  {id:'CAT-01',cliente:'Don Yeyo',medida:'321x300',anchoPet:350,espPet:250,anchoPe:370,espPe:50,anchoFinal:321,tiras:1,pesoBobinaPet:92,metrosBobinaPet:762,pesoBobinaPe:26,metrosBobinaPe:1550,pesoBobinaFinal:35,cilindro:340},
  {id:'CAT-02',cliente:'Molinos',medida:'472x235',anchoPet:500,espPet:200,anchoPe:530,espPe:35,anchoFinal:472,tiras:1,pesoBobinaPet:80,metrosBobinaPet:592,pesoBobinaPe:32,metrosBobinaPe:1900,pesoBobinaFinal:40,cilindro:490},
@@ -1014,10 +1013,10 @@ function wizSide(){const d=W.d;
   if(W.flow==='lam'&&['oc','partida','nro','kg','ok','obs','obsEd'].includes(W.step))return lamDiaPanel(d.ocId,'wizObsEdit');
   if(W.flow==='ref'&&d.ocId&&['pallet','lam','bruto','cierre','parada'].includes(W.step))return palPanel(d.ocId);
   return''}
-function lamDiaPanel(ocId,fn){const hoy=S.laminadas.filter(l=>l.tipo!=='PET'&&!l.resto&&esHoy(l.createdAt)).sort((a,b)=>b.createdAt>a.createdAt?1:-1);
+function lamDiaPanel(ocId,fn){const todo=isAdmin();const hoy=S.laminadas.filter(l=>l.tipo!=='PET'&&!l.resto&&esHoy(l.createdAt)&&(todo||l.operario===who)).sort((a,b)=>b.createdAt>a.createdAt?1:-1);
   const ocs=[...new Set(hoy.map(l=>l.ocId))].sort((a,b)=>(b===ocId)-(a===ocId));
-  const row=l=>`<div class="dl${minsAgo(l.createdAt)<3?' new':''}" onclick="${fn}('${l.id}')"><span class="h">${fh(l.createdAt)}</span><span class="t">${esc(l.partida)} · nº ${esc(l.nroOrigen||'L'+l.nro)}</span><span class="k">${fmt(l.kg)} kg</span>${obsDe(l)?`<span class="o">⚠ ${esc(obsDe(l))}</span>`:''}</div>`;
-  return`<h4>Bobinas de hoy</h4><div class="sub">${hoy.length?`<b>${hoy.length}</b> bobina${hoy.length!==1?'s':''} · <b>${fmt(sum(hoy,l=>l.kg))} kg</b> laminados hoy`:'Todavía no se cargó ninguna bobina hoy.'}</div>`
+  const row=l=>`<div class="dl${minsAgo(l.createdAt)<3?' new':''}" onclick="${fn}('${l.id}')"><span class="h">${fh(l.createdAt)}</span><span class="t">${esc(l.partida)} · nº ${esc(l.nroOrigen||'L'+l.nro)}${todo&&l.operario?` <span style="font-weight:400;color:var(--ink2);font-size:12.5px">· ${esc(l.operario.split(' ')[0])}</span>`:''}</span><span class="k">${fmt(l.kg)} kg</span>${obsDe(l)?`<span class="o">⚠ ${esc(obsDe(l))}</span>`:''}</div>`;
+  return`<h4>${todo?'Bobinas de hoy (todos)':'Tus bobinas de hoy'}</h4><div class="sub">${hoy.length?`<b>${hoy.length}</b> bobina${hoy.length!==1?'s':''} · <b>${fmt(sum(hoy,l=>l.kg))} kg</b> laminados hoy${todo?'':' con tu PIN'}`:(todo?'Todavía no se cargó ninguna bobina hoy.':'Todavía no cargaste ninguna bobina hoy.')}</div>`
     +ocs.map(id=>{const g=hoy.filter(l=>l.ocId===id);return`<div class="grp${id===ocId?' cur':''}"><span>${esc(ocLbl(ocOf(id)))}</span><span>${g.length} · ${fmt(sum(g,l=>l.kg))} kg</span></div>`+g.map(row).join('')}).join('')
     +(hoy.length?`<p class="muted" style="font-size:12.5px;margin:8px 2px 0">Tocá una bobina para ${fn==='wizObsEdit'?'marcarle un defecto':'corregirla'}.</p>`:'')}
 function palPanel(ocId){const oc=ocOf(ocId),op=opOf(ocId),fs=S.finales.filter(f=>f.ocId===ocId),cur=op?String(op.palletActual||''):'';
@@ -1689,13 +1688,13 @@ function renderLamPC(){
   const sL=$('qLam').value,eL=$('qLamEst').value;
   const esT=l=>!lamTipo||(lamTipo==='PET'?l.tipo==='PET':l.tipo!=='PET');
   const sinRef=S.laminadas.filter(l=>l.estado!=='cerrada'),lamS=sinRef.filter(l=>l.tipo!=='PET'),petS=sinRef.filter(l=>l.tipo==='PET');
-  $('lamKpi2').innerHTML=`<div><b>${sinRef.length}</b><span>bobinas madre sin refilar · ${fmt(sum(sinRef,l=>l.kg))} kg</span></div><div><b>${lamS.length}</b><span>laminadas PET/PE sin refilar · ${fmt(sum(lamS,l=>l.kg))} kg</span></div><div><b>${petS.length}</b><span>PET Chivilcoy sin refilar · ${fmt(sum(petS,l=>l.kg))} kg</span></div><div><b>${sinRef.filter(l=>l.estado==='en refilado').length}</b><span>en refiladora ahora</span></div>`;
+  $('lamKpi2').innerHTML=`<div><b>${sinRef.length}</b><span>bobinas sin refilar · ${fmt(sum(sinRef,l=>l.kg))} kg</span></div><div><b>${lamS.length}</b><span>laminadas PET/PE sin refilar · ${fmt(sum(lamS,l=>l.kg))} kg</span></div><div><b>${petS.length}</b><span>PET Chivilcoy sin refilar · ${fmt(sum(petS,l=>l.kg))} kg</span></div><div><b>${sinRef.filter(l=>l.estado==='en refilado').length}</b><span>en refiladora ahora</span></div>`;
   const lamsF=S.laminadas.filter(l=>esT(l)&&(!eL||l.estado===eL)&&q(sL,ocLbl(ocOf(l.ocId))+' '+l.partida+' '+(l.nroOrigen||'')+' '+(l.operario||'')+' '+obsDe(l)+' '+(l.remitoChiv||'')));
   const grupos=[...new Set(lamsF.map(l=>l.ocId))].map(id=>ocOf(id)).filter(o=>o.id).sort((a,b)=>(a.estado>b.estado?1:-1)||(b.createdAt>a.createdAt?1:-1));
   const cols='<colgroup><col style="width:96px"><col style="width:112px"><col style="width:64px"><col style="width:66px"><col style="width:118px"><col style="width:170px"><col style="width:176px"><col><col style="width:126px"></colgroup>';
   $('pcLam').innerHTML=grupos.map(o=>{const ls=lamsF.filter(l=>l.ocId===o.id).sort((a,b)=>b.nro-a.nro);const cnt=e=>ls.filter(l=>l.estado===e).length;const open=openOC.has(o.id)||!!sL;const pet=ls.every(l=>l.tipo==='PET');
     return`<details class="opc${o.estado==='cerrada'?' cerr':''}" ${open?'open':''} ontoggle="openOC[this.open?'add':'delete']('${o.id}')" style="${pet?'border-left-color:#6d8fd6':''}"><summary><div><div class="ti">${esc(ocLbl(o))} <span class="tag ${pet?'tipo-pet':'tipo-lam'}">${pet?'PET Chivilcoy':'Laminadas PET/PE'}</span>${o.estado==='cerrada'?' <span class="tag rem">OC cerrada</span>':''}</div><div class="me">${esc(o.desc||'')} · ${esc(trabajoLbl(o)||(o.ancho||'?')+' mm')}</div></div><div class="rt"><b>${ls.length}</b> bobinas · ${fmt(sum(ls,l=>l.kg))} kg<div style="margin-top:4px">${cnt('pendiente')?`<span class="tag pend">${cnt('pendiente')} para refilar</span> `:''}${cnt('en refilado')?`<span class="tag ref">${cnt('en refilado')} en refiladora</span> `:''}${cnt('cerrada')?`<span class="tag cerr">${cnt('cerrada')} refiladas</span>`:''}</div></div></summary>
-    <div class="bd" style="overflow-x:auto"><table class="tbl-fix" style="min-width:980px">${cols}<thead><tr><th>Fecha</th><th>Partida</th><th class="n">Nº bob.</th><th class="n">Kg</th><th>Medida</th><th>${pet?'Origen':'Laminó'}</th><th>Estado</th><th>Observaciones</th><th></th></tr></thead><tbody>${ls.map(l=>{const k=lamCalc(l);return`<tr><td>${fd(l.createdAt)} <span class="muted">${fh(l.createdAt)}</span></td><td><b>${esc(l.partida)}</b></td><td class="n">${esc(l.nroOrigen||'L'+l.nro)}${l.resto?' <span class="tag pend">resto</span>':''}</td><td class="n"><b>${fmt(l.kg)}</b></td><td>${l.ancho||'?'} × ${l.esp||'?'} µ</td><td title="${esc(origenDe(l))}">${esc(origenDe(l))}</td><td>${tagOf(l.estado)}${l.estado==='en refilado'&&l.refMaq?` <span class="tag ref">${l.refMaq}</span>`:''}${l.estado==='cerrada'?`<br><span class="muted" style="font-size:12.5px">${k.fin.length} finales · rend. ${fmt(l.rend??k.rend)} %</span>`:k.fin.length?`<br><span class="muted" style="font-size:12.5px">${k.fin.length} finales · ${fmt(k.kf)} kg</span>`:''}</td><td style="white-space:normal">${obsDe(l)?'⚠️ '+esc(obsDe(l)):''}</td><td style="text-align:right"><button class="btn sec" onclick="lamEdit('${l.id}')" title="Editar">✎</button> ${l.estado==='cerrada'?`<button class="btn sec" onclick="lamReabrir('${l.id}')" title="Reabrir">↺</button> `:''}<button class="btn sec" onclick="lamDel('${l.id}')" title="Borrar">✕</button></td></tr>`}).join('')}</tbody></table></div></details>`}).join('')||'<p class="muted">No hay bobinas madre con ese filtro.</p>';
+    <div class="bd" style="overflow-x:auto"><table class="tbl-fix" style="min-width:980px">${cols}<thead><tr><th>Fecha</th><th>Partida</th><th class="n">Nº bob.</th><th class="n">Kg</th><th>Medida</th><th>${pet?'Origen':'Laminó'}</th><th>Estado</th><th>Observaciones</th><th></th></tr></thead><tbody>${ls.map(l=>{const k=lamCalc(l);return`<tr><td>${fd(l.createdAt)} <span class="muted">${fh(l.createdAt)}</span></td><td><b>${esc(l.partida)}</b></td><td class="n">${esc(l.nroOrigen||'L'+l.nro)}${l.resto?' <span class="tag pend">resto</span>':''}</td><td class="n"><b>${fmt(l.kg)}</b></td><td>${l.ancho||'?'} × ${l.esp||'?'} µ</td><td title="${esc(origenDe(l))}">${esc(origenDe(l))}</td><td>${tagOf(l.estado)}${l.estado==='en refilado'&&l.refMaq?` <span class="tag ref">${l.refMaq}</span>`:''}${l.estado==='cerrada'?`<br><span class="muted" style="font-size:12.5px">${k.fin.length} finales · rend. ${fmt(l.rend??k.rend)} %</span>`:k.fin.length?`<br><span class="muted" style="font-size:12.5px">${k.fin.length} finales · ${fmt(k.kf)} kg</span>`:''}</td><td style="white-space:normal">${obsDe(l)?'⚠️ '+esc(obsDe(l)):''}</td><td style="text-align:right"><button class="btn sec" onclick="lamEdit('${l.id}')" title="Editar">✎</button> ${l.estado==='cerrada'?`<button class="btn sec" onclick="lamReabrir('${l.id}')" title="Reabrir">↺</button> `:''}<button class="btn sec" onclick="lamDel('${l.id}')" title="Borrar">✕</button></td></tr>`}).join('')}</tbody></table></div></details>`}).join('')||'<p class="muted">No hay bobinas con ese filtro.</p>';
 }
 
 /* ================= v0.39 · OPs DE REFILADO (Administración) ================= */
@@ -1731,14 +1730,14 @@ function opCard(op,d,open){
    <div class="me">Inicio ${fd(op.inicio)} ${fh(op.inicio)}${cer?` · cierre ${fd(op.fin)} ${fh(op.fin)}`:''} · ${esc(d.ops.join(', ')||'—')}${d.maqs.length?' · refiladora '+d.maqs.join(' y '):''}</div></div>
    <div class="rt"><b>${fmt(d.kf)}</b> / ${fmt(o.kg)} kg finales<div class="bar" style="margin-top:6px;width:180px;margin-left:auto"><i style="width:${pctF}%"></i></div></div></summary>
    <div class="bd">
-    <div class="mini"><div><b>${d.cerr.length} / ${d.lams.length}</b><span>bobinas madre refiladas</span></div><div><b>${fmt(d.kl)}</b><span>kg que entraron</span></div><div><b>${d.fin.length}</b><span>bobinas finales</span></div><div><b>${fmt(d.kf)}</b><span>kg finales netos</span></div><div class="${bajo?'bad':''}"><b>${fmt(d.scrap)}</b><span>kg scrap${d.kEnt?' · '+fmt(d.scrap/d.kEnt*100)+' %':''}</span></div><div class="${bajo?'bad':''}"><b>${d.rend!=null?fmt(d.rend)+' %':'—'}</b><span>rendimiento</span></div><div><b>${(op.paradas||[]).length}</b><span>paradas · ${sum(op.paradas||[],p=>p.min)} min</span></div></div>
+    <div class="mini"><div><b>${d.cerr.length} / ${d.lams.length}</b><span>bobinas refiladas</span></div><div><b>${fmt(d.kl)}</b><span>kg que entraron</span></div><div><b>${d.fin.length}</b><span>bobinas finales</span></div><div><b>${fmt(d.kf)}</b><span>kg finales netos</span></div><div class="${bajo?'bad':''}"><b>${fmt(d.scrap)}</b><span>kg scrap${d.kEnt?' · '+fmt(d.scrap/d.kEnt*100)+' %':''}</span></div><div class="${bajo?'bad':''}"><b>${d.rend!=null?fmt(d.rend)+' %':'—'}</b><span>rendimiento</span></div><div><b>${(op.paradas||[]).length}</b><span>paradas · ${sum(op.paradas||[],p=>p.min)} min</span></div></div>
     <div class="bal3"><i style="width:${d.kf/tot*100}%;background:var(--brand2)"></i><i style="width:${d.scrap/tot*100}%;background:#d9534f"></i><i style="width:${d.sinRef/tot*100}%;background:#f0d58a"></i></div>
     <div class="leg"><span style="--c:var(--brand2)">finales ${fmt(d.kf)} kg</span><span style="--c:#d9534f">scrap ${fmt(d.scrap)} kg</span><span style="--c:#f0d58a">falta refilar ~${fmt(d.sinRef)} kg</span>${d.resto?`<span style="--c:#b9c4bd">resto a stock ${fmt(d.resto)} kg</span>`:''}</div>
     ${op.nota?`<p style="margin:10px 0 0">📝 ${esc(op.nota)}</p>`:''}
-    <h5>Bobinas madre</h5>
-    <div style="overflow-x:auto"><table><thead><tr><th>Partida · nº</th><th>Tipo</th><th class="n">Kg entrada</th><th>Estado</th><th class="n">Finales</th><th class="n">Kg finales</th><th class="n">Scrap</th><th class="n">Rend.</th><th>Obs.</th><th></th></tr></thead><tbody>${lamRows||'<tr><td colspan="10" class="muted">Sin bobinas madre.</td></tr>'}</tbody></table></div>
+    <h5>Bobinas que entraron (laminadas / PET)</h5>
+    <div style="overflow-x:auto"><table><thead><tr><th>Partida · nº</th><th>Tipo</th><th class="n">Kg entrada</th><th>Estado</th><th class="n">Finales</th><th class="n">Kg finales</th><th class="n">Scrap</th><th class="n">Rend.</th><th>Obs.</th><th></th></tr></thead><tbody>${lamRows||'<tr><td colspan="10" class="muted">Sin bobinas.</td></tr>'}</tbody></table></div>
     <h5>Bobinas finales por pallet</h5>
-    <div style="overflow-x:auto"><table><thead><tr><th class="n">Nº</th><th>Bobina madre</th><th class="n">Bruto</th><th class="n">Neto</th><th class="n">Ancho</th><th>Cono</th><th>Salió</th><th>Operario</th><th></th></tr></thead><tbody>${finRows||'<tr><td colspan="9" class="muted">Todavía no salió ninguna bobina final.</td></tr>'}</tbody></table></div>
+    <div style="overflow-x:auto"><table><thead><tr><th class="n">Nº</th><th>Sale de</th><th class="n">Bruto</th><th class="n">Neto</th><th class="n">Ancho</th><th>Cono</th><th>Salió</th><th>Operario</th><th></th></tr></thead><tbody>${finRows||'<tr><td colspan="9" class="muted">Todavía no salió ninguna bobina final.</td></tr>'}</tbody></table></div>
     <h5>Paradas <button class="btn sec" onclick="paradaEdit('${op.id}',-1)">+ Agregar parada</button></h5>
     ${parRows?`<table><thead><tr><th>Cuándo</th><th>Motivo</th><th class="n">Duración</th><th>Máquina</th><th></th></tr></thead><tbody>${parRows}</tbody></table>`:'<p class="muted" style="margin:0">Sin paradas.</p>'}
     <div class="row" style="margin-top:16px;justify-content:flex-end"><button class="btn sec" onclick="opEdit('${op.id}')">✎ Editar OP</button>${cer?`<button class="btn sec" onclick="opReabrir('${op.id}')">↺ Reabrir OP</button>`:`<button class="btn ok" onclick="opCerrar('${op.id}')">Cerrar OP</button>`}<button class="btn sec" style="color:var(--bad)" onclick="opDel('${op.id}')">✕ Borrar OP</button></div>
@@ -1810,7 +1809,7 @@ function wfVista(v){try{localStorage.setItem('wf_vista',v)}catch(e){}const u=new
   if(!CELU){ if(window.WF_ES_TEL){sw.textContent='\uD83D\uDCF1 Ver versi\u00f3n celular';sw.onclick=()=>wfVista('celu');$('v-home').appendChild(sw)} return; }
   sw.textContent='\uD83D\uDDA5 Ver versi\u00f3n completa';sw.onclick=()=>wfVista('full');$('v-home').appendChild(sw);
   const h1=document.querySelector('header h1');
-  const NOM={prod:'Producci\u00f3n en vivo',cro:'Cronograma',oc:'\u00d3rdenes de compra',pet:'Recepci\u00f3n PET',lam:'Bobinas madre',ops:'OPs de refilado',fin:'Stock',desp:'Despachos',cat:'Cat\u00e1logo'};
+  const NOM={prod:'Producci\u00f3n en vivo',cro:'Cronograma',oc:'\u00d3rdenes de compra',pet:'Recepci\u00f3n PET',lam:'Bobinas para refilar',ops:'OPs de refilado',fin:'Stock',desp:'Despachos',cat:'Cat\u00e1logo'};
   const ICO={cro:'\uD83D\uDDD3\uFE0F',pet:'\uD83D\uDCE5',lam:'\uD83E\uDDFB',ops:'\u2702\uFE0F',cat:'\uD83D\uDCDA'};
   const BAJO=[['prod','\uD83D\uDCCA','En vivo'],['oc','\uD83D\uDCC4','\u00d3rdenes'],['fin','\uD83D\uDCE6','Stock'],['desp','\uD83D\uDE9A','Despachos']];
   const MODO={home:'Laminado y Refilado',config:'Configuraci\u00f3n',lam:'Laminado',lamoc:'Laminado',ref:'Refilado',op:'Refilado',wiz:'Carga en planta',login:'Laminado y Refilado'};
