@@ -217,6 +217,31 @@ input[type=file]{padding:9px 10px;font-size:14px}
 .opc .bal3 i{display:block;height:100%}
 .opc .leg{font-size:12.5px;color:var(--ink2);display:flex;gap:14px;flex-wrap:wrap}
 .opc .leg span::before{content:'';display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px;background:var(--c)}
+.rtabs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:14px}
+.rtabs button{all:unset;cursor:pointer;background:#fff;border:2px solid var(--line);border-radius:14px;padding:14px 18px;display:flex;flex-direction:column;gap:2px;transition:.15s}
+.rtabs button:hover{border-color:#b7dcc4}
+.rtabs button.on{border-color:var(--c);box-shadow:0 0 0 3px color-mix(in srgb,var(--c) 18%,transparent)}
+.rtabs .t{font-size:13px;font-weight:700;color:var(--ink2);text-transform:uppercase;letter-spacing:.4px}
+.rtabs .n{font-size:30px;font-weight:800;color:var(--c);line-height:1.1;font-variant-numeric:tabular-nums}
+.rtabs .s{font-size:13px;color:var(--ink2)}
+@media (max-width:900px){.rtabs{grid-template-columns:1fr 1fr}}
+.rt2{width:100%;border-collapse:collapse}
+.rt2 th{font-size:12px;text-transform:uppercase;letter-spacing:.4px;color:var(--ink2);text-align:left;padding:8px 12px;border-bottom:2px solid var(--line)}
+.rt2 td{padding:12px;border-bottom:1px solid var(--line);vertical-align:middle;font-size:14.5px}
+.rt2 th.n,.rt2 td.n{text-align:right;font-variant-numeric:tabular-nums}
+.rt2 tr.gh td{background:var(--soft);padding:10px 12px;border-top:14px solid #fff;font-weight:700;color:var(--brand);font-size:15px}
+.rt2 tr.gh:first-child td{border-top:0}
+.rt2 tr.gh small{font-weight:600;color:var(--ink2);font-size:13px;margin-left:8px}
+.rt2 tr.det>td{background:#fbfdfb;padding:6px 12px 16px}
+.rt2 .btn{padding:6px 12px;min-height:0;font-size:13px}
+.maqs{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media (max-width:900px){.maqs{grid-template-columns:1fr}}
+.maq{border:2px solid var(--line);border-radius:14px;padding:18px 20px}
+.maq.on{border-color:var(--brand2);background:#f6fbf7}
+.maq h3{margin:0 0 10px;display:flex;justify-content:space-between;align-items:center}
+.maq .big{font-size:20px;font-weight:700;color:var(--ink);margin-bottom:4px}
+.maq dl{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;margin:12px 0 0;font-size:14.5px}
+.maq dt{color:var(--ink2)}.maq dd{margin:0;font-weight:600}
 .flow{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:12px 0}
 .flow>div{border:1px solid var(--line);border-radius:10px;padding:10px 12px;background:var(--soft);min-width:0}
 .flow>div.on{background:var(--ref);border-color:#b7dcc4}
@@ -584,14 +609,14 @@ html.celu .login{padding:34px 22px}
     </div>
   </div>
   <div id="pc-rfl" class="pct" style="display:none">
+    <div class="rtabs" id="rflTabs"></div>
     <div class="card">
-      <h2>Refilado</h2>
-      <p class="muted" style="margin:0 0 12px">Una tarjeta por OC, siempre en el mismo orden: <b>① lo que falta refilar</b> → <b>② el pallet que se está armando</b> → <b>③ los pallets cerrados</b> (esos pasan a Stock). Cada bobina aparece en un solo lugar, según dónde está hoy. El historial (bobinas ya refiladas, detalle de finales y paradas) queda plegado adentro de cada OC.</p>
-      <div class="row noprint" style="margin-bottom:12px">
-        <div class="seg" id="rflSeg"><button data-v="curso" class="on">En curso</button><button data-v="term">Terminadas</button><button data-v="">Todas</button></div>
-        <div class="f" style="max-width:320px"><label>Buscar cliente, OC, partida u operario</label><input id="qRfl" oninput="renderRfl()"></div>
+      <div class="row noprint" style="margin-bottom:14px;align-items:flex-end">
+        <div><h2 id="rflTit" style="margin:0"></h2><p class="muted" id="rflSub" style="margin:4px 0 0"></p></div>
+        <span style="flex:1"></span>
+        <div class="seg" id="rflOpsSeg" style="display:none"><button data-v="abierta" class="on">Abiertas</button><button data-v="cerrada">Cerradas</button><button data-v="">Todas</button></div>
+        <div class="f" style="max-width:280px"><label>Buscar cliente, OC o partida</label><input id="qRfl" oninput="renderRfl()"></div>
       </div>
-      <div class="kpi" id="rflKpi" style="margin-bottom:14px"></div>
       <div id="pcRfl"></div>
     </div>
   </div>
@@ -760,7 +785,7 @@ html.celu .login{padding:34px 22px}
 
 <script>
 /* ================= ESTADO ================= */
-const VERSION='v0.41';
+const VERSION='v0.42';
 const CATALOGO=[
  {id:'CAT-01',cliente:'Don Yeyo',medida:'321x300',anchoPet:350,espPet:250,anchoPe:370,espPe:50,anchoFinal:321,tiras:1,pesoBobinaPet:92,metrosBobinaPet:762,pesoBobinaPe:26,metrosBobinaPe:1550,pesoBobinaFinal:35,cilindro:340},
  {id:'CAT-02',cliente:'Molinos',medida:'472x235',anchoPet:500,espPet:200,anchoPe:530,espPe:35,anchoFinal:472,tiras:1,pesoBobinaPet:80,metrosBobinaPet:592,pesoBobinaPe:32,metrosBobinaPe:1900,pesoBobinaFinal:40,cilindro:490},
@@ -1625,7 +1650,7 @@ function render(){
   if(mode==='config'){$('cfgOps').innerHTML='<table>'+S.operarios.map(o=>`<tr><td>${o.n}</td><td class="n">${o.pin}</td><td>${o.rol==='admin'?'Todo':'Solo tablets'}</td><td><button class="btn sec" onclick="opRm('${o.pin}')">✕</button></td></tr>`).join('')+'</table>'}
 }
 /* ================= v0.41 · REFILADO (Administración) · flujo por OC ================= */
-let rflEst='curso';const openRfl={};
+
 function segInit(id,cb){const s=$(id);if(!s||s.dataset.ok)return;s.dataset.ok=1;s.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;s.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));cb(b.dataset.v)})}
 const pk$=f=>String(f.pallet||'sin pallet');
 // pallet cerrado = no es el que se está armando en la OP abierta, o ya llegó a su capacidad
@@ -1645,57 +1670,61 @@ function rflData(o){
   return{o,lams,fin,ops,op,last:ops[0],porRef,refil,arm,finArm,pks,kf:sum(fin,f=>f.kg),kl:sum(lams.filter(l=>!l.resto),l=>l.kg),scrap:sum(refil,l=>+l.scrap||0),resto:sum(refil,l=>+l.resto||0),rend:kEnt?kfC/kEnt*100:null,kEnt,sinRef,paradas,maqs,curso,
     gente:[...new Set([...ops.map(x=>x.operario),...fin.map(f=>f.operario),...refil.map(l=>l.refOperario)].filter(Boolean))]};
 }
+let rflView='pend',rflOpsEst='abierta';const rflOpen=new Set();
+const RFLV={pend:['Para refilar','#c98a00'],maq:['En refiladora','#1e9a4f'],pal:['Pallets armándose','#2f6fd0'],ops:['OPs / historial','#6f7a74']};
+function rflSet(v){rflView=v;renderRfl()}
+function rflTog(k){rflOpen.has(k)?rflOpen.delete(k):rflOpen.add(k);renderRfl()}
+function diasTxt(iso){const d=Math.floor(minsAgo(iso)/1440);return d<=0?'hoy':d===1?'1 día':d+' días'}
 function renderRfl(){
-  segInit('rflSeg',v=>{rflEst=v;renderRfl()});
-  const qq=$('qRfl').value;
-  const all=S.ocs.filter(o=>S.laminadas.some(l=>l.ocId===o.id)||S.ops.some(x=>x.ocId===o.id)).map(rflData);
-  const cur=all.filter(d=>d.curso),pr=cur.flatMap(d=>d.porRef),enM=pr.filter(l=>l.estado==='en refilado'),arm=cur.filter(d=>d.arm);
-  const listos=S.finales.filter(f=>f.estado==='en stock'&&palCerrado(f.ocId,pk$(f)));
-  const d30=all.filter(d=>d.refil.some(l=>l.refFin&&minsAgo(l.refFin)<30*1440)),e30=sum(d30,d=>d.kEnt),r30=e30?sum(d30,d=>d.rend!=null?d.kEnt*d.rend/100:0)/e30*100:null;
-  $('rflKpi').innerHTML=`<div><b>${pr.length}</b><span>bobinas por refilar · ${fmt(sum(pr,l=>l.kg))} kg</span></div><div><b>${enM.length}</b><span>en refiladora ahora${enM.length?' · '+[...new Set(enM.map(l=>l.refMaq).filter(Boolean))].join(' y '):''}</span></div><div><b>${arm.length}</b><span>pallets armándose · ${fmt(sum(arm,d=>sum(d.finArm,f=>f.kg)))} kg</span></div><div><b>${[...new Set(listos.map(f=>f.ocId+'|'+pk$(f)))].length}</b><span>pallets cerrados en stock · ${fmt(sum(listos,f=>f.kg))} kg</span></div><div><b>${r30!=null?fmt(r30)+' %':'—'}</b><span>rendimiento 30 días</span></div>`;
-  const rank=d=>d.maqs.length?0:d.porRef.length?1:d.op?2:3;
-  const lst=all.filter(d=>rflEst==='curso'?d.curso:rflEst==='term'?!d.curso:true)
-    .filter(d=>q(qq,ocLbl(d.o)+' '+(d.o.desc||'')+' '+d.gente.join(' ')+' '+d.lams.map(l=>l.partida+' '+(l.nroOrigen||'')).join(' ')))
-    .sort((a,b)=>rank(a)-rank(b)||((a.o.fecha||'9')>(b.o.fecha||'9')?1:-1));
-  $('pcRfl').innerHTML=lst.map((d,i)=>rflCard(d,openRfl[d.o.id]??(!!qq||d.maqs.length>0||(i===0&&d.curso)))).join('')||`<p class="muted">${rflEst==='curso'?'No hay nada en curso: ninguna OC tiene bobinas por refilar ni OP abierta.':'No hay OC con ese filtro.'}</p>`;
+  segInit('rflOpsSeg',v=>{rflOpsEst=v;renderRfl()});
+  const qq=$('qRfl').value,okQ=(o,extra)=>q(qq,ocLbl(o)+' '+(o.desc||'')+' '+(extra||''));
+  const pend=S.laminadas.filter(l=>l.estado==='pendiente'),enM=S.laminadas.filter(l=>l.estado==='en refilado');
+  const arm=S.ocs.map(o=>({o,pk:palArmando(o.id)})).filter(x=>x.pk).map(x=>({...x,op:opOf(x.o.id),fs:S.finales.filter(f=>f.ocId===x.o.id&&pk$(f)===x.pk).sort((a,b)=>a.nro-b.nro)})).filter(x=>x.fs.length);
+  const opsAb=S.ops.filter(x=>x.estado==='abierta');
+  const cnt={pend:[pend.length,`${fmt(sum(pend,l=>l.kg))} kg esperando`],maq:[enM.length,enM.length?[...new Set(enM.map(l=>l.refMaq||'?'))].join(' y '):'máquinas libres'],pal:[arm.length,`${fmt(sum(arm.flatMap(x=>x.fs),f=>f.kg))} kg sin cerrar`],ops:[opsAb.length,'OPs abiertas']};
+  $('rflTabs').innerHTML=Object.entries(RFLV).map(([k,[t,c]])=>`<button class="${k===rflView?'on':''}" style="--c:${c}" onclick="rflSet('${k}')"><span class="t">${t}</span><span class="n">${cnt[k][0]}</span><span class="s">${cnt[k][1]}</span></button>`).join('');
+  $('rflTit').textContent=RFLV[rflView][0];$('rflOpsSeg').style.display=rflView==='ops'?'':'none';
+  let h='';
+  if(rflView==='pend'){
+    $('rflSub').textContent='Bobinas laminadas PET/PE y bobinas PET de Chivilcoy que están esperando entrar a una refiladora.';
+    const ocs=[...new Set(pend.map(l=>l.ocId))].map(ocOf).filter(o=>o.id&&okQ(o,pend.filter(l=>l.ocId===o.id).map(l=>l.partida).join(' '))).sort((a,b)=>(a.fecha||'9')>(b.fecha||'9')?1:-1);
+    h=ocs.length?`<table class="rt2"><thead><tr><th>Partida</th><th>Nº bobina</th><th>Tipo</th><th class="n">Kg</th><th>Ingresó</th><th>Espera</th><th>Observaciones</th><th></th></tr></thead><tbody>${ocs.map(o=>{const ls=pend.filter(l=>l.ocId===o.id).sort((a,b)=>a.nro-b.nro);
+      return`<tr class="gh"><td colspan="8">${esc(o.cliente)} · OC ${esc(o.nro)}<small>${esc(o.desc||'')} → ${esc(trabajoLbl(o)||(o.ancho||'?')+' mm')}</small><small>${ls.length} bobina${ls.length>1?'s':''} · ${fmt(sum(ls,l=>l.kg))} kg${o.fecha?' · entrega '+o.fecha.slice(8,10)+'/'+o.fecha.slice(5,7):''}</small></td></tr>`
+      +ls.map(l=>{const d=Math.floor(minsAgo(l.createdAt)/1440);return`<tr><td><b>${esc(l.partida)}</b></td><td>${esc(l.nroOrigen||'L'+l.nro)}${l.resto?' <span class="tag pend">resto</span>':''}</td><td>${tipoTag(l)}</td><td class="n"><b>${fmt(l.kg)}</b></td><td>${fd(l.createdAt)}</td><td>${d>=3?`<span class="tag" style="background:#fde3e1;color:var(--bad)">${diasTxt(l.createdAt)}</span>`:diasTxt(l.createdAt)}</td><td style="white-space:normal">${obsDe(l)?'⚠️ '+esc(obsDe(l)):'<span class="muted">—</span>'}</td><td style="text-align:right"><button class="btn sec" onclick="lamEdit('${l.id}')">✎ Editar</button></td></tr>`}).join('')}).join('')}</tbody></table>`:'<p class="muted" style="font-size:15px">No hay bobinas esperando para refilar.</p>';
+  }
+  if(rflView==='maq'){
+    $('rflSub').textContent='Qué está refilando cada máquina en este momento.';
+    const card=m=>{const ls=enM.filter(l=>(l.refMaq||'')===m);if(!ls.length)return`<div class="maq"><h3>Refiladora ${m} <span class="tag rem">libre</span></h3><p class="muted" style="margin:0">No tiene ninguna bobina cargada.</p></div>`;
+      return ls.map(l=>{const o=ocOf(l.ocId),fi=S.finales.filter(f=>f.lamId===l.id),op=opOf(o.id),p=op?palInfo(op):null,ult=fi.map(f=>f.createdAt).sort().slice(-1)[0];
+        return`<div class="maq on"><h3>Refiladora ${m} <span class="tag cerr">trabajando</span></h3><div class="big">${esc(o.cliente)} · OC ${esc(o.nro)}</div><div class="muted">${esc(o.desc||'')} → ${esc(trabajoLbl(o)||'')}</div>
+        <dl><dt>Bobina madre</dt><dd>${esc(l.partida)} · ${esc(l.nroOrigen||'L'+l.nro)} · ${fmt(l.kg)} kg</dd><dt>Ya salieron</dt><dd>${fi.length} bobinas · ${fmt(sum(fi,f=>f.kg))} kg</dd>${p?`<dt>Pallet</dt><dd>Nº ${esc(p.nro)} · ${p.n}${p.cap?' de '+p.cap:''} bobinas</dd>`:''}<dt>Operario</dt><dd>${esc(fi.slice(-1)[0]?.operario||op?.operario||'—')}</dd><dt>Última bobina</dt><dd>${ult?fh(ult)+' ('+fd(ult)+')':'todavía ninguna'}</dd></dl></div>`}).join('')};
+    const otras=enM.filter(l=>!['Verde','Gris'].includes(l.refMaq));
+    h=`<div class="maqs">${card('Verde')}${card('Gris')}</div>${otras.length?`<p class="muted" style="margin-top:12px">También figuran en refiladora sin máquina asignada: ${otras.map(l=>esc(lamLbl(l))+' ('+esc(ocLbl(ocOf(l.ocId)))+')').join(', ')}.</p>`:''}`;
+  }
+  if(rflView==='pal'){
+    $('rflSub').textContent='Pallets abiertos que se están llenando. Cuando se cierran pasan a Stock.';
+    const L=arm.filter(x=>okQ(x.o,x.fs.map(f=>f.partida).join(' ')));
+    h=L.length?`<table class="rt2"><thead><tr><th>Cliente · OC</th><th>Medida</th><th>Pallet</th><th>Bobinas</th><th class="n">Kg neto</th><th>Última bobina</th><th></th></tr></thead><tbody>${L.map(x=>{const cap=x.op.palletCap||x.o.bxp||0,k='pal'+x.o.id,op=rflOpen.has(k);
+      return`<tr><td><b>${esc(x.o.cliente)}</b> · OC ${esc(x.o.nro)}</td><td>${esc(x.o.desc||'')}</td><td><b>${esc(x.pk)}</b></td><td>${x.fs.length}${cap?' de '+cap:''}${cap?`<div class="bar" style="width:90px;margin-top:4px"><i style="width:${Math.min(100,x.fs.length/cap*100)}%"></i></div>`:''}</td><td class="n"><b>${fmt(sum(x.fs,f=>f.kg))}</b></td><td>${fh(x.fs.slice(-1)[0].createdAt)} · ${fd(x.fs.slice(-1)[0].createdAt)}</td><td style="text-align:right;white-space:nowrap"><button class="btn sec" onclick="rflTog('${k}')">${op?'▲ Ocultar':'▼ Ver bobinas'}</button> <button class="btn" onclick="rflPalCerrar('${x.o.id}')">Cerrar pallet ✓</button></td></tr>`
+      +(op?`<tr class="det"><td colspan="7"><table class="rt2"><thead><tr><th>Nº</th><th>Sale de</th><th class="n">Bruto</th><th class="n">Neto</th><th>Hora</th><th>Máquina</th><th></th></tr></thead><tbody>${x.fs.map(f=>{const l=S.laminadas.find(y=>y.id===f.lamId);return`<tr><td><b>${f.nro}</b></td><td>${l?esc(lamLbl(l)):'—'}</td><td class="n">${f.kgB?fmt(f.kgB):''}</td><td class="n">${f.kg?fmt(f.kg):'<span class="tag pend">sin pesar</span>'}</td><td>${fh(f.createdAt)}</td><td>${f.maq||''}</td><td style="text-align:right"><button class="btn sec" onclick="finEdit('${f.id}')">✎</button></td></tr>`}).join('')}</tbody></table></td></tr>`:'')}).join('')}</tbody></table>`:'<p class="muted" style="font-size:15px">No hay pallets armándose.</p>';
+  }
+  if(rflView==='ops'){
+    $('rflSub').textContent='Una OP por OC. Tocá "Ver" para el detalle: bobinas que entraron, bobinas finales, paradas y rendimiento.';
+    const all=S.ocs.filter(o=>S.ops.some(x=>x.ocId===o.id)).map(rflData).filter(d=>!rflOpsEst||(rflOpsEst==='abierta'?!!d.op:!d.op)).filter(d=>okQ(d.o,d.lams.map(l=>l.partida).join(' ')+' '+d.gente.join(' '))).sort((a,b)=>(b.last?.inicio||'')>(a.last?.inicio||'')?1:-1);
+    h=all.length?`<table class="rt2"><thead><tr><th>Cliente · OC</th><th>Estado</th><th>Inicio</th><th class="n">Kg entraron</th><th class="n">Kg finales</th><th class="n">Scrap</th><th class="n">Rend.</th><th class="n">Paradas</th><th></th></tr></thead><tbody>${all.map(d=>{const k='op'+d.o.id,op=rflOpen.has(k),bajo=d.rend!=null&&d.rend<90;
+      return`<tr><td><b>${esc(d.o.cliente)}</b> · OC ${esc(d.o.nro)}<br><span class="muted" style="font-size:13px">${esc(d.o.desc||'')}</span></td><td>${d.op?'<span class="tag cerr">abierta</span>':'<span class="tag rem">cerrada</span>'}</td><td>${fd(d.last.inicio)}</td><td class="n">${fmt(d.kEnt)}</td><td class="n"><b>${fmt(d.kf)}</b> <span class="muted">/ ${fmt(d.o.kg)}</span></td><td class="n">${fmt(d.scrap)}</td><td class="n" style="${bajo?'color:var(--bad);font-weight:700':''}">${d.rend!=null?fmt(d.rend)+' %':'—'}</td><td class="n">${d.paradas.length?d.paradas.length+' · '+sum(d.paradas,p=>p.min)+' min':'—'}</td><td style="text-align:right"><button class="btn sec" onclick="rflTog('${k}')">${op?'▲ Ocultar':'▼ Ver'}</button></td></tr>`+(op?`<tr class="det"><td colspan="9">${rflDet(d)}</td></tr>`:'')}).join('')}</tbody></table>`:'<p class="muted" style="font-size:15px">No hay OPs con ese filtro.</p>';
+  }
+  $('pcRfl').innerHTML=h;
 }
-function rflCard(d,open){
-  const o=d.o,pet=d.lams.length&&d.lams.every(l=>l.tipo==='PET'),pctF=o.kg?Math.min(100,d.kf/o.kg*100):0,bajo=d.rend!=null&&d.rend<90;
-  const est=d.maqs.length?`<span class="tag ref">refilando en ${d.maqs.join(' y ')}</span>`:d.porRef.length?'<span class="tag pend">esperando refilado</span>':d.op?'<span class="tag ref">OP abierta · nada por refilar</span>':'<span class="tag rem">terminada</span>';
-  const rb=d.rend==null?'':`<span class="tag ${bajo?'':'cerr'}" style="${bajo?'background:#fde3e1;color:var(--bad)':''}">rend. ${fmt(d.rend)} %</span>`;
-  // ① por refilar
-  const c1=d.porRef.map(l=>{const ya=sum(d.fin.filter(f=>f.lamId===l.id),f=>f.kg);return`<div class="it"><span><b>${esc(l.partida)}</b> · ${esc(l.nroOrigen||'L'+l.nro)}${l.resto?' <span class="tag pend">resto</span>':''}${obsDe(l)?` <span title="${esc(obsDe(l))}">⚠️</span>`:''}${l.estado==='en refilado'?`<br><small style="color:var(--brand)">en ${l.refMaq||'refiladora'}${ya?' · ya salieron '+fmt(ya)+' kg':''}</small>`:''}</span><span class="r"><b>${fmt(l.kg)}</b> kg <button class="btn sec" onclick="lamEdit('${l.id}')" title="Editar">✎</button></span></div>`}).join('');
-  // ② pallet armándose
-  const cap=d.op?(d.op.palletCap||o.bxp||0):0;
-  const c2=d.arm?d.finArm.map(f=>`<div class="it"><span><b>Bob ${f.nro}</b> <small class="muted">${fh(f.createdAt)}${f.maq?' · '+f.maq:''}</small></span><span class="r">${f.kg?`<b>${fmt(f.kg)}</b> kg`:'<span class="tag pend">sin pesar</span>'} <button class="btn sec" onclick="finEdit('${f.id}')" title="Editar">✎</button></span></div>`).join('')||'<div class="vac">Pallet abierto, todavía sin bobinas.</div>':'';
-  // ③ pallets cerrados
-  const c3=d.pks.map(pk=>{const g=d.fin.filter(f=>pk$(f)===pk),rem=g.every(f=>f.estado==='remitida'),par=!rem&&g.some(f=>f.estado==='remitida');return`<div class="it"><span><b>Pallet ${esc(pk)}</b> <small class="muted">${g.length} bob</small></span><span class="r"><b>${fmt(sum(g,f=>f.kg))}</b> kg ${rem?'<span class="tag rem">despachado</span>':par?'<span class="tag pend">parcial</span>':'<span class="tag cerr">en stock</span>'}</span></div>`}).join('');
-  const tot=Math.max(d.kl,d.kf+d.scrap+d.sinRef)||1;
-  // historial plegado
-  const refRows=d.refil.map(l=>{const k=lamCalc(l),fi=d.fin.filter(f=>f.lamId===l.id);return`<tr><td><b>${esc(l.partida)}</b> · ${esc(l.nroOrigen||'L'+l.nro)}${l.resto?' <span class="tag pend">resto</span>':''}</td><td>${tipoTag(l)}</td><td class="n">${fmt(l.kg)}</td><td class="n">${fi.length}</td><td class="n">${fmt(sum(fi,f=>f.kg))}</td><td class="n">${fmt(l.scrap)}</td><td class="n">${fmt(l.rend??k.rend)} %</td><td>${esc(l.refOperario||'')}${l.refMaq?' · '+l.refMaq:''}${l.refFin?' · '+fd(l.refFin):''}</td><td style="white-space:normal;min-width:120px">${obsDe(l)?'⚠️ '+esc(obsDe(l)):''}</td><td style="text-align:right"><button class="btn sec" onclick="lamEdit('${l.id}')" title="Editar">✎</button> <button class="btn sec" onclick="lamReabrir('${l.id}')" title="Reabrir">↺</button></td></tr>`}).join('');
-  const allPk=[...(d.arm?[d.arm]:[]),...d.pks];
-  const finRows=allPk.map(p=>{const g=d.fin.filter(f=>pk$(f)===p).sort((a,b)=>a.nro-b.nro);return`<tr class="palrow"><td colspan="8" style="background:${p===d.arm?'var(--ref)':'var(--soft)'};font-weight:700;color:var(--brand)">Pallet ${esc(p)}${p===d.arm?' <span class="tag ref">armándose</span>':''} <span class="muted" style="font-weight:600">· ${g.length} bob · ${fmt(sum(g,f=>f.kgB||0))} bruto · ${fmt(sum(g,f=>f.kg))} neto</span></td></tr>`+g.map(f=>{const l=S.laminadas.find(x=>x.id===f.lamId);return`<tr><td class="n"><b>${f.nro}</b></td><td>${l?esc(lamLbl(l)):'—'}</td><td class="n">${f.kgB?fmt(f.kgB):''}</td><td class="n">${f.kg?fmt(f.kg):'<span class="tag pend">sin pesar</span>'}</td><td>${f.cono||''}</td><td>${fd(f.createdAt)} ${fh(f.createdAt)}</td><td>${esc(f.operario||'')}${f.maq?' · '+f.maq:''}</td><td style="text-align:right">${f.estado==='remitida'?'<span class="tag rem">despachada</span> ':''}<button class="btn sec" onclick="finEdit('${f.id}')" title="Editar">✎</button> <button class="btn sec" onclick="finDel('${f.id}')" title="Borrar">✕</button></td></tr>`}).join('')}).join('');
-  const parRows=d.paradas.map(p=>`<tr><td>${fd(p.t)} ${fh(p.t)}</td><td>${esc(p.mot)}</td><td class="n">${p.min} min</td><td>${p.maq||''}</td><td style="text-align:right"><button class="btn sec" onclick="paradaEdit('${p.opId}',${p.i})" title="Editar">✎</button> <button class="btn sec" onclick="paradaDel('${p.opId}',${p.i})" title="Borrar">✕</button></td></tr>`).join('');
-  const opB=d.op||d.last;
-  return`<details class="opc${d.curso?'':' cerr'}" ${open?'open':''} ontoggle="openRfl['${o.id}']=this.open" style="${pet?'border-left-color:#6d8fd6':''}"><summary>
-   <div><div class="ti">${esc(ocLbl(o))} <span class="tag ${pet?'tipo-pet':'tipo-lam'}">${pet?'PET Chivilcoy':'PET/PE'}</span> ${est} ${rb}</div>
-   <div class="me">${esc(o.desc||'')} · 🛠 ${esc(trabajoLbl(o)||(o.ancho||'?')+' mm')}${o.fecha?' · entrega '+o.fecha.slice(8,10)+'/'+o.fecha.slice(5,7):''}</div></div>
-   <div class="rt"><b>${fmt(d.kf)}</b> / ${fmt(o.kg)} kg finales<div class="bar" style="margin-top:6px;width:180px;margin-left:auto"><i style="width:${pctF}%"></i></div></div></summary>
-   <div class="bd">
-    <div class="flow">
-     <div class="${d.porRef.length?'on':''}"><h6><span>① Por refilar</span><span>${d.porRef.length} bob · ${fmt(sum(d.porRef,l=>l.kg))} kg</span></h6>${c1||'<div class="vac">No queda nada por refilar.</div>'}</div>
-     <div class="${d.arm?'on':''}"><h6><span>② Pallet armándose</span><span>${d.arm?`Pallet ${esc(d.arm)} · ${d.finArm.length}${cap?' de '+cap:''} bob`:''}</span></h6>${d.arm?c2+`<div class="ft"><span>${fmt(sum(d.finArm,f=>f.kg))} kg neto</span><button class="btn sec" onclick="rflPalCerrar('${o.id}')">Cerrar pallet ✓</button></div>`:'<div class="vac">Ningún pallet abierto.</div>'}</div>
-     <div class="${d.pks.length?'on':''}"><h6><span>③ Pallets cerrados</span><span>${d.pks.length}</span></h6>${c3||'<div class="vac">Todavía no se cerró ningún pallet.</div>'}${d.pks.length?'<div class="ft"><span>Los que están en stock se despachan desde Despachos.</span></div>':''}</div>
-    </div>
-    <div class="bal3"><i style="width:${d.kf/tot*100}%;background:var(--brand2)"></i><i style="width:${d.scrap/tot*100}%;background:#d9534f"></i><i style="width:${d.sinRef/tot*100}%;background:#f0d58a"></i></div>
-    <div class="leg"><span style="--c:var(--brand2)">salieron ${fmt(d.kf)} kg finales</span><span style="--c:#d9534f">scrap ${fmt(d.scrap)} kg${d.kEnt?' ('+fmt(d.scrap/d.kEnt*100)+' %)':''}</span><span style="--c:#f0d58a">falta refilar ~${fmt(d.sinRef)} kg</span>${d.resto?`<span style="--c:#b9c4bd">resto a stock ${fmt(d.resto)} kg</span>`:''}${d.gente.length?`<span style="margin-left:auto">👷 ${esc(d.gente.join(', '))}</span>`:''}</div>
-    ${opB&&opB.nota?`<p style="margin:10px 0 0">📝 ${esc(opB.nota)}</p>`:''}
-    <details class="sub"><summary>Bobinas madre ya refiladas (${d.refil.length}) · trazabilidad y rendimiento</summary><div style="overflow-x:auto">${refRows?`<table><thead><tr><th>Partida · nº</th><th>Tipo</th><th class="n">Kg entrada</th><th class="n">Finales</th><th class="n">Kg finales</th><th class="n">Scrap</th><th class="n">Rend.</th><th>Refiló</th><th>Obs.</th><th></th></tr></thead><tbody>${refRows}</tbody></table>`:'<p class="muted" style="margin:0 0 8px">Todavía ninguna.</p>'}</div></details>
-    <details class="sub"><summary>Detalle de las ${d.fin.length} bobinas finales · corregir pesos</summary><div style="overflow-x:auto">${finRows?`<table><thead><tr><th class="n">Nº</th><th>Sale de</th><th class="n">Bruto</th><th class="n">Neto</th><th>Cono</th><th>Salió</th><th>Operario</th><th></th></tr></thead><tbody>${finRows}</tbody></table>`:'<p class="muted" style="margin:0 0 8px">Todavía no salió ninguna.</p>'}</div></details>
-    <details class="sub"><summary>Paradas (${d.paradas.length}${d.paradas.length?' · '+sum(d.paradas,p=>p.min)+' min':''})</summary>${parRows?`<table><thead><tr><th>Cuándo</th><th>Motivo</th><th class="n">Duración</th><th>Máquina</th><th></th></tr></thead><tbody>${parRows}</tbody></table>`:'<p class="muted" style="margin:0 0 8px">Sin paradas.</p>'}${opB?`<button class="btn sec" style="margin:6px 0" onclick="paradaEdit('${opB.id}',-1)">+ Agregar parada</button>`:''}</details>
-    ${opB?`<div class="row" style="margin-top:14px;justify-content:flex-end;align-items:center"><span class="muted" style="margin-right:auto;font-size:12.5px">OP ${d.op?'abierta':'cerrada'} · inicio ${fd(opB.inicio)}${opB.fin&&!d.op?' · cierre '+fd(opB.fin):''}</span><button class="btn sec" onclick="opEdit('${opB.id}')">✎ Editar OP</button>${d.op?`<button class="btn ok" onclick="opCerrar('${d.op.id}')">Cerrar OP</button>`:`<button class="btn sec" onclick="opReabrir('${opB.id}')">↺ Reabrir OP</button>`}<button class="btn sec" style="color:var(--bad)" onclick="opDel('${opB.id}')">✕ Borrar OP</button></div>`:'<p class="muted" style="margin:12px 0 0;font-size:12.5px">Sin OP todavía: se abre sola cuando el refilador elige esta OC en la tablet.</p>'}
-   </div></details>`;
-}
+function rflDet(d){const opB=d.op||d.last;
+  const madre=d.refil.concat(d.lams.filter(l=>l.estado!=='cerrada')).map(l=>{const fi=d.fin.filter(f=>f.lamId===l.id);return`<tr><td><b>${esc(l.partida)}</b> · ${esc(l.nroOrigen||'L'+l.nro)}</td><td class="n">${fmt(l.kg)}</td><td>${tagOf(l.estado)}</td><td class="n">${fi.length}</td><td class="n">${fmt(sum(fi,f=>f.kg))}</td><td class="n">${l.estado==='cerrada'?fmt(l.scrap):''}</td><td class="n">${l.estado==='cerrada'?fmt(l.rend??lamCalc(l).rend)+' %':''}</td><td style="text-align:right"><button class="btn sec" onclick="lamEdit('${l.id}')">✎</button>${l.estado==='cerrada'?` <button class="btn sec" onclick="lamReabrir('${l.id}')" title="Reabrir">↺</button>`:''}</td></tr>`}).join('');
+  const pks=[...new Set(d.fin.map(pk$))].sort((a,b)=>(+a||1e9)-(+b||1e9));
+  const fin=pks.map(p=>{const g=d.fin.filter(f=>pk$(f)===p).sort((a,b)=>a.nro-b.nro);return`<tr class="gh"><td colspan="6">Pallet ${esc(p)}<small>${g.length} bobinas · ${fmt(sum(g,f=>f.kg))} kg neto · ${p===d.arm?'armándose':g.every(f=>f.estado==='remitida')?'despachado':'cerrado'}</small></td></tr>`+g.map(f=>`<tr><td><b>${f.nro}</b></td><td class="n">${f.kgB?fmt(f.kgB):''}</td><td class="n">${f.kg?fmt(f.kg):'<span class="tag pend">sin pesar</span>'}</td><td>${fd(f.createdAt)} ${fh(f.createdAt)}</td><td>${esc(f.operario||'')}${f.maq?' · '+f.maq:''}</td><td style="text-align:right"><button class="btn sec" onclick="finEdit('${f.id}')">✎</button> <button class="btn sec" onclick="finDel('${f.id}')">✕</button></td></tr>`).join('')}).join('');
+  const par=d.paradas.map(p=>`<tr><td>${fd(p.t)} ${fh(p.t)}</td><td>${esc(p.mot)}</td><td class="n">${p.min} min</td><td>${p.maq||''}</td><td style="text-align:right"><button class="btn sec" onclick="paradaEdit('${p.opId}',${p.i})">✎</button> <button class="btn sec" onclick="paradaDel('${p.opId}',${p.i})">✕</button></td></tr>`).join('');
+  return`<h4 style="margin:12px 0 6px">1 · Bobinas madre que entraron</h4>${madre?`<table class="rt2"><thead><tr><th>Partida · nº</th><th class="n">Kg</th><th>Estado</th><th class="n">Finales</th><th class="n">Kg finales</th><th class="n">Scrap</th><th class="n">Rend.</th><th></th></tr></thead><tbody>${madre}</tbody></table>`:'<p class="muted">Ninguna.</p>'}
+   <h4 style="margin:18px 0 6px">2 · Bobinas finales por pallet</h4>${fin?`<table class="rt2"><thead><tr><th>Nº</th><th class="n">Bruto</th><th class="n">Neto</th><th>Salió</th><th>Operario</th><th></th></tr></thead><tbody>${fin}</tbody></table>`:'<p class="muted">Todavía ninguna.</p>'}
+   <h4 style="margin:18px 0 6px">3 · Paradas</h4>${par?`<table class="rt2"><tbody>${par}</tbody></table>`:'<p class="muted">Sin paradas.</p>'}
+   <div class="row" style="margin-top:16px;justify-content:flex-end"><button class="btn sec" onclick="paradaEdit('${opB.id}',-1)">+ Parada</button><button class="btn sec" onclick="opEdit('${opB.id}')">✎ Editar OP</button>${d.op?`<button class="btn ok" onclick="opCerrar('${d.op.id}')">Cerrar OP</button>`:`<button class="btn sec" onclick="opReabrir('${opB.id}')">↺ Reabrir OP</button>`}<button class="btn sec" style="color:var(--bad)" onclick="opDel('${opB.id}')">✕ Borrar OP</button></div>`}
 async function rflPalCerrar(ocId){const op=opOf(ocId);if(!op)return;const p=palInfo(op);if(!p.n)return toast('El pallet no tiene bobinas');
   if(!await confirmUI(`¿Cerrar el pallet <b>${p.nro}</b> con <b>${p.n}</b> bobina${p.n>1?'s':''}${p.cap&&p.n<p.cap?` (de ${p.cap} previstas)`:''}? Pasa a Stock y el refilador sigue en el pallet ${(+p.nro||0)+1}.`))return;
   op.palletActual=String((+p.nro||0)+1);op.updatedAt=now();save();toast(`Pallet ${p.nro} cerrado · pasa a Stock`)}
