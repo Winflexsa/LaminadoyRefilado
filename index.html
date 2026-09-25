@@ -217,6 +217,10 @@ input[type=file]{padding:9px 10px;font-size:14px}
 .opc .bal3 i{display:block;height:100%}
 .opc .leg{font-size:12.5px;color:var(--ink2);display:flex;gap:14px;flex-wrap:wrap}
 .opc .leg span::before{content:'';display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px;background:var(--c)}
+.opc.ficha>summary{padding:16px 18px}
+.opc.ficha .ti{font-size:17px}
+.opc.ficha .me{margin-top:3px}
+.opc.ficha .bd{padding:6px 18px 18px}
 .rtabs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:14px}
 .rtabs button{all:unset;cursor:pointer;background:#fff;border:2px solid var(--line);border-radius:14px;padding:14px 18px;display:flex;flex-direction:column;gap:2px;transition:.15s}
 .rtabs button:hover{border-color:#b7dcc4}
@@ -785,7 +789,7 @@ html.celu .login{padding:34px 22px}
 
 <script>
 /* ================= ESTADO ================= */
-const VERSION='v0.42';
+const VERSION='v0.43';
 const CATALOGO=[
  {id:'CAT-01',cliente:'Don Yeyo',medida:'321x300',anchoPet:350,espPet:250,anchoPe:370,espPe:50,anchoFinal:321,tiras:1,pesoBobinaPet:92,metrosBobinaPet:762,pesoBobinaPe:26,metrosBobinaPe:1550,pesoBobinaFinal:35,cilindro:340},
  {id:'CAT-02',cliente:'Molinos',medida:'472x235',anchoPet:500,espPet:200,anchoPe:530,espPe:35,anchoFinal:472,tiras:1,pesoBobinaPet:80,metrosBobinaPet:592,pesoBobinaPe:32,metrosBobinaPe:1900,pesoBobinaFinal:40,cilindro:490},
@@ -1674,6 +1678,8 @@ let rflView='pend',rflOpsEst='abierta';const rflOpen=new Set();
 const RFLV={pend:['Para refilar','#c98a00'],maq:['En refiladora','#1e9a4f'],pal:['Pallets armándose','#2f6fd0'],ops:['OPs / historial','#6f7a74']};
 function rflSet(v){rflView=v;renderRfl()}
 function rflTog(k){rflOpen.has(k)?rflOpen.delete(k):rflOpen.add(k);renderRfl()}
+const stop="event.preventDefault();event.stopPropagation();";
+function ficha(k,cls,col,tit,meta,der,body,forceOpen){const op=forceOpen||rflOpen.has(k);return`<details class="opc ficha ${cls||''}" ${op?'open':''} style="border-left-color:${col}" ontoggle="rflOpen[this.open?'add':'delete']('${k}')"><summary><div><div class="ti">${tit}</div><div class="me">${meta}</div></div><div class="rt">${der}</div></summary><div class="bd">${body}</div></details>`}
 function diasTxt(iso){const d=Math.floor(minsAgo(iso)/1440);return d<=0?'hoy':d===1?'1 día':d+' días'}
 function renderRfl(){
   segInit('rflOpsSeg',v=>{rflOpsEst=v;renderRfl()});
@@ -1686,11 +1692,13 @@ function renderRfl(){
   $('rflTit').textContent=RFLV[rflView][0];$('rflOpsSeg').style.display=rflView==='ops'?'':'none';
   let h='';
   if(rflView==='pend'){
-    $('rflSub').textContent='Bobinas laminadas PET/PE y bobinas PET de Chivilcoy que están esperando entrar a una refiladora.';
+    $('rflSub').textContent='Bobinas laminadas PET/PE y bobinas PET de Chivilcoy esperando entrar a una refiladora. Una ficha por OC: tocala para ver las bobinas.';
     const ocs=[...new Set(pend.map(l=>l.ocId))].map(ocOf).filter(o=>o.id&&okQ(o,pend.filter(l=>l.ocId===o.id).map(l=>l.partida).join(' '))).sort((a,b)=>(a.fecha||'9')>(b.fecha||'9')?1:-1);
-    h=ocs.length?`<table class="rt2"><thead><tr><th>Partida</th><th>Nº bobina</th><th>Tipo</th><th class="n">Kg</th><th>Ingresó</th><th>Espera</th><th>Observaciones</th><th></th></tr></thead><tbody>${ocs.map(o=>{const ls=pend.filter(l=>l.ocId===o.id).sort((a,b)=>a.nro-b.nro);
-      return`<tr class="gh"><td colspan="8">${esc(o.cliente)} · OC ${esc(o.nro)}<small>${esc(o.desc||'')} → ${esc(trabajoLbl(o)||(o.ancho||'?')+' mm')}</small><small>${ls.length} bobina${ls.length>1?'s':''} · ${fmt(sum(ls,l=>l.kg))} kg${o.fecha?' · entrega '+o.fecha.slice(8,10)+'/'+o.fecha.slice(5,7):''}</small></td></tr>`
-      +ls.map(l=>{const d=Math.floor(minsAgo(l.createdAt)/1440);return`<tr><td><b>${esc(l.partida)}</b></td><td>${esc(l.nroOrigen||'L'+l.nro)}${l.resto?' <span class="tag pend">resto</span>':''}</td><td>${tipoTag(l)}</td><td class="n"><b>${fmt(l.kg)}</b></td><td>${fd(l.createdAt)}</td><td>${d>=3?`<span class="tag" style="background:#fde3e1;color:var(--bad)">${diasTxt(l.createdAt)}</span>`:diasTxt(l.createdAt)}</td><td style="white-space:normal">${obsDe(l)?'⚠️ '+esc(obsDe(l)):'<span class="muted">—</span>'}</td><td style="text-align:right"><button class="btn sec" onclick="lamEdit('${l.id}')">✎ Editar</button></td></tr>`}).join('')}).join('')}</tbody></table>`:'<p class="muted" style="font-size:15px">No hay bobinas esperando para refilar.</p>';
+    h=ocs.map(o=>{const ls=pend.filter(l=>l.ocId===o.id).sort((a,b)=>a.nro-b.nro),pet=ls.every(l=>l.tipo==='PET'),maxD=Math.max(...ls.map(l=>Math.floor(minsAgo(l.createdAt)/1440))),obs=ls.filter(l=>obsDe(l)).length;
+      const body=`<table class="rt2"><thead><tr><th>Partida</th><th>Nº bobina</th><th class="n">Kg</th><th>Ingresó</th><th>Espera</th><th>Observaciones</th><th></th></tr></thead><tbody>${ls.map(l=>{const d=Math.floor(minsAgo(l.createdAt)/1440);return`<tr><td><b>${esc(l.partida)}</b></td><td>${esc(l.nroOrigen||'L'+l.nro)}${l.resto?' <span class="tag pend">resto</span>':''}</td><td class="n"><b>${fmt(l.kg)}</b></td><td>${fd(l.createdAt)}</td><td>${d>=3?`<span class="tag" style="background:#fde3e1;color:var(--bad)">${diasTxt(l.createdAt)}</span>`:diasTxt(l.createdAt)}</td><td style="white-space:normal">${obsDe(l)?'⚠️ '+esc(obsDe(l)):'<span class="muted">—</span>'}</td><td style="text-align:right"><button class="btn sec" onclick="lamEdit('${l.id}')">✎ Editar</button></td></tr>`}).join('')}</tbody></table>`;
+      return ficha('pe'+o.id,'',pet?'#6d8fd6':'#c98a00',`${esc(o.cliente)} · OC ${esc(o.nro)} <span class="tag ${pet?'tipo-pet':'tipo-lam'}">${pet?'PET Chivilcoy':'Laminada PET/PE'}</span>${maxD>=3?` <span class="tag" style="background:#fde3e1;color:var(--bad)">esperando ${maxD} días</span>`:''}${obs?` <span class="tag pend">⚠️ ${obs} con obs.</span>`:''}`,
+        `${esc(o.desc||'')} → ${esc(trabajoLbl(o)||(o.ancho||'?')+' mm')}${o.fecha?' · entrega '+o.fecha.slice(8,10)+'/'+o.fecha.slice(5,7):''}`,
+        `<b>${ls.length}</b> bobina${ls.length>1?'s':''}<div style="font-size:14px;margin-top:2px"><b>${fmt(sum(ls,l=>l.kg))}</b> kg para refilar</div>`,body,!!qq)}).join('')||'<p class="muted" style="font-size:15px">No hay bobinas esperando para refilar.</p>';
   }
   if(rflView==='maq'){
     $('rflSub').textContent='Qué está refilando cada máquina en este momento.';
@@ -1702,17 +1710,21 @@ function renderRfl(){
     h=`<div class="maqs">${card('Verde')}${card('Gris')}</div>${otras.length?`<p class="muted" style="margin-top:12px">También figuran en refiladora sin máquina asignada: ${otras.map(l=>esc(lamLbl(l))+' ('+esc(ocLbl(ocOf(l.ocId)))+')').join(', ')}.</p>`:''}`;
   }
   if(rflView==='pal'){
-    $('rflSub').textContent='Pallets abiertos que se están llenando. Cuando se cierran pasan a Stock.';
+    $('rflSub').textContent='Pallets abiertos que se están llenando. Cuando se cierran pasan a Stock. Tocá la ficha para ver las bobinas.';
     const L=arm.filter(x=>okQ(x.o,x.fs.map(f=>f.partida).join(' ')));
-    h=L.length?`<table class="rt2"><thead><tr><th>Cliente · OC</th><th>Medida</th><th>Pallet</th><th>Bobinas</th><th class="n">Kg neto</th><th>Última bobina</th><th></th></tr></thead><tbody>${L.map(x=>{const cap=x.op.palletCap||x.o.bxp||0,k='pal'+x.o.id,op=rflOpen.has(k);
-      return`<tr><td><b>${esc(x.o.cliente)}</b> · OC ${esc(x.o.nro)}</td><td>${esc(x.o.desc||'')}</td><td><b>${esc(x.pk)}</b></td><td>${x.fs.length}${cap?' de '+cap:''}${cap?`<div class="bar" style="width:90px;margin-top:4px"><i style="width:${Math.min(100,x.fs.length/cap*100)}%"></i></div>`:''}</td><td class="n"><b>${fmt(sum(x.fs,f=>f.kg))}</b></td><td>${fh(x.fs.slice(-1)[0].createdAt)} · ${fd(x.fs.slice(-1)[0].createdAt)}</td><td style="text-align:right;white-space:nowrap"><button class="btn sec" onclick="rflTog('${k}')">${op?'▲ Ocultar':'▼ Ver bobinas'}</button> <button class="btn" onclick="rflPalCerrar('${x.o.id}')">Cerrar pallet ✓</button></td></tr>`
-      +(op?`<tr class="det"><td colspan="7"><table class="rt2"><thead><tr><th>Nº</th><th>Sale de</th><th class="n">Bruto</th><th class="n">Neto</th><th>Hora</th><th>Máquina</th><th></th></tr></thead><tbody>${x.fs.map(f=>{const l=S.laminadas.find(y=>y.id===f.lamId);return`<tr><td><b>${f.nro}</b></td><td>${l?esc(lamLbl(l)):'—'}</td><td class="n">${f.kgB?fmt(f.kgB):''}</td><td class="n">${f.kg?fmt(f.kg):'<span class="tag pend">sin pesar</span>'}</td><td>${fh(f.createdAt)}</td><td>${f.maq||''}</td><td style="text-align:right"><button class="btn sec" onclick="finEdit('${f.id}')">✎</button></td></tr>`}).join('')}</tbody></table></td></tr>`:'')}).join('')}</tbody></table>`:'<p class="muted" style="font-size:15px">No hay pallets armándose.</p>';
+    h=L.map(x=>{const cap=x.op.palletCap||x.o.bxp||0,ult=x.fs.slice(-1)[0].createdAt;
+      const body=`<table class="rt2"><thead><tr><th>Nº</th><th>Sale de</th><th class="n">Bruto</th><th class="n">Neto</th><th>Hora</th><th>Máquina</th><th></th></tr></thead><tbody>${x.fs.map(f=>{const l=S.laminadas.find(y=>y.id===f.lamId);return`<tr><td><b>${f.nro}</b></td><td>${l?esc(lamLbl(l)):'—'}</td><td class="n">${f.kgB?fmt(f.kgB):''}</td><td class="n">${f.kg?fmt(f.kg):'<span class="tag pend">sin pesar</span>'}</td><td>${fh(f.createdAt)} · ${fd(f.createdAt)}</td><td>${f.maq||''}</td><td style="text-align:right"><button class="btn sec" onclick="finEdit('${f.id}')">✎</button></td></tr>`}).join('')}</tbody></table>`;
+      return ficha('pa'+x.o.id,'','#2f6fd0',`${esc(x.o.cliente)} · OC ${esc(x.o.nro)} · <span style="color:#2f6fd0">Pallet ${esc(x.pk)}</span>`,
+        `${esc(x.o.desc||'')} · última bobina ${fh(ult)} (${fd(ult)})`,
+        `<b>${x.fs.length}${cap?' de '+cap:''}</b> bobinas · <b>${fmt(sum(x.fs,f=>f.kg))}</b> kg${cap?`<div class="bar" style="width:170px;margin:6px 0 6px auto"><i style="width:${Math.min(100,x.fs.length/cap*100)}%"></i></div>`:'<br>'}<button class="btn" style="padding:6px 12px;min-height:0;font-size:13px" onclick="${stop}rflPalCerrar('${x.o.id}')">Cerrar pallet ✓</button>`,body,!!qq)}).join('')||'<p class="muted" style="font-size:15px">No hay pallets armándose.</p>';
   }
   if(rflView==='ops'){
-    $('rflSub').textContent='Una OP por OC. Tocá "Ver" para el detalle: bobinas que entraron, bobinas finales, paradas y rendimiento.';
+    $('rflSub').textContent='Una ficha por OP (una por OC) con lo principal. Tocala para ver bobinas madre, bobinas finales por pallet y paradas.';
     const all=S.ocs.filter(o=>S.ops.some(x=>x.ocId===o.id)).map(rflData).filter(d=>!rflOpsEst||(rflOpsEst==='abierta'?!!d.op:!d.op)).filter(d=>okQ(d.o,d.lams.map(l=>l.partida).join(' ')+' '+d.gente.join(' '))).sort((a,b)=>(b.last?.inicio||'')>(a.last?.inicio||'')?1:-1);
-    h=all.length?`<table class="rt2"><thead><tr><th>Cliente · OC</th><th>Estado</th><th>Inicio</th><th class="n">Kg entraron</th><th class="n">Kg finales</th><th class="n">Scrap</th><th class="n">Rend.</th><th class="n">Paradas</th><th></th></tr></thead><tbody>${all.map(d=>{const k='op'+d.o.id,op=rflOpen.has(k),bajo=d.rend!=null&&d.rend<90;
-      return`<tr><td><b>${esc(d.o.cliente)}</b> · OC ${esc(d.o.nro)}<br><span class="muted" style="font-size:13px">${esc(d.o.desc||'')}</span></td><td>${d.op?'<span class="tag cerr">abierta</span>':'<span class="tag rem">cerrada</span>'}</td><td>${fd(d.last.inicio)}</td><td class="n">${fmt(d.kEnt)}</td><td class="n"><b>${fmt(d.kf)}</b> <span class="muted">/ ${fmt(d.o.kg)}</span></td><td class="n">${fmt(d.scrap)}</td><td class="n" style="${bajo?'color:var(--bad);font-weight:700':''}">${d.rend!=null?fmt(d.rend)+' %':'—'}</td><td class="n">${d.paradas.length?d.paradas.length+' · '+sum(d.paradas,p=>p.min)+' min':'—'}</td><td style="text-align:right"><button class="btn sec" onclick="rflTog('${k}')">${op?'▲ Ocultar':'▼ Ver'}</button></td></tr>`+(op?`<tr class="det"><td colspan="9">${rflDet(d)}</td></tr>`:'')}).join('')}</tbody></table>`:'<p class="muted" style="font-size:15px">No hay OPs con ese filtro.</p>';
+    h=all.map(d=>{const bajo=d.rend!=null&&d.rend<90,pct=d.o.kg?Math.min(100,d.kf/d.o.kg*100):0;
+      return ficha('op'+d.o.id,d.op?'':'cerr',d.op?'var(--brand3)':'#b9c4bd',`${esc(d.o.cliente)} · OC ${esc(d.o.nro)} ${d.op?'<span class="tag cerr">OP abierta</span>':'<span class="tag rem">OP cerrada</span>'}${d.rend!=null?` <span class="tag ${bajo?'':'cerr'}" style="${bajo?'background:#fde3e1;color:var(--bad)':''}">rend. ${fmt(d.rend)} %</span>`:''}`,
+        `${esc(d.o.desc||'')} · inicio ${fd(d.last.inicio)}${!d.op&&d.last.fin?' · cierre '+fd(d.last.fin):''} · ${d.refil.length} de ${d.lams.length} bobinas madre refiladas · scrap ${fmt(d.scrap)} kg${d.paradas.length?' · '+d.paradas.length+' paradas':''}`,
+        `<b>${fmt(d.kf)}</b> / ${fmt(d.o.kg)} kg finales<div class="bar" style="margin-top:6px;width:170px;margin-left:auto"><i style="width:${pct}%"></i></div>`,rflDet(d),!!qq)}).join('')||'<p class="muted" style="font-size:15px">No hay OPs con ese filtro.</p>';
   }
   $('pcRfl').innerHTML=h;
 }
