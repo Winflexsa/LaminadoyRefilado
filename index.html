@@ -789,7 +789,7 @@ html.celu .login{padding:34px 22px}
 
 <script>
 /* ================= ESTADO ================= */
-const VERSION='v0.43';
+const VERSION='v0.44';
 const CATALOGO=[
  {id:'CAT-01',cliente:'Don Yeyo',medida:'321x300',anchoPet:350,espPet:250,anchoPe:370,espPe:50,anchoFinal:321,tiras:1,pesoBobinaPet:92,metrosBobinaPet:762,pesoBobinaPe:26,metrosBobinaPe:1550,pesoBobinaFinal:35,cilindro:340},
  {id:'CAT-02',cliente:'Molinos',medida:'472x235',anchoPet:500,espPet:200,anchoPe:530,espPe:35,anchoFinal:472,tiras:1,pesoBobinaPet:80,metrosBobinaPet:592,pesoBobinaPe:32,metrosBobinaPe:1900,pesoBobinaFinal:40,cilindro:490},
@@ -1687,18 +1687,21 @@ function renderRfl(){
   const pend=S.laminadas.filter(l=>l.estado==='pendiente'),enM=S.laminadas.filter(l=>l.estado==='en refilado');
   const arm=S.ocs.map(o=>({o,pk:palArmando(o.id)})).filter(x=>x.pk).map(x=>({...x,op:opOf(x.o.id),fs:S.finales.filter(f=>f.ocId===x.o.id&&pk$(f)===x.pk).sort((a,b)=>a.nro-b.nro)})).filter(x=>x.fs.length);
   const opsAb=S.ops.filter(x=>x.estado==='abierta');
-  const cnt={pend:[pend.length,`${fmt(sum(pend,l=>l.kg))} kg esperando`],maq:[enM.length,enM.length?[...new Set(enM.map(l=>l.refMaq||'?'))].join(' y '):'máquinas libres'],pal:[arm.length,`${fmt(sum(arm.flatMap(x=>x.fs),f=>f.kg))} kg sin cerrar`],ops:[opsAb.length,'OPs abiertas']};
+  const cnt={pend:[pend.length+enM.length,`${pend.length} listas · ${enM.length} en máquina · ${fmt(sum(pend.concat(enM),l=>l.kg))} kg`],maq:[enM.length,enM.length?[...new Set(enM.map(l=>l.refMaq||'?'))].join(' y '):'máquinas libres'],pal:[arm.length,`${fmt(sum(arm.flatMap(x=>x.fs),f=>f.kg))} kg sin cerrar`],ops:[opsAb.length,'OPs abiertas']};
   $('rflTabs').innerHTML=Object.entries(RFLV).map(([k,[t,c]])=>`<button class="${k===rflView?'on':''}" style="--c:${c}" onclick="rflSet('${k}')"><span class="t">${t}</span><span class="n">${cnt[k][0]}</span><span class="s">${cnt[k][1]}</span></button>`).join('');
   $('rflTit').textContent=RFLV[rflView][0];$('rflOpsSeg').style.display=rflView==='ops'?'':'none';
   let h='';
   if(rflView==='pend'){
-    $('rflSub').textContent='Bobinas laminadas PET/PE y bobinas PET de Chivilcoy esperando entrar a una refiladora. Una ficha por OC: tocala para ver las bobinas.';
-    const ocs=[...new Set(pend.map(l=>l.ocId))].map(ocOf).filter(o=>o.id&&okQ(o,pend.filter(l=>l.ocId===o.id).map(l=>l.partida).join(' '))).sort((a,b)=>(a.fecha||'9')>(b.fecha||'9')?1:-1);
-    h=ocs.map(o=>{const ls=pend.filter(l=>l.ocId===o.id).sort((a,b)=>a.nro-b.nro),pet=ls.every(l=>l.tipo==='PET'),maxD=Math.max(...ls.map(l=>Math.floor(minsAgo(l.createdAt)/1440))),obs=ls.filter(l=>obsDe(l)).length;
-      const body=`<table class="rt2"><thead><tr><th>Partida</th><th>Nº bobina</th><th class="n">Kg</th><th>Ingresó</th><th>Espera</th><th>Observaciones</th><th></th></tr></thead><tbody>${ls.map(l=>{const d=Math.floor(minsAgo(l.createdAt)/1440);return`<tr><td><b>${esc(l.partida)}</b></td><td>${esc(l.nroOrigen||'L'+l.nro)}${l.resto?' <span class="tag pend">resto</span>':''}</td><td class="n"><b>${fmt(l.kg)}</b></td><td>${fd(l.createdAt)}</td><td>${d>=3?`<span class="tag" style="background:#fde3e1;color:var(--bad)">${diasTxt(l.createdAt)}</span>`:diasTxt(l.createdAt)}</td><td style="white-space:normal">${obsDe(l)?'⚠️ '+esc(obsDe(l)):'<span class="muted">—</span>'}</td><td style="text-align:right"><button class="btn sec" onclick="lamEdit('${l.id}')">✎ Editar</button></td></tr>`}).join('')}</tbody></table>`;
-      return ficha('pe'+o.id,'',pet?'#6d8fd6':'#c98a00',`${esc(o.cliente)} · OC ${esc(o.nro)} <span class="tag ${pet?'tipo-pet':'tipo-lam'}">${pet?'PET Chivilcoy':'Laminada PET/PE'}</span>${maxD>=3?` <span class="tag" style="background:#fde3e1;color:var(--bad)">esperando ${maxD} días</span>`:''}${obs?` <span class="tag pend">⚠️ ${obs} con obs.</span>`:''}`,
-        `${esc(o.desc||'')} → ${esc(trabajoLbl(o)||(o.ancho||'?')+' mm')}${o.fecha?' · entrega '+o.fecha.slice(8,10)+'/'+o.fecha.slice(5,7):''}`,
-        `<b>${ls.length}</b> bobina${ls.length>1?'s':''}<div style="font-size:14px;margin-top:2px"><b>${fmt(sum(ls,l=>l.kg))}</b> kg para refilar</div>`,body,!!qq)}).join('')||'<p class="muted" style="font-size:15px">No hay bobinas esperando para refilar.</p>';
+    $('rflSub').textContent='Bobinas laminadas PET/PE y PET de Chivilcoy que falta refilar, con su estado: lista para refilar o ya en una refiladora (y cuál). Una ficha por OC: tocala para ver las bobinas.';
+    const pr=pend.concat(enM);
+    const ocs=[...new Set(pr.map(l=>l.ocId))].map(ocOf).filter(o=>o.id&&okQ(o,pr.filter(l=>l.ocId===o.id).map(l=>l.partida).join(' '))).sort((a,b)=>(pr.some(l=>l.ocId===b.id&&l.estado==='en refilado')-pr.some(l=>l.ocId===a.id&&l.estado==='en refilado'))||((a.fecha||'9')>(b.fecha||'9')?1:-1));
+    const estTag=l=>l.estado==='en refilado'?`<span class="tag ref" style="font-size:12.5px">✂️ en refiladora ${esc(l.refMaq||'')}</span>`:'<span class="tag pend" style="font-size:12.5px">⏳ lista para refilar</span>';
+    h=ocs.map(o=>{const ls=pr.filter(l=>l.ocId===o.id).sort((a,b)=>(a.estado==='en refilado'?0:1)-(b.estado==='en refilado'?0:1)||a.nro-b.nro),pet=ls.every(l=>l.tipo==='PET'),lp=ls.filter(l=>l.estado==='pendiente'),em=ls.filter(l=>l.estado==='en refilado'),maxD=lp.length?Math.max(...lp.map(l=>Math.floor(minsAgo(l.createdAt)/1440))):0,obs=ls.filter(l=>obsDe(l)).length;
+      const body=`<table class="rt2"><thead><tr><th>Partida</th><th>Nº bobina</th><th class="n">Kg</th><th>Estado</th><th>Ingresó</th><th>Espera / avance</th><th>Observaciones</th><th></th></tr></thead><tbody>${ls.map(l=>{const d=Math.floor(minsAgo(l.createdAt)/1440),fi=S.finales.filter(f=>f.lamId===l.id);return`<tr><td><b>${esc(l.partida)}</b></td><td>${esc(l.nroOrigen||'L'+l.nro)}${l.resto?' <span class="tag pend">resto</span>':''}</td><td class="n"><b>${fmt(l.kg)}</b></td><td>${estTag(l)}</td><td>${fd(l.createdAt)}</td><td>${l.estado==='en refilado'?`salieron ${fi.length} bob · ${fmt(sum(fi,f=>f.kg))} kg`:d>=3?`<span class="tag" style="background:#fde3e1;color:var(--bad)">${diasTxt(l.createdAt)}</span>`:diasTxt(l.createdAt)}</td><td style="white-space:normal">${obsDe(l)?'⚠️ '+esc(obsDe(l)):'<span class="muted">—</span>'}</td><td style="text-align:right"><button class="btn sec" onclick="lamEdit('${l.id}')">✎ Editar</button></td></tr>`}).join('')}</tbody></table>`;
+      const chips=`${em.length?[...new Set(em.map(l=>l.refMaq||''))].map(m=>`<span class="tag ref">✂️ ${em.filter(l=>(l.refMaq||'')===m).length} en refiladora ${esc(m)}</span>`).join(' ')+' ':''}${lp.length?`<span class="tag pend">⏳ ${lp.length} lista${lp.length>1?'s':''} para refilar</span>`:''}${maxD>=3?` <span class="tag" style="background:#fde3e1;color:var(--bad)">esperando ${maxD} días</span>`:''}${obs?` <span class="tag pend">⚠️ ${obs} con obs.</span>`:''}`;
+      return ficha('pe'+o.id,'',em.length?'var(--brand2)':pet?'#6d8fd6':'#c98a00',`${esc(o.cliente)} · OC ${esc(o.nro)} <span class="tag ${pet?'tipo-pet':'tipo-lam'}">${pet?'PET Chivilcoy':'Laminada PET/PE'}</span>`,
+        `${esc(o.desc||'')} → ${esc(trabajoLbl(o)||(o.ancho||'?')+' mm')}${o.fecha?' · entrega '+o.fecha.slice(8,10)+'/'+o.fecha.slice(5,7):''}<div style="margin-top:6px;display:flex;gap:6px;flex-wrap:wrap">${chips}</div>`,
+        `<b>${ls.length}</b> bobina${ls.length>1?'s':''}<div style="font-size:14px;margin-top:2px"><b>${fmt(sum(ls,l=>l.kg))}</b> kg sin refilar</div>`,body,!!qq)}).join('')||'<p class="muted" style="font-size:15px">No hay bobinas para refilar.</p>';
   }
   if(rflView==='maq'){
     $('rflSub').textContent='Qué está refilando cada máquina en este momento.';
