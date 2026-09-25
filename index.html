@@ -221,6 +221,10 @@ input[type=file]{padding:9px 10px;font-size:14px}
 .opc.ficha .ti{font-size:17px}
 .opc.ficha .me{margin-top:3px}
 .opc.ficha .bd{padding:6px 18px 18px}
+.cat2{width:100%;table-layout:auto}
+.cat2 td,.cat2 th{padding:10px 10px;vertical-align:top;white-space:normal}
+.cat2 td.sm{font-size:13.5px;line-height:1.5}
+.cat2 .btn{padding:6px 10px;min-height:0}
 .rtabs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:14px}
 .rtabs button{all:unset;cursor:pointer;background:#fff;border:2px solid var(--line);border-radius:14px;padding:14px 18px;display:flex;flex-direction:column;gap:2px;transition:.15s}
 .rtabs button:hover{border-color:#b7dcc4}
@@ -741,7 +745,7 @@ html.celu .login{padding:34px 22px}
       <div class="row" style="margin-top:10px"><button class="btn" onclick="catSave()">Guardar producto</button><button class="btn sec" onclick="catNew()">Limpiar</button></div>
     </div>
     <div class="card">
-      <table><thead><tr><th>Cliente</th><th>Medida</th><th class="n">A.PET</th><th class="n">E.PET</th><th class="n">A.PE</th><th class="n">E.PE</th><th class="n">Final</th><th class="n">Tiras</th><th class="n">Bob. PET</th><th class="n">Bob. PE</th><th class="n">Bob. final</th><th class="n">Cilindro</th><th class="n">Bob/pallet</th><th class="n">Cono 3"</th><th class="n">Cono 6"</th><th class="n">Obj. lam.</th><th class="n">Obj. ref.</th><th></th></tr></thead><tbody id="catList"></tbody></table>
+      <table class="cat2"><thead><tr><th>Cliente / medida</th><th>PET</th><th>PE</th><th>Final</th><th>Bobinas</th><th>Pallet</th><th>Cono (kg)</th><th>Objetivo kg/h</th><th></th></tr></thead><tbody id="catList"></tbody></table>
     </div>
   </div>
 </section>
@@ -789,7 +793,7 @@ html.celu .login{padding:34px 22px}
 
 <script>
 /* ================= ESTADO ================= */
-const VERSION='v0.44';
+const VERSION='v0.45';
 const CATALOGO=[
  {id:'CAT-01',cliente:'Don Yeyo',medida:'321x300',anchoPet:350,espPet:250,anchoPe:370,espPe:50,anchoFinal:321,tiras:1,pesoBobinaPet:92,metrosBobinaPet:762,pesoBobinaPe:26,metrosBobinaPe:1550,pesoBobinaFinal:35,cilindro:340},
  {id:'CAT-02',cliente:'Molinos',medida:'472x235',anchoPet:500,espPet:200,anchoPe:530,espPe:35,anchoFinal:472,tiras:1,pesoBobinaPet:80,metrosBobinaPet:592,pesoBobinaPe:32,metrosBobinaPe:1900,pesoBobinaFinal:40,cilindro:490},
@@ -1646,7 +1650,8 @@ function render(){
   if(mode==='pc'){
     renderProd();renderCro();renderPet();renderDesp();
     const pv=$('ocProd').value;$('ocProd').innerHTML='<option value="">— elegir producto —</option>'+S.catalogo.slice().sort((a,b)=>a.cliente.localeCompare(b.cliente)).map(p=>`<option value="${p.id}">${prodLbl(p)}</option>`).join('');$('ocProd').value=pv;
-    $('catList').innerHTML=S.catalogo.slice().sort((a,b)=>a.cliente.localeCompare(b.cliente)).map(p=>`<tr><td>${p.cliente}</td><td><b>${p.medida}</b></td><td class="n">${p.anchoPet??''}</td><td class="n">${p.espPet??''}</td><td class="n">${p.anchoPe??''}</td><td class="n">${p.espPe??''}</td><td class="n">${p.anchoFinal}</td><td class="n">${p.tiras||1}</td><td class="n">${p.pesoBobinaPet?p.pesoBobinaPet+' kg / '+(p.metrosBobinaPet||'?')+' m':'—'}</td><td class="n">${p.pesoBobinaPe?p.pesoBobinaPe+' kg / '+(p.metrosBobinaPe||'?')+' m':'—'}</td><td class="n">${p.pesoBobinaFinal?p.pesoBobinaFinal+' kg':'—'}</td><td class="n">${p.cilindro||'—'}</td><td class="n">${p.bxp||'—'}</td><td class="n">${p.cono3!=null?p.cono3:`<span class="muted">${taraKg('3"',p.anchoFinal)} est.</span>`}</td><td class="n">${p.cono6!=null?p.cono6:'—'}</td><td class="n">${p.kgHoraLam||'—'}</td><td class="n">${p.kgHoraRef||'—'}</td><td><button class="btn sec" onclick="catEdit('${p.id}')">✎</button> <button class="btn sec" onclick="catDel('${p.id}')">✕</button></td></tr>`).join('');
+    const v2=(x,y,u1,u2)=>x==null&&y==null?'<span class="muted">—</span>':`${x??'?'}${u1} · ${y??'?'}${u2}`;
+    $('catList').innerHTML=S.catalogo.slice().sort((a,b)=>a.cliente.localeCompare(b.cliente)).map(p=>`<tr><td><b>${esc(p.cliente)}</b><br><span style="font-size:15px;font-weight:700;color:var(--brand)">${esc(p.medida)}</span></td><td>${v2(p.anchoPet,p.espPet,' mm',' µ')}</td><td>${v2(p.anchoPe,p.espPe,' mm',' µ')}</td><td><b>${p.anchoFinal??'?'} mm</b><br><span class="muted">${p.tiras||1} tira${(p.tiras||1)>1?'s':''}</span></td><td class="sm">${p.pesoBobinaPet?`PET ${p.pesoBobinaPet} kg${p.metrosBobinaPet?' / '+p.metrosBobinaPet+' m':''}<br>`:''}${p.pesoBobinaPe?`PE ${p.pesoBobinaPe} kg${p.metrosBobinaPe?' / '+p.metrosBobinaPe+' m':''}<br>`:''}${p.pesoBobinaFinal?`<b>Final ${p.pesoBobinaFinal} kg</b>`:''}${!p.pesoBobinaPet&&!p.pesoBobinaPe&&!p.pesoBobinaFinal?'<span class="muted">—</span>':''}</td><td class="sm">${p.bxp?p.bxp+' bob':'—'}${p.cilindro?`<br><span class="muted">cil. ${p.cilindro} mm</span>`:''}</td><td class="sm">3": ${p.cono3!=null?p.cono3:`<span class="muted">${taraKg('3"',p.anchoFinal)} est.</span>`}<br>6": ${p.cono6!=null?p.cono6:'—'}</td><td class="sm">Lam. ${p.kgHoraLam||'—'}<br>Ref. ${p.kgHoraRef||'—'}</td><td style="text-align:right;white-space:nowrap"><button class="btn sec" onclick="catEdit('${p.id}')">✎</button> <button class="btn sec" onclick="catDel('${p.id}')">✕</button></td></tr>`).join('');
     const sOC=$('qOC').value,eOC=$('qOCEst').value;
     $('ocList').innerHTML=S.ocs.slice().reverse().filter(o=>(!eOC||o.estado===eOC)&&q(sOC,o.cliente+' '+o.nro+' '+(o.desc||''))).map(o=>{const k=ocAvance(o),d=diasA(o.fecha),sub=ocSub(o);return`<tr${sub?' class="ocmain"':''}><td><b>${o.cliente}</b></td><td>${o.nro}</td><td><b>${o.desc||''}</b>${o.lamina==='Lamina PET'?' <span class="tag tipo-pet">PET</span>':''}<br><span class="muted" style="font-size:12.5px">${o.ancho||'?'} mm · ${o.espPet&&o.espPe?o.espPet+'+'+o.espPe:o.esp||'?'} µ${o.bxp?' · '+o.bxp+' bob/pallet':''}</span></td><td class="n"><b>${fmt(o.kg)}</b></td><td style="min-width:200px"><div class="bar" style="height:7px;background:#e6ede8;border-radius:4px;overflow:hidden;position:relative"><i style="position:absolute;left:0;top:0;height:100%;width:${k.pctLam}%;background:#bfe3cc"></i><i style="position:absolute;left:0;top:0;height:100%;width:${k.pctFin}%;background:var(--brand3)"></i><i style="position:absolute;left:0;top:0;height:100%;width:${k.pctRem}%;background:var(--brand)"></i></div><span class="muted" style="font-size:12px">Lam. ${fmt(k.lam)} · Ref. ${fmt(k.fin)} · Rem. ${fmt(k.rem)} kg</span></td><td>${o.fecha?`${o.fecha.slice(8,10)}/${o.fecha.slice(5,7)} <span class="tag ${d<0?'rem':d<=3?'pend':'cerr'}" style="${d<0?'background:#fde3e1;color:var(--bad)':''}">${d<0?-d+' d atrasada':d===0?'hoy':'en '+d+' d'}</span>`:''}</td><td>${tagOf(o.estado)}</td><td><button class="btn sec" onclick="ocEdit('${o.id}')">✎</button> <button class="btn sec" onclick="ocToggle('${o.id}')">${o.estado==='abierta'?'Cerrar':'Reabrir'}</button> <button class="btn sec" onclick="ocDel('${o.id}')">✕</button></td></tr>${sub}`}).join('');
     renderRfl();renderStock();
