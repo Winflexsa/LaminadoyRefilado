@@ -793,7 +793,7 @@ html.celu .login{padding:34px 22px}
 
 <script>
 /* ================= ESTADO ================= */
-const VERSION='v0.45';
+const VERSION='v0.46';
 const CATALOGO=[
  {id:'CAT-01',cliente:'Don Yeyo',medida:'321x300',anchoPet:350,espPet:250,anchoPe:370,espPe:50,anchoFinal:321,tiras:1,pesoBobinaPet:92,metrosBobinaPet:762,pesoBobinaPe:26,metrosBobinaPe:1550,pesoBobinaFinal:35,cilindro:340},
  {id:'CAT-02',cliente:'Molinos',medida:'472x235',anchoPet:500,espPet:200,anchoPe:530,espPe:35,anchoFinal:472,tiras:1,pesoBobinaPet:80,metrosBobinaPet:592,pesoBobinaPe:32,metrosBobinaPe:1900,pesoBobinaFinal:40,cilindro:490},
@@ -1109,6 +1109,12 @@ function catSave(){
   const p={cliente:$('catCli').value.trim(),medida:$('catMed').value.trim(),anchoPet:n('catAPet'),espPet:n('catEPet'),anchoPe:n('catAPe'),espPe:n('catEPe'),anchoFinal:n('catAF'),tiras:n('catTiras')||1,pesoBobinaPet:n('catPPet'),metrosBobinaPet:n('catMPet'),pesoBobinaPe:n('catPPe'),metrosBobinaPe:n('catMPe'),pesoBobinaFinal:n('catPLam'),cilindro:n('catCil'),kgHoraLam:n('catKhLam'),kgHoraRef:n('catKhRef'),cono3:n('catCono3'),cono6:n('catCono6'),bxp:n('catBxP'),updatedAt:now()};
   if(!p.cliente||!p.medida||!p.anchoFinal)return toast('Falta cliente, medida o ancho final');
   const id=$('catId').value;if(id){Object.assign(S.catalogo.find(x=>x.id===id),p)}else{S.catalogo.push({id:uid('CAT'),...p})}
+  // v0.46: la OC guarda una copia de los datos del producto al crearse; si se corrige el catálogo, ofrecer actualizar las OC abiertas de ese producto
+  if(id){const difs=S.ocs.filter(o=>o.prodId===id&&o.estado==='abierta'&&(+o.espPet!==+p.espPet||+o.espPe!==+p.espPe||+o.ancho!==+p.anchoFinal||o.desc!==p.medida));
+    if(difs.length&&confirm(`Hay ${difs.length} OC abierta(s) de este producto con medida/espesor distinto al catálogo:\n${difs.map(o=>`OC ${o.nro}: ${o.desc} · ${o.espPet}+${o.espPe} µ`).join('\n')}\n\n¿Actualizarlas a ${p.medida} · ${p.espPet}+${p.espPe} µ (${(p.espPet||0)+(p.espPe||0)} µ)?`)){
+      for(const o of difs){Object.assign(o,{desc:p.medida,ancho:p.anchoFinal,espPet:p.espPet,espPe:p.espPe,esp:(p.espPet||0)+(p.espPe||0),updatedAt:now(),editadoPor:who});
+        S.finales.filter(f=>f.ocId===o.id&&f.estado!=='remitida').forEach(f=>{f.esp=o.esp;f.ancho=o.ancho;f.updatedAt=now()})}
+      toast(`${difs.length} OC actualizada(s)`)}}
   save();catNew();toast('Producto guardado');
 }
 async function catDel(id){if(S.ocs.some(o=>o.prodId===id))return toast('Hay OC que usan este producto');if(await confirmUI('¿Borrar el producto del catálogo?')){kill('catalogo',id);save()}}
