@@ -273,7 +273,11 @@ input[type=file]{padding:9px 10px;font-size:14px}
 .opc h5 .btn{margin-left:auto}
 .tbl-fix{table-layout:fixed}
 .tbl-fix td{white-space:normal;overflow-wrap:anywhere}
-.tipo-pet{background:#e3ecff;color:#1f3d8a}.tipo-lam{background:var(--ref);color:var(--brand)}
+.tipo-pet{background:#e3ecff;color:#1f3d8a}
+details.recep{background:#fff;border:1px solid var(--line);border-left:6px solid #6d8fd6;border-radius:12px;margin-bottom:14px}
+details.recep>summary{cursor:pointer;padding:14px 18px;font-weight:700;font-size:16px;color:#1f3d8a}
+details.recep>.card{margin:0 12px 12px;box-shadow:none}
+.stk-dias{font-size:12px}.tipo-lam{background:var(--ref);color:var(--brand)}
 .seg{display:inline-flex;background:#e9efea;border-radius:11px;padding:4px;gap:2px;align-self:flex-end}
 .seg button{border:0;background:none;padding:9px 14px;border-radius:8px;font-weight:600;color:var(--ink2);cursor:pointer;white-space:nowrap}
 .seg button.on{background:#fff;color:var(--brand);box-shadow:0 1px 3px rgba(0,0,0,.12)}
@@ -548,7 +552,6 @@ html.celu .login{padding:34px 22px}
     <button class="on" onclick="pcTab('prod',this)">Producción en vivo</button>
     <button onclick="pcTab('cro',this)">Cronograma</button>
     <button onclick="pcTab('oc',this)">Órdenes de compra</button>
-    <button onclick="pcTab('pet',this)">Recepción PET</button>
     <button onclick="pcTab('rfl',this)">Refilado</button>
     <button onclick="pcTab('fin',this)">Stock</button>
     <button onclick="pcTab('desp',this)">Despachos</button>
@@ -612,7 +615,7 @@ html.celu .login{padding:34px 22px}
       <div class="row" style="margin-top:10px"><button class="btn" onclick="ocSave()">Guardar OC</button></div>
     </div>
     <div class="card">
-      <div class="row noprint" style="margin-bottom:10px"><div class="f" style="max-width:320px"><label>Buscar OC</label><input id="qOC" oninput="render()"></div><div class="f" style="max-width:200px"><label>Estado</label><select id="qOCEst" onchange="render()"><option value="abierta">Abiertas</option><option value="cerrada">Cerradas</option><option value="">Todas</option></select></div></div>
+      <div class="row noprint" style="margin-bottom:10px"><div class="f" style="max-width:320px"><label>Buscar OC</label><input id="qOC" oninput="render()"></div><div class="f" style="max-width:200px"><label>Estado</label><select id="qOCEst" onchange="render()"><option value="abierta">Abiertas</option><option value="cerrada">Cerradas</option><option value="">Todas</option></select></div><span style="flex:1"></span><div class="seg flujoSeg"><button data-v="" class="on">Todos</button><button data-v="lam">Laminado</button><button data-v="pet">PET</button></div></div>
       <table><thead><tr><th>Cliente</th><th>OC</th><th>Producto</th><th class="n">Kg pedidos</th><th>Avance</th><th>Entrega</th><th>Estado</th><th></th></tr></thead><tbody id="ocList"></tbody></table>
     </div>
   </div>
@@ -622,6 +625,7 @@ html.celu .login{padding:34px 22px}
       <div class="row noprint" style="margin-bottom:14px;align-items:flex-end">
         <div><h2 id="rflTit" style="margin:0"></h2><p class="muted" id="rflSub" style="margin:4px 0 0"></p></div>
         <span style="flex:1"></span>
+        <div class="seg flujoSeg"><button data-v="" class="on">Todos</button><button data-v="lam">Laminado</button><button data-v="pet">PET</button></div>
         <div class="seg" id="rflOpsSeg" style="display:none"><button data-v="abierta" class="on">Abiertas</button><button data-v="cerrada">Cerradas</button><button data-v="">Todas</button></div>
         <div class="f" style="max-width:280px"><label>Buscar cliente, OC o partida</label><input id="qRfl" oninput="renderRfl()"></div>
       </div>
@@ -650,39 +654,22 @@ html.celu .login{padding:34px 22px}
     </div>
   </div>
   <div id="pc-fin" class="pct" style="display:none">
+    <div class="rtabs" id="stkTabs"></div>
     <div class="card">
-      <h2>Stock · pallets listos para entregar</h2>
-      <p class="muted" style="margin:0 0 10px">Solo pallets <b>cerrados y sin despachar</b>. El pallet que se está armando y las bobinas por refilar se ven en Refilado; lo despachado, en Despachos.</p>
-      <div class="row noprint" style="margin-bottom:8px"><div class="f" style="max-width:280px"><label>Buscar cliente / OC / medida / partida</label><input id="qStk" oninput="renderStock()"></div></div>
+      <div class="row noprint" style="margin-bottom:10px;align-items:flex-end">
+        <div><h2 id="stkTit" style="margin:0"></h2><p class="muted" id="stkSub" style="margin:4px 0 0"></p></div>
+        <span style="flex:1"></span>
+        <div class="seg flujoSeg"><button data-v="" class="on">Todos</button><button data-v="lam">Laminado</button><button data-v="pet">PET</button></div>
+        <div class="f" style="max-width:260px"><label>Buscar cliente / OC / medida / partida</label><input id="qStk" oninput="renderStock()"></div>
+      </div>
       <div id="stkKpi" class="kpi" style="margin-bottom:6px"></div>
       <p class="muted" id="stkNota" style="margin:6px 0 0"></p>
     </div>
-    <div id="stkRes"></div>
-  </div>
-  <div id="pc-cro" class="pct" style="display:none">
-    <div class="card noprint">
-      <h2>Cronograma semanal</h2>
-      <div class="row">
-        <button class="btn sec" onclick="croWeek(-1)">◀ Semana</button>
-        <div class="f" style="max-width:170px"><label>Semana del</label><input id="croIni" type="date" onchange="render()"></div>
-        <button class="btn sec" onclick="croWeek(1)">Semana ▶</button>
-        <button class="btn sec" onclick="croHoy()">Hoy</button>
-        <button class="btn" onclick="croAdd()">+ Asignar trabajo</button>
-        <span style="flex:1"></span>
-        <button class="btn sec" onclick="croPrint()">🖨 Imprimir / PDF</button>
-        <button class="btn sec" onclick="croPNG()">⬇ Imagen semana</button>
-        <div class="f" style="max-width:220px"><label>Enviar a operario</label><select id="croOp" onchange="croWA()"><option value="">— elegir —</option></select></div>
-      </div>
-    </div>
-    <div class="card" id="croPrintArea">
-      <div id="croGrid"></div>
-      <p class="muted noprint" style="margin-top:8px">Tocá una celda vacía para asignar; tocá una asignación para editarla. Los operarios ven en su tablet lo programado para hoy en su máquina.</p>
-    </div>
-  </div>
-  <div id="pc-pet" class="pct" style="display:none">
+    <div id="stkRecepWrap" style="display:none">
+  <details id="stkRecep" class="recep"><summary>📥 Recibir bobinas PET de Chivilcoy <span class="muted">· Excel de Agustín o carga manual</span></summary>
     <div class="card">
-      <h2>Recepción de bobinas PET de Chivilcoy</h2>
-      <p class="muted" style="margin:0 0 10px">Subí el Excel que manda Agustín, filtrá por cliente o medida, tildá las bobinas que llegaron y asignales la OC. Entran a refilado como bobinas PET (jumbo), igual que las laminadas.</p>
+      
+      <p class="muted" style="margin:0 0 10px">Subí el Excel que manda Agustín, filtrá por cliente o medida, tildá las bobinas que llegaron y asignales la OC. Quedan en <b>Materia prima</b> hasta que se refilan.</p>
       <div class="row">
         <div class="f" style="max-width:330px"><label>Excel de Chivilcoy (.xlsx / .csv)</label><input id="petFile" type="file" accept=".xlsx,.xls,.csv" onchange="petLoad(this.files[0])"></div>
         <div class="f" style="max-width:180px"><label>Hoja</label><select id="petSheet" onchange="petParse()"></select></div>
@@ -713,6 +700,29 @@ html.celu .login{padding:34px 22px}
     <div class="card">
       <h3>Bobinas PET recibidas</h3>
       <div id="petList"></div>
+    </div>
+  </details>
+    </div>
+    <div id="stkRes"></div>
+  </div>
+  <div id="pc-cro" class="pct" style="display:none">
+    <div class="card noprint">
+      <h2>Cronograma semanal</h2>
+      <div class="row">
+        <button class="btn sec" onclick="croWeek(-1)">◀ Semana</button>
+        <div class="f" style="max-width:170px"><label>Semana del</label><input id="croIni" type="date" onchange="render()"></div>
+        <button class="btn sec" onclick="croWeek(1)">Semana ▶</button>
+        <button class="btn sec" onclick="croHoy()">Hoy</button>
+        <button class="btn" onclick="croAdd()">+ Asignar trabajo</button>
+        <span style="flex:1"></span>
+        <button class="btn sec" onclick="croPrint()">🖨 Imprimir / PDF</button>
+        <button class="btn sec" onclick="croPNG()">⬇ Imagen semana</button>
+        <div class="f" style="max-width:220px"><label>Enviar a operario</label><select id="croOp" onchange="croWA()"><option value="">— elegir —</option></select></div>
+      </div>
+    </div>
+    <div class="card" id="croPrintArea">
+      <div id="croGrid"></div>
+      <p class="muted noprint" style="margin-top:8px">Tocá una celda vacía para asignar; tocá una asignación para editarla. Los operarios ven en su tablet lo programado para hoy en su máquina.</p>
     </div>
   </div>
   <div id="pc-cat" class="pct" style="display:none">
@@ -793,7 +803,7 @@ html.celu .login{padding:34px 22px}
 
 <script>
 /* ================= ESTADO ================= */
-const VERSION='v0.46';
+const VERSION='v0.47';
 const CATALOGO=[
  {id:'CAT-01',cliente:'Don Yeyo',medida:'321x300',anchoPet:350,espPet:250,anchoPe:370,espPe:50,anchoFinal:321,tiras:1,pesoBobinaPet:92,metrosBobinaPet:762,pesoBobinaPe:26,metrosBobinaPe:1550,pesoBobinaFinal:35,cilindro:340},
  {id:'CAT-02',cliente:'Molinos',medida:'472x235',anchoPet:500,espPet:200,anchoPe:530,espPe:35,anchoFinal:472,tiras:1,pesoBobinaPet:80,metrosBobinaPet:592,pesoBobinaPe:32,metrosBobinaPe:1900,pesoBobinaFinal:40,cilindro:490},
@@ -841,6 +851,11 @@ const finLbl=f=>`bob ${f.nro}`;
 const obsDe=l=>{const o=(l&&l.obs)||'';return l&&l.tipo==='PET'&&/^Chivilcoy /.test(o)?'':o};
 const origenDe=l=>{if(!l)return'';if(l.tipo==='PET'){const leg=/^Chivilcoy /.test(l.obs||'')?l.obs.replace(/^Chivilcoy\s*/,''):'';return'Chivilcoy'+(l.palletChiv?` · pallet ${l.palletChiv}`:'')+(l.remitoChiv?` · rem. ${l.remitoChiv}`:((leg.match(/remito\s*(\S+)/)||[])[1]?` · rem. ${leg.match(/remito\s*(\S+)/)[1]}`:(leg&&!l.palletChiv?' · '+leg:'')))}return l.operario||''};
 const remDe=l=>l.remitoChiv||((String(l.obs||'').match(/remito\s*(\S+)/)||[])[1]||'');
+/* v0.47 · flujos del área: Laminado (PET/PE → laminado → refilado) y PET (jumbo Chivilcoy → refilado) */
+const esPetOC=o=>!!o&&(o.lamina==='Lamina PET'||(!o.lamina&&S.laminadas.some(l=>l.ocId===o.id&&l.tipo==='PET')));
+const flujoTag=o=>esPetOC(o)?'<span class="tag tipo-pet">PET</span>':'<span class="tag tipo-lam">Laminado</span>';
+let flujoF='';const okFlujo=o=>!flujoF||(flujoF==='pet'?esPetOC(o):!esPetOC(o));
+document.addEventListener('click',e=>{const b=e.target.closest('.flujoSeg button');if(!b)return;flujoF=b.dataset.v;document.querySelectorAll('.flujoSeg button').forEach(x=>x.classList.toggle('on',x.dataset.v===flujoF));render()});
 const tipoTag=l=>l.tipo==='PET'?'<span class="tag tipo-pet">PET Chivilcoy</span>':'<span class="tag tipo-lam">Laminada PET/PE</span>';
 const esc=t=>String(t??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const kgTxt=v=>String(v).replace('.',',');
@@ -979,7 +994,7 @@ function wizRender(){
     if(W.step==='maq'){body=`<div class="wz-q">¿En qué refiladora estás?</div><div class="wz-big2"><div class="pick" onclick="setMaq('Verde');W.d.maq='Verde';wizGo('oc')">Verde</div><div class="pick" onclick="setMaq('Gris');W.d.maq='Gris';wizGo('oc')">Gris</div></div><div class="wz-nav"><button class="btn sec" onclick="go('home')">← Inicio</button></div>`}
     else if(W.step==='oc'){const prog=progHoy('Refiladora '+d.maq),progIds=prog.map(c=>c.ocId);
       const ab=S.ocs.filter(o=>o.estado==='abierta'&&(S.laminadas.some(x=>x.ocId===o.id)||opOf(o.id)));
-      const card=o=>{const pend=S.laminadas.filter(x=>x.ocId===o.id&&x.estado!=='cerrada'),kf=sum(S.finales.filter(f=>f.ocId===o.id),f=>f.kg);const cerr=!opOf(o.id)&&S.ops.filter(x=>x.ocId===o.id&&x.estado==='cerrada').sort((a,b)=>b.fin>a.fin?1:-1)[0];return`<div class="pick" style="${cerr?'opacity:.6;border-left-color:#c9d2cc':''}" onclick="${cerr?`wizRefReabrir('${cerr.id}')`:`wizRefOC('${o.id}')`}"><b>${ocLbl(o)}</b> ${opOf(o.id)?'<span class="tag ref">OP abierta</span>':cerr?`<span class="tag rem">🔒 OP cerrada ${fd(cerr.fin)}</span>`:''}<small>${o.desc||''} · ${o.ancho||'?'} mm${o.tiras>1?' · '+o.tiras+' tiras':''}</small><small>${pend.length} bobinas por refilar · <b>${fmt(kf)}</b> / ${fmt(o.kg)} kg finales</small><div class="bar"><i style="width:${o.kg?Math.min(100,kf/o.kg*100):0}%"></i></div></div>`};
+      const card=o=>{const pend=S.laminadas.filter(x=>x.ocId===o.id&&x.estado!=='cerrada'),kf=sum(S.finales.filter(f=>f.ocId===o.id),f=>f.kg);const cerr=!opOf(o.id)&&S.ops.filter(x=>x.ocId===o.id&&x.estado==='cerrada').sort((a,b)=>b.fin>a.fin?1:-1)[0];return`<div class="pick" style="${cerr?'opacity:.6;border-left-color:#c9d2cc':esPetOC(o)?'border-left-color:#6d8fd6;background:#f3f7ff':''}" onclick="${cerr?`wizRefReabrir('${cerr.id}')`:`wizRefOC('${o.id}')`}"><b>${ocLbl(o)}</b> ${flujoTag(o)} ${opOf(o.id)?'<span class="tag ref">OP abierta</span>':cerr?`<span class="tag rem">🔒 OP cerrada ${fd(cerr.fin)}</span>`:''}<small>${o.desc||''} · ${o.ancho||'?'} mm${o.tiras>1?' · '+o.tiras+' tiras':''}</small><small>${pend.length} bobinas por refilar · <b>${fmt(kf)}</b> / ${fmt(o.kg)} kg finales</small><div class="bar"><i style="width:${o.kg?Math.min(100,kf/o.kg*100):0}%"></i></div></div>`};
       body=`<div class="wz-q">¿Qué OC vas a refilar?</div>${prog.length?`<h3>Programado para hoy · ${d.maq}</h3><div class="wz-grid">${ab.filter(o=>progIds.includes(o.id)).map(card).join('')}</div>`:''}<h3>${prog.length?'Otras OC':'OC con bobinas'}</h3><div class="wz-grid">${ab.filter(o=>!progIds.includes(o.id)).map(card).join('')||'<p class="muted">No hay bobinas laminadas para refilar.</p>'}</div><div class="wz-nav"><button class="btn sec" onclick="wizGo('maq')">← Atrás</button></div>`}
     else if(W.step==='pallet'){const p=palInfo(op);if(W.palField==null){W.palField='nro';W.pn=p.nro||'';W.pc=p.cap||''}
       const box=(f,label,val,unit)=>`<div onclick="W.palField='${f}';wizRender()" style="cursor:pointer"><div class="muted" style="text-align:center;font-weight:600">${label}</div><div class="wz-val" style="${W.palField===f?'':'border-color:var(--line)'}">${val||'<span style=\'color:#c9d2cc\'>—</span>'}${unit?`<small>${unit}</small>`:''}</div></div>`;
@@ -1651,7 +1666,7 @@ function render(){
     const pr=maq?progHoy('Refiladora '+maq):[];$('refProg').innerHTML=pr.length?`<h3>Programado para hoy · Refiladora ${maq}</h3><div class="grid" style="margin-bottom:12px">`+pr.map(c=>`<div class="pick" style="border-left-color:var(--warn);cursor:${c.ocId?'pointer':'default'}" ${c.ocId?`onclick="opOpen('${c.ocId}')"`:''}><b>${croLbl(c)}</b> <span class="tag ref">${c.turno}</span>${c.operario?` <span class="tag rem">${c.operario}</span>`:''}${c.nota?`<small>${c.nota}</small>`:''}</div>`).join('')+'</div><h3>Todas las OC con laminadas</h3>':'';
     $('refPend').innerHTML=abiertas.map(o=>{const lams=S.laminadas.filter(l=>l.ocId===o.id),pend=lams.filter(l=>l.estado!=='cerrada'),op=opOf(o.id),kf=sum(S.finales.filter(f=>f.ocId===o.id),f=>f.kg);
     if(!lams.length&&!op)return '';
-    return`<div class="pick" onclick="opOpen('${o.id}')"><b>${ocLbl(o)}</b> ${op?tagOf('abierta'):''}<small>${o.desc||''} · ${o.ancho||'?'} mm × ${o.esp||'?'} µ</small><small style="color:var(--brand)">🛠 ${trabajoLbl(o)}</small><small>${pend.length} bobinas por refilar (${fmt(sum(pend,l=>l.kg))} kg) · <b>${fmt(kf)}</b> / ${fmt(o.kg)} kg finales</small><div class="bar"><i style="width:${o.kg?Math.min(100,kf/o.kg*100):0}%"></i></div></div>`}).join('')||'<p class="muted">No hay OC con bobinas laminadas para refilar.</p>';}
+    return`<div class="pick" style="${esPetOC(o)?'border-left-color:#6d8fd6;background:#f3f7ff':''}" onclick="opOpen('${o.id}')"><b>${ocLbl(o)}</b> ${flujoTag(o)} ${op?tagOf('abierta'):''}<small>${o.desc||''} · ${o.ancho||'?'} mm × ${o.esp||'?'} µ</small><small style="color:var(--brand)">🛠 ${trabajoLbl(o)}</small><small>${pend.length} bobinas por refilar (${fmt(sum(pend,l=>l.kg))} kg) · <b>${fmt(kf)}</b> / ${fmt(o.kg)} kg finales</small><div class="bar"><i style="width:${o.kg?Math.min(100,kf/o.kg*100):0}%"></i></div></div>`}).join('')||'<p class="muted">No hay OC con bobinas laminadas para refilar.</p>';}
   if(mode==='op'&&curOP)renderOP();
   if(mode==='pc'){
     renderProd();renderCro();renderPet();renderDesp();
@@ -1659,7 +1674,7 @@ function render(){
     const v2=(x,y,u1,u2)=>x==null&&y==null?'<span class="muted">—</span>':`${x??'?'}${u1} · ${y??'?'}${u2}`;
     $('catList').innerHTML=S.catalogo.slice().sort((a,b)=>a.cliente.localeCompare(b.cliente)).map(p=>`<tr><td><b>${esc(p.cliente)}</b><br><span style="font-size:15px;font-weight:700;color:var(--brand)">${esc(p.medida)}</span></td><td>${v2(p.anchoPet,p.espPet,' mm',' µ')}</td><td>${v2(p.anchoPe,p.espPe,' mm',' µ')}</td><td><b>${p.anchoFinal??'?'} mm</b><br><span class="muted">${p.tiras||1} tira${(p.tiras||1)>1?'s':''}</span></td><td class="sm">${p.pesoBobinaPet?`PET ${p.pesoBobinaPet} kg${p.metrosBobinaPet?' / '+p.metrosBobinaPet+' m':''}<br>`:''}${p.pesoBobinaPe?`PE ${p.pesoBobinaPe} kg${p.metrosBobinaPe?' / '+p.metrosBobinaPe+' m':''}<br>`:''}${p.pesoBobinaFinal?`<b>Final ${p.pesoBobinaFinal} kg</b>`:''}${!p.pesoBobinaPet&&!p.pesoBobinaPe&&!p.pesoBobinaFinal?'<span class="muted">—</span>':''}</td><td class="sm">${p.bxp?p.bxp+' bob':'—'}${p.cilindro?`<br><span class="muted">cil. ${p.cilindro} mm</span>`:''}</td><td class="sm">3": ${p.cono3!=null?p.cono3:`<span class="muted">${taraKg('3"',p.anchoFinal)} est.</span>`}<br>6": ${p.cono6!=null?p.cono6:'—'}</td><td class="sm">Lam. ${p.kgHoraLam||'—'}<br>Ref. ${p.kgHoraRef||'—'}</td><td style="text-align:right;white-space:nowrap"><button class="btn sec" onclick="catEdit('${p.id}')">✎</button> <button class="btn sec" onclick="catDel('${p.id}')">✕</button></td></tr>`).join('');
     const sOC=$('qOC').value,eOC=$('qOCEst').value;
-    $('ocList').innerHTML=S.ocs.slice().reverse().filter(o=>(!eOC||o.estado===eOC)&&q(sOC,o.cliente+' '+o.nro+' '+(o.desc||''))).map(o=>{const k=ocAvance(o),d=diasA(o.fecha),sub=ocSub(o);return`<tr${sub?' class="ocmain"':''}><td><b>${o.cliente}</b></td><td>${o.nro}</td><td><b>${o.desc||''}</b>${o.lamina==='Lamina PET'?' <span class="tag tipo-pet">PET</span>':''}<br><span class="muted" style="font-size:12.5px">${o.ancho||'?'} mm · ${o.espPet&&o.espPe?o.espPet+'+'+o.espPe:o.esp||'?'} µ${o.bxp?' · '+o.bxp+' bob/pallet':''}</span></td><td class="n"><b>${fmt(o.kg)}</b></td><td style="min-width:200px"><div class="bar" style="height:7px;background:#e6ede8;border-radius:4px;overflow:hidden;position:relative"><i style="position:absolute;left:0;top:0;height:100%;width:${k.pctLam}%;background:#bfe3cc"></i><i style="position:absolute;left:0;top:0;height:100%;width:${k.pctFin}%;background:var(--brand3)"></i><i style="position:absolute;left:0;top:0;height:100%;width:${k.pctRem}%;background:var(--brand)"></i></div><span class="muted" style="font-size:12px">Lam. ${fmt(k.lam)} · Ref. ${fmt(k.fin)} · Rem. ${fmt(k.rem)} kg</span></td><td>${o.fecha?`${o.fecha.slice(8,10)}/${o.fecha.slice(5,7)} <span class="tag ${d<0?'rem':d<=3?'pend':'cerr'}" style="${d<0?'background:#fde3e1;color:var(--bad)':''}">${d<0?-d+' d atrasada':d===0?'hoy':'en '+d+' d'}</span>`:''}</td><td>${tagOf(o.estado)}</td><td><button class="btn sec" onclick="ocEdit('${o.id}')">✎</button> <button class="btn sec" onclick="ocToggle('${o.id}')">${o.estado==='abierta'?'Cerrar':'Reabrir'}</button> <button class="btn sec" onclick="ocDel('${o.id}')">✕</button></td></tr>${sub}`}).join('');
+    $('ocList').innerHTML=S.ocs.slice().reverse().filter(o=>okFlujo(o)&&(!eOC||o.estado===eOC)&&q(sOC,o.cliente+' '+o.nro+' '+(o.desc||''))).map(o=>{const k=ocAvance(o),d=diasA(o.fecha),sub=ocSub(o);return`<tr${sub?' class="ocmain"':''}><td><b>${o.cliente}</b></td><td>${o.nro}</td><td><b>${o.desc||''}</b>${o.lamina==='Lamina PET'?' <span class="tag tipo-pet">PET</span>':' <span class="tag tipo-lam">Laminado</span>'}<br><span class="muted" style="font-size:12.5px">${o.ancho||'?'} mm · ${o.espPet&&o.espPe?o.espPet+'+'+o.espPe:o.esp||'?'} µ${o.bxp?' · '+o.bxp+' bob/pallet':''}</span></td><td class="n"><b>${fmt(o.kg)}</b></td><td style="min-width:200px"><div class="bar" style="height:7px;background:#e6ede8;border-radius:4px;overflow:hidden;position:relative"><i style="position:absolute;left:0;top:0;height:100%;width:${k.pctLam}%;background:#bfe3cc"></i><i style="position:absolute;left:0;top:0;height:100%;width:${k.pctFin}%;background:var(--brand3)"></i><i style="position:absolute;left:0;top:0;height:100%;width:${k.pctRem}%;background:var(--brand)"></i></div><span class="muted" style="font-size:12px">Lam. ${fmt(k.lam)} · Ref. ${fmt(k.fin)} · Rem. ${fmt(k.rem)} kg</span></td><td>${o.fecha?`${o.fecha.slice(8,10)}/${o.fecha.slice(5,7)} <span class="tag ${d<0?'rem':d<=3?'pend':'cerr'}" style="${d<0?'background:#fde3e1;color:var(--bad)':''}">${d<0?-d+' d atrasada':d===0?'hoy':'en '+d+' d'}</span>`:''}</td><td>${tagOf(o.estado)}</td><td><button class="btn sec" onclick="ocEdit('${o.id}')">✎</button> <button class="btn sec" onclick="ocToggle('${o.id}')">${o.estado==='abierta'?'Cerrar':'Reabrir'}</button> <button class="btn sec" onclick="ocDel('${o.id}')">✕</button></td></tr>${sub}`}).join('');
     renderRfl();renderStock();
   }
   if(mode==='config'){$('cfgOps').innerHTML='<table>'+S.operarios.map(o=>`<tr><td>${o.n}</td><td class="n">${o.pin}</td><td>${o.rol==='admin'?'Todo':'Solo tablets'}</td><td><button class="btn sec" onclick="opRm('${o.pin}')">✕</button></td></tr>`).join('')+'</table>'}
@@ -1695,9 +1710,9 @@ function diasTxt(iso){const d=Math.floor(minsAgo(iso)/1440);return d<=0?'hoy':d=
 function renderRfl(){
   segInit('rflOpsSeg',v=>{rflOpsEst=v;renderRfl()});
   const qq=$('qRfl').value,okQ=(o,extra)=>q(qq,ocLbl(o)+' '+(o.desc||'')+' '+(extra||''));
-  const pend=S.laminadas.filter(l=>l.estado==='pendiente'),enM=S.laminadas.filter(l=>l.estado==='en refilado');
-  const arm=S.ocs.map(o=>({o,pk:palArmando(o.id)})).filter(x=>x.pk).map(x=>({...x,op:opOf(x.o.id),fs:S.finales.filter(f=>f.ocId===x.o.id&&pk$(f)===x.pk).sort((a,b)=>a.nro-b.nro)})).filter(x=>x.fs.length);
-  const opsAb=S.ops.filter(x=>x.estado==='abierta');
+  const pend=S.laminadas.filter(l=>l.estado==='pendiente'&&okFlujo(ocOf(l.ocId))),enM=S.laminadas.filter(l=>l.estado==='en refilado'&&okFlujo(ocOf(l.ocId)));
+  const arm=S.ocs.filter(okFlujo).map(o=>({o,pk:palArmando(o.id)})).filter(x=>x.pk).map(x=>({...x,op:opOf(x.o.id),fs:S.finales.filter(f=>f.ocId===x.o.id&&pk$(f)===x.pk).sort((a,b)=>a.nro-b.nro)})).filter(x=>x.fs.length);
+  const opsAb=S.ops.filter(x=>x.estado==='abierta'&&okFlujo(ocOf(x.ocId)));
   const cnt={pend:[pend.length+enM.length,`${pend.length} listas · ${enM.length} en máquina · ${fmt(sum(pend.concat(enM),l=>l.kg))} kg`],maq:[enM.length,enM.length?[...new Set(enM.map(l=>l.refMaq||'?'))].join(' y '):'máquinas libres'],pal:[arm.length,`${fmt(sum(arm.flatMap(x=>x.fs),f=>f.kg))} kg sin cerrar`],ops:[opsAb.length,'OPs abiertas']};
   $('rflTabs').innerHTML=Object.entries(RFLV).map(([k,[t,c]])=>`<button class="${k===rflView?'on':''}" style="--c:${c}" onclick="rflSet('${k}')"><span class="t">${t}</span><span class="n">${cnt[k][0]}</span><span class="s">${cnt[k][1]}</span></button>`).join('');
   $('rflTit').textContent=RFLV[rflView][0];$('rflOpsSeg').style.display=rflView==='ops'?'':'none';
@@ -1734,7 +1749,7 @@ function renderRfl(){
   }
   if(rflView==='ops'){
     $('rflSub').textContent='Una ficha por OP (una por OC) con lo principal. Tocala para ver bobinas madre, bobinas finales por pallet y paradas.';
-    const all=S.ocs.filter(o=>S.ops.some(x=>x.ocId===o.id)).map(rflData).filter(d=>!rflOpsEst||(rflOpsEst==='abierta'?!!d.op:!d.op)).filter(d=>okQ(d.o,d.lams.map(l=>l.partida).join(' ')+' '+d.gente.join(' '))).sort((a,b)=>(b.last?.inicio||'')>(a.last?.inicio||'')?1:-1);
+    const all=S.ocs.filter(o=>S.ops.some(x=>x.ocId===o.id)).filter(okFlujo).map(rflData).filter(d=>!rflOpsEst||(rflOpsEst==='abierta'?!!d.op:!d.op)).filter(d=>okQ(d.o,d.lams.map(l=>l.partida).join(' ')+' '+d.gente.join(' '))).sort((a,b)=>(b.last?.inicio||'')>(a.last?.inicio||'')?1:-1);
     h=all.map(d=>{const bajo=d.rend!=null&&d.rend<90,pct=d.o.kg?Math.min(100,d.kf/d.o.kg*100):0;
       return ficha('op'+d.o.id,d.op?'':'cerr',d.op?'var(--brand3)':'#b9c4bd',`${esc(d.o.cliente)} · OC ${esc(d.o.nro)} ${d.op?'<span class="tag cerr">OP abierta</span>':'<span class="tag rem">OP cerrada</span>'}${d.rend!=null?` <span class="tag ${bajo?'':'cerr'}" style="${bajo?'background:#fde3e1;color:var(--bad)':''}">rend. ${fmt(d.rend)} %</span>`:''}`,
         `${esc(d.o.desc||'')} · inicio ${fd(d.last.inicio)}${!d.op&&d.last.fin?' · cierre '+fd(d.last.fin):''} · ${d.refil.length} de ${d.lams.length} bobinas madre refiladas · scrap ${fmt(d.scrap)} kg${d.paradas.length?' · '+d.paradas.length+' paradas':''}`,
@@ -1762,19 +1777,49 @@ const MOTIVOS=['Cambio de cuchillas','Falta material','Rotura / atasco','Limpiez
 function paradaEdit(opId,i){const op=S.ops.find(o=>o.id===opId);const p=i>=0?op.paradas[i]:{mot:'Otro',min:0,t:now(),maq:''};const mots=MOTIVOS.includes(p.mot)?MOTIVOS:[p.mot,...MOTIVOS];
   edit(i>=0?'Editar parada':'Nueva parada',[{k:'mot',l:'Motivo',opts:mots},{k:'min',l:'Minutos',t:'number'},{k:'tL',l:'Cuándo',t:'datetime-local'},{k:'maq',l:'Refiladora',opts:['','Verde','Gris']}],{mot:p.mot,min:p.min,tL:toLocalIn(p.t),maq:p.maq||''},
     x=>{Object.assign(p,{mot:x.mot,min:+x.min||0,t:fromLocalIn(x.tL)||p.t,maq:x.maq});if(i<0){op.paradas=op.paradas||[];op.paradas.push(p)}op.updatedAt=now()})}
+/* v0.47 · STOCK por etapas: Terminado · En proceso · Semielaborado · Materia prima (solo kg; sin restos; sin clientes directos) */
+let stkView='fin';
+const STKV={fin:['Terminado','#1e9a4f','Pallets cerrados y bobinas sin pallet, listos para entregar'],proc:['En proceso','#2f6fd0','Pallets que se están armando en refiladora'],semi:['Semielaborado','#c98a00','Bobinas laminadas PET/PE esperando refilado'],mp:['Materia prima','#6d8fd6','Bobinas jumbo PET de Chivilcoy sin refilar']};
+function stkSet(v){stkView=v;renderStock()}
+function stkLamRest(l){return Math.max(0,(+l.kg||0)-sum(S.finales.filter(f=>f.lamId===l.id),f=>f.kg))}
+function stkBase(){
+  const okO=o=>o&&o.id&&okFlujo(o)&&!esDirecto(o.cliente);
+  const g=palGroups(),fin=[];
+  for(const cli of Object.keys(g))for(const {oc,pallets} of Object.values(g[cli])){if(!okO(oc))continue;for(const pk of Object.keys(pallets)){const fs=pallets[pk].sort((a,b)=>a.nro-b.nro);fin.push({cli,oc,pk,fs,kg:sum(fs,f=>f.kg),kgB:sum(fs,f=>f.kgB||f.kg),ult:fs.map(f=>f.createdAt).sort().slice(-1)[0]})}}
+  const proc=S.ocs.filter(okO).map(o=>({o,pk:palArmando(o.id)})).filter(x=>x.pk).map(x=>{const fs=S.finales.filter(f=>f.ocId===x.o.id&&pk$(f)===x.pk&&f.estado==='en stock').sort((a,b)=>a.nro-b.nro),op=opOf(x.o.id);return{cli:x.o.cliente,oc:x.o,pk:x.pk,fs,cap:(op&&op.palletCap)||x.o.bxp||0,kg:sum(fs,f=>f.kg),kgB:sum(fs,f=>f.kgB||f.kg),ult:fs.map(f=>f.createdAt).sort().slice(-1)[0]}}).filter(x=>x.fs.length);
+  const bob=tipo=>S.laminadas.filter(l=>l.estado!=='cerrada'&&!l.resto&&(tipo==='PET'?l.tipo==='PET':l.tipo!=='PET')).map(l=>({l,oc:ocOf(l.ocId),kg:stkLamRest(l)})).filter(x=>okO(x.oc)&&x.kg>0).map(x=>({...x,cli:x.oc.cliente}));
+  return{fin,proc,semi:bob('LAM'),mp:bob('PET')};
+}
 function renderStock(){
-  const s=$('qStk').value,g=palGroups(),hoy=Date.now();
-  const rows=[];for(const cli of Object.keys(g))for(const {oc,pallets} of Object.values(g[cli]))for(const pk of Object.keys(pallets)){const fs=pallets[pk].sort((a,b)=>a.nro-b.nro);
-    if(!q(s,cli+' '+oc.nro+' '+(oc.desc||'')+' '+fs.map(f=>f.partida).join(' ')))continue;rows.push({cli,oc,pk,fs,ult:fs.map(f=>f.createdAt).sort().slice(-1)[0]})}
-  const allF=rows.flatMap(r=>r.fs);
-  $('stkKpi').innerHTML=`<div><b>${rows.length}</b><span>pallets listos para entregar</span></div><div><b>${fmt(sum(allF,f=>f.kg))}</b><span>kg neto · ${fmt(sum(allF,f=>f.kgB||f.kg))} kg bruto</span></div><div><b>${allF.length}</b><span>bobinas</span></div><div><b>${[...new Set(rows.map(r=>r.cli))].length}</b><span>clientes</span></div>`;
-  const arm=S.ocs.map(o=>({o,pk:palArmando(o.id)})).filter(x=>x.pk).map(x=>({...x,fs:S.finales.filter(f=>f.ocId===x.o.id&&pk$(f)===x.pk)})).filter(x=>x.fs.length);
-  $('stkNota').innerHTML=arm.length?`Además hay ${arm.length} pallet${arm.length>1?'s':''} armándose (${fmt(sum(arm.flatMap(x=>x.fs),f=>f.kg))} kg) que todavía no cuentan acá.`:'';
+  const s=$('qStk').value,B=stkBase();
+  const qOk=(r,extra)=>q(s,r.cli+' '+r.oc.nro+' '+(r.oc.desc||'')+' '+(extra||''));
+  const kgOf=v=>sum(B[v],r=>r.kg),nOf=v=>v==='fin'||v==='proc'?B[v].length:B[v].length;
+  const pl=n=>n+' pallet'+(n===1?'':'s');const sub={fin:`${pl(B.fin.length)} · ${sum(B.fin,r=>r.fs.length)} bob.`,proc:`${pl(B.proc.length)} · ${sum(B.proc,r=>r.fs.length)} bob.`,semi:`${B.semi.length} bobinas laminadas`,mp:`${B.mp.length} bobinas jumbo`};
+  $('stkTabs').innerHTML=Object.entries(STKV).map(([k,[t,c]])=>`<button class="${k===stkView?'on':''}" style="--c:${c}" onclick="stkSet('${k}')"><span class="t">${t}</span><span class="n">${fmt(kgOf(k))} <small style="font-size:14px">kg</small></span><span class="s">${sub[k]}</span></button>`).join('');
+  $('stkTit').textContent='Stock · '+STKV[stkView][0];$('stkSub').textContent=STKV[stkView][2]+'. Por cliente.';
+  $('stkRecepWrap').style.display=stkView==='mp'?'':'none';
+  const tot=Object.keys(STKV).reduce((a,k)=>a+kgOf(k),0);
+  const hoy=Date.now(),dTag=iso=>{const d=Math.floor((hoy-new Date(iso))/864e5);return d>=15?`<span class="tag stk-dias" style="background:#fde3e1;color:var(--bad)">${d} días</span>`:`<span class="muted stk-dias">${d<=0?'hoy':d===1?'1 día':d+' días'}</span>`};
+  const ocTd=o=>`<td><b>${esc(o.nro||'—')}</b> ${flujoTag(o)}${o.fecha?`<br><span class="muted" style="font-size:12px">entrega ${o.fecha.slice(8,10)}/${o.fecha.slice(5,7)}</span>`:''}</td><td>${esc(o.desc||'')}<br><span class="muted" style="font-size:12px">${o.ancho||'?'} mm · ${o.esp||o.espPet||'?'} µ${o.color&&o.color!=='Cristal'?' · '+esc(o.color):''}</span></td>`;
+  const rango=fs=>{const n=fs.map(f=>f.nro);return n.length>1&&n[n.length-1]-n[0]===n.length-1?`${n[0]} – ${n[n.length-1]}`:n.join(', ')};
+  let rows,head,line,kpi;
+  if(stkView==='fin'||stkView==='proc'){
+    rows=B[stkView].filter(r=>qOk(r,r.fs.map(f=>f.partida).join(' ')));const F=rows.flatMap(r=>r.fs);
+    kpi=`<div><b>${rows.length}</b><span>${stkView==='fin'?'pallets listos':'pallets armándose'}</span></div><div><b>${fmt(sum(F,f=>f.kg))}</b><span>kg neto · ${fmt(sum(F,f=>f.kgB||f.kg))} kg bruto</span></div><div><b>${F.length}</b><span>bobinas</span></div><div><b>${[...new Set(rows.map(r=>r.cli))].length}</b><span>clientes</span></div>`;
+    head=`<th>OC</th><th>Medida</th><th>Pallet</th><th class="n">Bob.</th><th>Nº bobinas</th><th class="n">Kg bruto</th><th class="n">Kg neto</th><th>Partida</th><th>${stkView==='fin'?'Antigüedad':'Última bobina'}</th>`;
+    line=r=>`<tr>${ocTd(r.oc)}<td><b>${esc(r.pk)}</b>${r.pk==='sin pallet'?' <span class="tag pend">sin pallet</span>':''}</td><td class="n">${r.fs.length}${stkView==='proc'&&r.cap?' / '+r.cap:''}</td><td>${rango(r.fs)}</td><td class="n">${fmt(r.kgB)}</td><td class="n"><b>${fmt(r.kg)}</b></td><td>${esc([...new Set(r.fs.map(f=>f.partida).filter(Boolean))].join(', '))}</td><td>${stkView==='fin'?dTag(r.ult):fh(r.ult)+' · '+fd(r.ult)}</td></tr>`;
+  }else{
+    rows=B[stkView].filter(r=>qOk(r,r.l.partida+' '+(r.l.nroOrigen||'')));
+    kpi=`<div><b>${fmt(sum(rows,r=>r.kg))}</b><span>kg</span></div><div><b>${rows.length}</b><span>bobinas</span></div><div><b>${rows.filter(r=>r.l.estado==='en refilado').length}</b><span>en refiladora ahora</span></div><div><b>${[...new Set(rows.map(r=>r.cli))].length}</b><span>clientes</span></div>`;
+    head=`<th>OC</th><th>Medida</th><th>Partida</th><th>Nº bobina</th>${stkView==='mp'?'<th>Pallet Chiv.</th>':''}<th class="n">Kg</th><th>Estado</th><th>Ingresó</th>`;
+    line=r=>{const l=r.l,parcial=r.kg<(+l.kg||0)-0.05;return`<tr>${ocTd(r.oc)}<td><b>${esc(l.partida||'')}</b></td><td>${esc(l.nroOrigen||'L'+l.nro)}</td>${stkView==='mp'?`<td>${esc(l.palletChiv||'')}</td>`:''}<td class="n"><b>${fmt(r.kg)}</b>${parcial?`<br><span class="muted" style="font-size:12px">de ${fmt(l.kg)}</span>`:''}</td><td>${l.estado==='en refilado'?`<span class="tag ref">✂️ en refiladora ${esc(l.refMaq||'')}</span>`:'<span class="tag pend">⏳ para refilar</span>'}</td><td>${fd(l.createdAt)} ${dTag(l.createdAt)}</td></tr>`};
+  }
+  $('stkKpi').innerHTML=kpi;
+  $('stkNota').innerHTML=`Total del área: <b>${fmt(tot)} kg</b> (MP ${fmt(kgOf('mp'))} · semielaborado ${fmt(kgOf('semi'))} · en proceso ${fmt(kgOf('proc'))} · terminado ${fmt(kgOf('fin'))}). Restos y clientes directos no cuentan.`;
   const byCli={};rows.forEach(r=>{(byCli[r.cli]=byCli[r.cli]||[]).push(r)});
-  $('stkRes').innerHTML=Object.keys(byCli).sort().map(cli=>{const R=byCli[cli].sort((a,b)=>((a.oc.fecha||'9')>(b.oc.fecha||'9')?1:-1)||(a.oc.nro>b.oc.nro?1:-1)||((+a.pk||1e9)-(+b.pk||1e9)));const F=R.flatMap(r=>r.fs);
-    return`<div class="card"><div style="display:flex;gap:12px;align-items:baseline;flex-wrap:wrap;margin-bottom:8px"><h2 style="margin:0">${esc(cli)}</h2><span class="muted" style="margin-left:auto"><b>${R.length}</b> pallets · <b>${F.length}</b> bobinas · <b>${fmt(sum(F,f=>f.kg))}</b> kg neto · ${fmt(sum(F,f=>f.kgB||f.kg))} kg bruto</span></div>
-    <div style="overflow-x:auto"><table><thead><tr><th>OC</th><th>Medida</th><th>Pallet</th><th class="n">Bob.</th><th>Nº bobinas</th><th class="n">Kg bruto</th><th class="n">Kg neto</th><th>Partida</th><th>Cerrado</th><th class="noprint"></th></tr></thead><tbody>${R.map(r=>{const n=r.fs.map(f=>f.nro),rango=n.length>1&&n[n.length-1]-n[0]===n.length-1?`${n[0]} – ${n[n.length-1]}`:n.join(', '),dias=Math.floor((hoy-new Date(r.ult))/864e5);
-      return`<tr><td><b>${esc(r.oc.nro)}</b>${r.oc.fecha?`<br><span class="muted" style="font-size:12px">entrega ${r.oc.fecha.slice(8,10)}/${r.oc.fecha.slice(5,7)}</span>`:''}</td><td>${esc(r.oc.desc||'')}<br><span class="muted" style="font-size:12px">${r.oc.ancho||'?'} mm · ${r.oc.esp||'?'} µ${r.oc.color&&r.oc.color!=='Cristal'?' · '+esc(r.oc.color):''}</span></td><td><b>${esc(r.pk)}</b>${r.pk==='sin pallet'?' <span class="tag pend">asignar</span>':''}</td><td class="n">${r.fs.length}</td><td>${rango}</td><td class="n">${fmt(sum(r.fs,f=>f.kgB||f.kg))}</td><td class="n"><b>${fmt(sum(r.fs,f=>f.kg))}</b></td><td>${[...new Set(r.fs.map(f=>f.partida))].join(', ')}</td><td>${fd(r.ult)}${dias>=7?` <span class="tag pend">${dias} d</span>`:''}</td><td class="noprint" style="white-space:nowrap"><button class="btn sec" title="Etiqueta para pegar en el pallet" onclick="palEtiq('${r.oc.id}','${r.pk}')">🏷</button> <button class="btn sec" title="Lista de empaque + etiqueta" onclick="palDetalle('${r.oc.id}','${r.pk}')">📋</button></td></tr>`}).join('')}</tbody></table></div></div>`}).join('')||'<div class="card"><p class="muted">No hay pallets cerrados en stock.</p></div>';
+  $('stkRes').innerHTML=Object.keys(byCli).sort().map(cli=>{const R=byCli[cli].sort((a,b)=>((a.oc.fecha||'9')>(b.oc.fecha||'9')?1:-1)||(String(a.oc.nro)>String(b.oc.nro)?1:String(a.oc.nro)<String(b.oc.nro)?-1:0)||((a.l?a.l.createdAt:a.ult||'')>(b.l?b.l.createdAt:b.ult||'')?1:-1));
+    return`<div class="card"><div style="display:flex;gap:12px;align-items:baseline;flex-wrap:wrap;margin-bottom:8px"><h2 style="margin:0">${esc(cli)}</h2><span class="muted" style="margin-left:auto"><b>${fmt(sum(R,r=>r.kg))}</b> kg · ${stkView==='fin'||stkView==='proc'?`${pl(R.length)} · ${sum(R,r=>r.fs.length)} bobinas`:`${R.length} bobinas`}</span></div>
+    <div style="overflow-x:auto"><table><thead><tr>${head}</tr></thead><tbody>${R.map(line).join('')}</tbody></table></div></div>`}).join('')||`<div class="card"><p class="muted" style="font-size:15px;margin:0">No hay stock en esta etapa${s||flujoF?' con ese filtro':''}.</p></div>`;
 }
 function renderOP(){
   const op=S.ops.find(o=>o.id===curOP);if(!op)return;const c=opCalc(op),o=ocOf(op.ocId);
@@ -1809,8 +1854,8 @@ function wfVista(v){try{localStorage.setItem('wf_vista',v)}catch(e){}const u=new
   if(!CELU){ if(window.WF_ES_TEL){sw.textContent='\uD83D\uDCF1 Ver versi\u00f3n celular';sw.onclick=()=>wfVista('celu');$('v-home').appendChild(sw)} return; }
   sw.textContent='\uD83D\uDDA5 Ver versi\u00f3n completa';sw.onclick=()=>wfVista('full');$('v-home').appendChild(sw);
   const h1=document.querySelector('header h1');
-  const NOM={prod:'Producci\u00f3n en vivo',cro:'Cronograma',oc:'\u00d3rdenes de compra',pet:'Recepci\u00f3n PET',rfl:'Refilado',fin:'Stock',desp:'Despachos',cat:'Cat\u00e1logo'};
-  const ICO={cro:'\uD83D\uDDD3\uFE0F',pet:'\uD83D\uDCE5',rfl:'\u2702\uFE0F',cat:'\uD83D\uDCDA'};
+  const NOM={prod:'Producci\u00f3n en vivo',cro:'Cronograma',oc:'\u00d3rdenes de compra',rfl:'Refilado',fin:'Stock',desp:'Despachos',cat:'Cat\u00e1logo'};
+  const ICO={cro:'\uD83D\uDDD3\uFE0F',rfl:'\u2702\uFE0F',cat:'\uD83D\uDCDA'};
   const BAJO=[['prod','\uD83D\uDCCA','En vivo'],['oc','\uD83D\uDCC4','\u00d3rdenes'],['fin','\uD83D\uDCE6','Stock'],['desp','\uD83D\uDE9A','Despachos']];
   const MODO={home:'Laminado y Refilado',config:'Configuraci\u00f3n',lam:'Laminado',lamoc:'Laminado',ref:'Refilado',op:'Refilado',wiz:'Carga en planta',login:'Laminado y Refilado'};
   let PCT='prod';
