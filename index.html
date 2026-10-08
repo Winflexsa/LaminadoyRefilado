@@ -274,6 +274,7 @@ input[type=file]{padding:9px 10px;font-size:14px}
 .tbl-fix{table-layout:fixed}
 .tbl-fix td{white-space:normal;overflow-wrap:anywhere}
 .tipo-pet{background:#e3ecff;color:#1f3d8a}
+#v-pc>.tabs .recep-btn{background:#e3ecff;color:#1f3d8a;font-weight:700}
 details.recep{background:#fff;border:1px solid var(--line);border-left:6px solid #6d8fd6;border-radius:12px;margin-bottom:14px}
 details.recep>summary{cursor:pointer;padding:14px 18px;font-weight:700;font-size:16px;color:#1f3d8a}
 details.recep>.card{margin:0 12px 12px;box-shadow:none}
@@ -556,6 +557,7 @@ html.celu .login{padding:34px 22px}
     <button onclick="pcTab('fin',this)">Stock</button>
     <button onclick="pcTab('desp',this)">Despachos</button>
     <button onclick="pcTab('cat',this)">Catálogo</button>
+    <span style="flex:1"></span><button class="recep-btn" onclick="irRecepPET()">📥 Recibir bobinas PET</button>
   </div>
   <div id="pc-prod" class="pct">
     <div class="card">
@@ -803,7 +805,7 @@ html.celu .login{padding:34px 22px}
 
 <script>
 /* ================= ESTADO ================= */
-const VERSION='v0.47';
+const VERSION='v0.48';
 const CATALOGO=[
  {id:'CAT-01',cliente:'Don Yeyo',medida:'321x300',anchoPet:350,espPet:250,anchoPe:370,espPe:50,anchoFinal:321,tiras:1,pesoBobinaPet:92,metrosBobinaPet:762,pesoBobinaPe:26,metrosBobinaPe:1550,pesoBobinaFinal:35,cilindro:340},
  {id:'CAT-02',cliente:'Molinos',medida:'472x235',anchoPet:500,espPet:200,anchoPe:530,espPe:35,anchoFinal:472,tiras:1,pesoBobinaPet:80,metrosBobinaPet:592,pesoBobinaPe:32,metrosBobinaPe:1900,pesoBobinaFinal:40,cilindro:490},
@@ -894,7 +896,7 @@ function mergeInto(base,inc){ // unión por id, gana updatedAt más nuevo
     base[k]=[...map.values()];
   }
   base.tomb={...(base.tomb||{})};for(const [k,t] of Object.entries(inc.tomb||{}))if(!base.tomb[k]||t>base.tomb[k])base.tomb[k]=t;
-  for(const k of ['ocs','laminadas','ops','finales','operarios','catalogo','despachos']){const key=k==='operarios'?'pin':'id';base[k]=(base[k]||[]).filter(x=>{const t=base.tomb[k+':'+x[key]];return !t||(x.updatedAt||'')>t})}
+  for(const k of ['ocs','laminadas','ops','finales','operarios','catalogo','despachos','cronograma']){const key=k==='operarios'?'pin':'id';base[k]=(base[k]||[]).filter(x=>{const t=base.tomb[k+':'+x[key]];return !t||(x.updatedAt||'')>t})}
   base.operarios.forEach(o=>{if(!o.rol)o.rol='tablet'});
   if(!base.catalogo||!base.catalogo.length)base.catalogo=CATALOGO.map(p=>({...p,cono3:CONO3_SEED[p.anchoFinal]??null}));
   base.catalogo.forEach(p=>{if(p.cono3==null&&CONO3_SEED[p.anchoFinal]!=null)p.cono3=CONO3_SEED[p.anchoFinal]});
@@ -912,19 +914,21 @@ async function loadRemote(force){
     S=mergeInto(S,rem);local();setSync('on');render();novedades();if(force)toast('Sincronizado');
   }catch(e){setSync('err');if(force)toast('Error JSONBin: '+e.message)}
 }
-let saving=false;
+let saving=false,saveOtra=false,pendSubir=false;
 async function save(){ // lectura → merge → escritura, nunca pisar a ciegas
   local();render();
-  if(!cfg.bin||!cfg.key||saving)return;
-  saving=true;setSync('busy');
+  if(!cfg.bin||!cfg.key)return;
+  if(saving){saveOtra=true;return} // v0.48: si ya está guardando, guarda de nuevo al terminar (antes se perdía)
+  saving=true;saveOtra=false;setSync('busy');
   try{
     const r=await fetch(`https://api.jsonbin.io/v3/b/${cfg.bin}/latest`,{headers:{...authH(),'X-Bin-Meta':'false'}});
     if(r.ok){S=mergeInto(S,await r.json());local()}
     const w=await fetch(`https://api.jsonbin.io/v3/b/${cfg.bin}`,{method:'PUT',headers:{'Content-Type':'application/json',...authH()},body:JSON.stringify(S)});
     if(!w.ok)throw new Error(w.status);
-    setSync('on');render();
-  }catch(e){setSync('err');toast('Guardado local. JSONBin: '+e.message)}
+    pendSubir=false;setSync('on');render();
+  }catch(e){pendSubir=true;setSync('err');toast('⚠ NO se subió a la nube ('+e.message+'). Queda en este equipo y se reintenta solo.')}
   saving=false;
+  if(saveOtra)save();
 }
 function cfgSave(){cfg={bin:$('cfgBin').value.trim()||DEFAULT_CFG.bin,key:$('cfgKey').value.trim()||DEFAULT_CFG.key,keyType:$('cfgKeyType').value};localStorage.setItem('wr_cfg',JSON.stringify(cfg));loadRemote(true)}
 function exportJSON(){const a=document.createElement('a');a.href='data:application/json,'+encodeURIComponent(JSON.stringify(S,null,1));a.download='winflex-refilado-backup.json';a.click()}
@@ -1426,7 +1430,7 @@ function croForm(c){
     if(!v.fecha)return toast('Falta la fecha');if(c.id){Object.assign(S.cronograma.find(x=>x.id===c.id),v)}else S.cronograma.push({id:uid('CRO'),...v});save();edClose();toast('Cronograma guardado')}};
   $('ed').classList.add('show');
 }
-async function croDel(id){edClose();if(await confirmUI('¿Borrar la asignación?')){const c=S.cronograma.find(x=>x.id===id);c.del=true;c.updatedAt=now();save()}}
+async function croDel(id){edClose();if(await confirmUI('¿Borrar la asignación?')){const c=S.cronograma.find(x=>x.id===id);const t=now();if(c){c.del=true;c.updatedAt=t}S.tomb=S.tomb||{};S.tomb['cronograma:'+id]=t;save()}}
 function renderCro(){
   const dias=croDias();const hoy=now().slice(0,10);
   const tot=d=>{const its=MAQS.flatMap(m=>croItems(d,m));const obj=sum(its,c=>c.kgObj),real=sum(its,c=>croReal(c)||0);return obj?`<span class="muted" style="font-weight:400">${fmt(real)}/${fmt(obj)} kg</span>`:''};
@@ -1781,6 +1785,7 @@ function paradaEdit(opId,i){const op=S.ops.find(o=>o.id===opId);const p=i>=0?op.
 let stkView='fin';
 const STKV={fin:['Terminado','#1e9a4f','Pallets cerrados y bobinas sin pallet, listos para entregar'],proc:['En proceso','#2f6fd0','Pallets que se están armando en refiladora'],semi:['Semielaborado','#c98a00','Bobinas laminadas PET/PE esperando refilado'],mp:['Materia prima','#6d8fd6','Bobinas jumbo PET de Chivilcoy sin refilar']};
 function stkSet(v){stkView=v;renderStock()}
+function irRecepPET(){const b=[...document.querySelectorAll('#v-pc>.tabs button')].find(x=>(x.getAttribute('onclick')||'').indexOf("pcTab('fin'")===0);if(b)b.click();stkSet('mp');const d=$('stkRecep');if(d){d.open=true;setTimeout(()=>d.scrollIntoView({behavior:'smooth',block:'start'}),50)}}
 function stkLamRest(l){return Math.max(0,(+l.kg||0)-sum(S.finales.filter(f=>f.lamId===l.id),f=>f.kg))}
 function stkBase(){
   const okO=o=>o&&o.id&&okFlujo(o)&&!esDirecto(o.cliente);
@@ -1842,7 +1847,7 @@ function renderOP(){
 /* ================= INIT ================= */
 (function(){
   try{const l=JSON.parse(localStorage.getItem('wr_state'));if(l)S=mergeInto(EMPTY(),l)}catch(e){}
-  $('loginLogo').src=document.querySelector('header img').src;go('login');loadRemote();setInterval(()=>{if(!saving)loadRemote()},30000);document.addEventListener('visibilitychange',()=>{if(!document.hidden&&!saving)loadRemote()});
+  $('loginLogo').src=document.querySelector('header img').src;go('login');loadRemote();setInterval(()=>{if(!saving)(pendSubir?save():loadRemote())},30000);window.addEventListener('beforeunload',e=>{if(saving||pendSubir){e.preventDefault();e.returnValue=''}});document.addEventListener('visibilitychange',()=>{if(!document.hidden&&!saving)loadRemote()});
 })();
 
 
