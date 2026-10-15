@@ -12,6 +12,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" async></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js" async></script>
 <link rel="manifest" href="./manifest.json">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script>
 /* === MODO CELULAR: solo en telefonos (tactil + lado menor < 600px). Tablets y PC no cambian. === */
 (function(){try{
@@ -391,6 +392,130 @@ html.celu .ov .box .row:last-child .btn{flex:1}
 html.celu .toast{bottom:calc(96px + env(safe-area-inset-bottom,0px));max-width:92vw;text-align:center}
 html.celu .login{padding:34px 22px}
 .vista-sw{display:block;margin:20px auto;padding:10px 16px;border-radius:10px;border:1px solid var(--line);background:#fff;color:var(--ink2);font-size:12.5px;font-weight:600;cursor:pointer}
+/* ── v0.49 Dashboard (estilo termoformado / PET Chivilcoy: en vivo arriba, después análisis, stock y pedidos) ── */
+#pc-dash{--pd-surf:#fff;--pd-border:#dde4dd;--pd-border2:#cbd5cb;--pd-text:#19211b;--pd-text2:#5c665e;--pd-text3:#94a096;--pd-g:#15a463;--pd-gd:#0e7a49;--pd-gdd:#0a5e38;--pd-gl:#e4f6ec;--pd-gl2:#d2eedd;--pd-ok:#0e7a49;--pd-mid:#b07d13;--pd-bad:#a33b3b;--pd-sh:0 1px 2px rgba(20,40,25,.04),0 2px 10px rgba(20,40,25,.05);--pd-sh2:0 4px 18px rgba(20,40,25,.10);font-size:14px}
+#pc-dash .mono{font-family:'DM Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+#pc-dash h3{margin:0}
+.db-head{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap;margin:2px 0 14px}
+.db-title{font-size:20px;font-weight:700;color:var(--pd-text)}
+.db-sub{font-size:12.5px;color:var(--pd-text3);margin-top:2px}
+.db-btn{background:var(--pd-surf);border:1px solid var(--pd-border2);color:var(--pd-gd);border-radius:9px;padding:7px 12px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit}
+.db-btn:hover{background:var(--pd-gl)}
+.db-x{background:none;border:0;color:var(--pd-gd);font-size:12px;font-weight:600;cursor:pointer;padding:2px 0;font-family:inherit;white-space:nowrap}
+.db-x:hover{text-decoration:underline}
+.db-alerts{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.db-al{font-size:12px;font-weight:600;border-radius:999px;padding:6px 12px;border:1px solid;cursor:pointer}
+.db-al.bad{color:#a8464a;background:#fdf0ef;border-color:#f3d3d0}.db-al.warn{color:#8f6a14;background:#fbf3df;border-color:#efdfb2}.db-al.info{color:#2f5aa8;background:#eef3fb;border-color:#d4e0f4}
+.db-top{display:grid;grid-template-columns:2.3fr 1fr;gap:14px;margin-bottom:6px}
+.db-box,.db-live,.db-hoy{background:var(--pd-surf);border:1px solid var(--pd-border);border-radius:14px;box-shadow:var(--pd-sh);padding:16px 18px;min-width:0}
+.db-live{background:linear-gradient(160deg,#eaf7f0 0%,#fff 55%);border-color:var(--pd-gl2)}
+.db-k{font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--pd-gd)}
+.db-lh{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:wrap}
+.db-lt{font-size:13.5px;color:var(--pd-text2);margin-top:3px}.db-lt b{color:var(--pd-text);font-weight:600}
+.db-est{display:inline-flex;align-items:center;gap:7px;font-size:12px;font-weight:600;border-radius:999px;padding:5px 12px;border:1px solid;white-space:nowrap}
+.db-est i{width:8px;height:8px;border-radius:50%;background:currentColor}
+.db-est.ok{color:#0e7a49;background:#e4f6ec;border-color:#c6e9d5}.db-est.ok i{animation:dbp 1.6s infinite}
+.db-est.warn{color:#8f6a14;background:#fbf3df;border-color:#efdfb2}.db-est.bad{color:#a8464a;background:#fdf0ef;border-color:#f3d3d0}.db-est.off{color:var(--pd-text3);background:#f2f5f2;border-color:var(--pd-border)}
+@keyframes dbp{0%,100%{opacity:1}50%{opacity:.25}}
+.db-sum{display:flex;gap:30px;flex-wrap:wrap;margin:14px 0 4px}
+.db-sum div b{display:block;font-family:'DM Mono',ui-monospace,Menlo,Consolas,monospace;font-size:30px;font-weight:500;color:var(--pd-gdd);line-height:1.05}
+.db-sum div span{font-size:12px;color:var(--pd-text3)}
+.db-mqs{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:14px}
+.db-mq{background:rgba(255,255,255,.85);border:1px solid var(--pd-gl2);border-radius:12px;padding:12px 13px;min-width:0;display:flex;flex-direction:column;gap:8px}
+.db-mq.off{border-color:var(--pd-border);background:#fbfcfb}
+.db-mqh{display:flex;justify-content:space-between;align-items:center;gap:6px}
+.db-mqh b{font-size:14px;font-weight:700;color:var(--pd-text)}
+.db-mqh .db-est{padding:3px 9px;font-size:11px}
+.db-mqn{display:flex;align-items:flex-end;gap:16px;flex-wrap:wrap}
+.db-mqn .big b{display:block;font-family:'DM Mono',ui-monospace,Menlo,Consolas,monospace;font-size:28px;font-weight:500;color:var(--pd-gdd);line-height:1}
+.db-mqn .ef b{display:block;font-family:'DM Mono',ui-monospace,Menlo,Consolas,monospace;font-size:20px;font-weight:500;line-height:1.1;color:var(--pd-text)}
+.db-mqn span{font-size:11px;color:var(--pd-text3)}
+.db-bar{position:relative;height:8px;border-radius:999px;background:rgba(0,0,0,.06)}
+.db-fill{height:100%;border-radius:999px;transition:width .4s;max-width:100%}
+.db-mark{position:absolute;top:-4px;width:2px;height:16px;background:var(--pd-text2);border-radius:2px;opacity:.55}
+.db-bl{display:flex;justify-content:space-between;gap:8px;font-size:11px;color:var(--pd-text3);flex-wrap:wrap}
+.db-oc{border-top:1px dashed var(--pd-gl2);padding-top:8px;font-size:12.5px;cursor:pointer;min-width:0}
+.db-oc small{display:block;font-size:10.5px;color:var(--pd-text3);text-transform:uppercase;letter-spacing:.05em;font-weight:700}
+.db-oc b{font-weight:600;color:var(--pd-text)}.db-oc span{color:var(--pd-text2)}
+.db-oc .db-bar{height:5px;margin-top:5px}
+.db-mm{display:grid;grid-template-columns:1fr 1fr;gap:6px 12px;font-size:12px}
+.db-mm span{display:block;font-size:10.5px;color:var(--pd-text3)}.db-mm b{font-weight:600;color:var(--pd-text)}.db-mm small{color:var(--pd-text3);font-weight:400}
+.db-hbig{margin:6px 0 4px;display:flex;gap:18px;flex-wrap:wrap}.db-hbig div b{display:block;font-family:'DM Mono',ui-monospace,Menlo,Consolas,monospace;font-size:24px;font-weight:500;color:var(--pd-gd)}.db-hbig div span{font-size:11.5px;color:var(--pd-text3)}
+.db-ht{display:grid;grid-template-columns:1fr auto 48px;gap:8px;align-items:center;padding:6px 0;border-top:1px solid #edf1ed;font-size:13px}
+.db-hl{color:var(--pd-text3);font-size:12px}.db-ht b{font-weight:500}.db-he{text-align:right;font-family:'DM Mono',ui-monospace,Menlo,Consolas,monospace;font-size:12.5px;font-weight:600}
+.db-sep{height:12px}.db-cmp{font-size:11.5px;color:var(--pd-text3);margin-top:8px}
+.db-sec{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin:22px 0 10px}
+.db-sec h3,.db-bh h3{margin:0;font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--pd-gd)}
+.db-note{font-size:11.5px;color:var(--pd-text3)}
+.db-bh{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap}
+.db-seg{display:inline-flex;background:#eef2ee;border-radius:10px;padding:3px;gap:2px}
+.db-seg button{border:0;background:none;padding:6px 12px;border-radius:8px;font-size:12.5px;font-weight:600;color:var(--pd-text2);cursor:pointer;font-family:inherit}
+.db-seg button.on{background:#fff;color:var(--pd-gd);box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.db-chw{display:flex;gap:6px;align-items:stretch;height:190px}
+.db-chc{flex:1;display:flex;flex-direction:column;align-items:center;min-width:0}
+.db-chv{font-family:'DM Mono',ui-monospace,Menlo,Consolas,monospace;font-size:10.5px;color:var(--pd-text2);height:16px;white-space:nowrap}
+.db-chb{flex:1;width:100%;display:flex;align-items:flex-end;justify-content:center}.db-chb i{display:block;width:72%;max-width:38px;border-radius:7px 7px 3px 3px;min-height:2px;opacity:.85}
+.db-che{font-family:'DM Mono',ui-monospace,Menlo,Consolas,monospace;font-size:10.5px;font-weight:600;height:15px;margin-top:4px}
+.db-chd{font-size:10.5px;color:var(--pd-text3);white-space:nowrap}.db-chd.hoy{color:var(--pd-gd);font-weight:700}
+.db-leg{display:flex;gap:16px;justify-content:flex-end;font-size:11px;color:var(--pd-text3);margin-top:8px;flex-wrap:wrap}.db-leg i{display:inline-block;width:9px;height:9px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+.db-kpis{display:grid;grid-template-columns:repeat(5,1fr);gap:12px}
+.db-kpi{background:var(--pd-surf);border:1px solid var(--pd-border);border-radius:14px;box-shadow:var(--pd-sh);padding:13px 15px;min-width:0}
+.db-kpi .v{font-family:'DM Mono',ui-monospace,Menlo,Consolas,monospace;font-size:24px;font-weight:500;color:var(--pd-gdd);line-height:1.15}
+.db-kpi .l{font-size:12px;font-weight:600;color:var(--pd-text2);margin-top:4px}.db-kpi .s{font-size:11px;color:var(--pd-text3);margin-top:2px}
+.db-mix{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px}
+.db-mr{margin-bottom:10px}.db-mrh{display:flex;justify-content:space-between;gap:8px;font-size:12.5px;margin-bottom:4px;flex-wrap:wrap}.db-mrh span:last-child{color:var(--pd-text3)}
+.db-mb{height:7px;background:#eef2ee;border-radius:999px;overflow:hidden}.db-mb i{display:block;height:100%;border-radius:999px}
+.db-stk{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.db-sk{background:var(--pd-surf);border:1px solid var(--pd-border);border-left:4px solid var(--c);border-radius:14px;box-shadow:var(--pd-sh);padding:12px 15px;cursor:pointer;min-width:0}
+.db-sk:hover{box-shadow:var(--pd-sh2)}
+.db-sk .t{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--c)}
+.db-sk .n{font-family:'DM Mono',ui-monospace,Menlo,Consolas,monospace;font-size:24px;font-weight:500;color:var(--pd-text);margin-top:2px}.db-sk .n small{font-size:13px;color:var(--pd-text3)}
+.db-sk .s{font-size:11.5px;color:var(--pd-text3)}
+.db-sk .cl{margin-top:8px;border-top:1px solid #edf1ed;padding-top:6px;font-size:12px}
+.db-sk .cl div{display:flex;justify-content:space-between;gap:8px;padding:2px 0}.db-sk .cl div span:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.db-sk .cl div span:last-child{font-family:'DM Mono',ui-monospace,Menlo,Consolas,monospace;color:var(--pd-text2);white-space:nowrap}
+.db-two{display:grid;grid-template-columns:1.15fr 1fr;gap:14px;margin-top:14px}
+.db-cg{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.db-cd{border:1px solid #edf1ed;border-radius:12px;padding:10px 11px;background:#fbfdfb;min-width:0}
+.db-cd.hoy{border-color:var(--pd-gl2);background:linear-gradient(180deg,#eaf7f0,#fff 70%)}
+.db-cdh{font-weight:600;font-size:13.5px;color:var(--pd-text);display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px}.db-cdh small{font-weight:400;color:var(--pd-text3);font-size:11.5px}
+.db-cm{font-size:10.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--pd-text3);margin:6px 0 4px}
+.db-cs{background:#fff;border:1px solid var(--pd-border);border-radius:9px;padding:7px 9px;margin-bottom:6px;font-size:12px;cursor:pointer}
+.db-cs:hover{border-color:var(--pd-gl2);background:#f6faf7}
+.db-cs b{font-weight:600;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.db-cs-m{color:var(--pd-text3);font-size:11px;margin-top:2px}
+.db-ce{font-size:11.5px;color:#b5beb6;font-style:italic;padding:2px}
+.db-chip{font-size:10.5px;font-weight:600;border-radius:999px;padding:2px 8px;white-space:nowrap;background:#eef2ee;color:var(--pd-text2)}
+.db-chip.ok{background:#e4f6ec;color:#0e7a49}.db-chip.bad{background:#fdf0ef;color:#a8464a}.db-chip.warn{background:#fbf3df;color:#8f6a14}.db-chip.blue{background:#e8eef9;color:#2f5aa8}
+.db-pk{display:grid;grid-template-columns:repeat(4,1fr);background:linear-gradient(180deg,var(--pd-gl),#fff 80%);border:1px solid var(--pd-gl2);border-radius:12px;margin-bottom:12px}
+.db-pk>div{padding:9px 12px;border-left:1px solid var(--pd-gl2);min-width:0}.db-pk>div:first-child{border-left:none}
+.db-pk b{display:block;font-family:'DM Mono',ui-monospace,Menlo,Consolas,monospace;font-size:19px;font-weight:500;color:var(--pd-gd)}.db-pk span{font-size:11px;color:var(--pd-text3)}
+.db-pk .bad b{color:var(--pd-bad)}
+.db-tt{font-size:10.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--pd-text3);margin:10px 0 6px}.db-tt.bad{color:#a8464a}.db-tt.ok{color:var(--pd-ok)}
+.db-r{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 4px;border-top:1px solid #edf1ed;cursor:pointer;font-size:13px}.db-r:hover{background:#f6faf7}
+.db-rc{display:flex;align-items:center;gap:8px;flex-wrap:wrap;min-width:0}.db-rc b{font-weight:600}.db-rc .mono{color:var(--pd-text2);font-size:12px}
+.db-rs{display:flex;align-items:center;gap:6px;white-space:nowrap}
+.db-urg{font-size:11.5px;font-weight:600}.db-urg.bad{color:var(--pd-bad)}.db-urg.warn{color:var(--pd-mid)}.db-urg.ok{color:var(--pd-text3)}
+.db-okmsg{font-size:13px;color:var(--pd-ok);padding:6px 2px}.db-more{font-size:11.5px;color:var(--pd-text3);padding:6px 4px}
+#pc-dash details.db-dd{background:var(--pd-surf);border:1px solid var(--pd-border);border-radius:14px;box-shadow:var(--pd-sh);padding:12px 18px;margin-top:12px}
+#pc-dash details.db-dd>summary{list-style:none;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:10px}
+#pc-dash details.db-dd>summary::-webkit-details-marker{display:none}
+#pc-dash details.db-dd>summary h3{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--pd-gd)}
+#pc-dash details.db-dd>summary .ch{color:var(--pd-text3);transition:transform .15s;font-size:16px}
+#pc-dash details.db-dd[open]>summary .ch{transform:rotate(180deg)}
+.db-dd-in{margin-top:12px}
+.db-tbl{width:100%;border-collapse:collapse;font-size:12.5px}
+.db-tbl th{text-align:left;font-size:10.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--pd-text3);padding:6px 8px;border-bottom:1px solid var(--pd-border);background:none;position:static}
+.db-tbl td{padding:7px 8px;border-bottom:1px solid #edf1ed;color:var(--pd-text)}
+.db-tbl .num{text-align:right;font-family:'DM Mono',ui-monospace,Menlo,Consolas,monospace}
+.db-bw{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.db-bwr{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:7px 2px;border-top:1px solid #edf1ed;font-size:12.5px}
+@media(max-width:1100px){.db-top,.db-two{grid-template-columns:1fr}.db-kpis{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:800px){.db-mqs,.db-stk{grid-template-columns:1fr 1fr}.db-cg{grid-template-columns:1fr}}
+html.celu .db-top,html.celu .db-two,html.celu .db-mix,html.celu .db-bw,html.celu .db-mqs{grid-template-columns:1fr}
+html.celu .db-stk,html.celu .db-kpis,html.celu .db-pk{grid-template-columns:1fr 1fr}html.celu .db-pk>div:nth-child(3){border-left:none}
+html.celu .db-sum{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}html.celu .db-sum div b{font-size:20px!important}html.celu .db-sum div span{font-size:11px;display:block;line-height:1.25}
+.db-mqh b{white-space:nowrap}
+html.celu .db-cg{grid-template-columns:1fr}html.celu .db-chw{height:150px}html.celu .db-chv{display:none}html.celu .db-sum div b{font-size:26px}
 </style>
 </head>
 <body>
@@ -550,7 +675,8 @@ html.celu .login{padding:34px 22px}
 <!-- PC -->
 <section id="v-pc" class="view">
   <div class="tabs">
-    <button class="on" onclick="pcTab('prod',this)">Producción en vivo</button>
+    <button class="on" onclick="pcTab('dash',this)">📊 Dashboard</button>
+    <button onclick="pcTab('prod',this)">Producción en vivo</button>
     <button onclick="pcTab('cro',this)">Cronograma</button>
     <button onclick="pcTab('oc',this)">Órdenes de compra</button>
     <button onclick="pcTab('rfl',this)">Refilado</button>
@@ -559,7 +685,31 @@ html.celu .login{padding:34px 22px}
     <button onclick="pcTab('cat',this)">Catálogo</button>
     <span style="flex:1"></span><button class="recep-btn" onclick="irRecepPET()">📥 Recibir bobinas PET</button>
   </div>
-  <div id="pc-prod" class="pct">
+  <div id="pc-dash" class="pct">
+    <div class="db-head">
+      <div><div class="db-title">Dashboard · Laminado y Refilado</div><div class="db-sub" id="db-sub">Cómo vienen trabajando la laminadora y las refiladoras</div></div>
+      <button class="db-btn" onclick="loadRemote(true)">↻ Actualizar</button>
+    </div>
+    <div id="db-alertas"></div>
+    <div class="db-top">
+      <div class="db-live" id="db-live"></div>
+      <div class="db-hoy" id="db-hoy"></div>
+    </div>
+    <div class="db-sec"><h3>Producción · últimos 14 días</h3><div class="db-seg" id="db-chseg"><button data-v="lam" class="on">Laminadora</button><button data-v="ref">Refiladoras</button></div></div>
+    <div class="db-box" id="db-chart"></div>
+    <div class="db-sec"><h3>Totales y análisis</h3><div class="db-seg" id="db-per"><button data-v="mes" class="on">Este mes</button><button data-v="mesant">Mes anterior</button><button data-v="anio">Este año</button></div></div>
+    <div class="db-kpis" id="db-kpis"></div>
+    <div class="db-mix" id="db-mix"></div>
+    <div class="db-sec"><h3>Stock del área</h3><button class="db-x" onclick="dbGo('fin')">ver stock →</button></div>
+    <div class="db-stk" id="db-stock"></div>
+    <div class="db-two">
+      <div class="db-box"><div class="db-bh"><h3>Cronograma · hoy y próximos días</h3><button class="db-x" onclick="dbGo('cro')">abrir →</button></div><div id="db-crono"></div></div>
+      <div class="db-box"><div class="db-bh"><h3>OC · atrasadas y próximas</h3><button class="db-x" onclick="dbGo('oc')">ver OC →</button></div><div class="db-pk" id="db-oc-kpis"></div><div id="db-oc-next"></div></div>
+    </div>
+    <details class="db-dd"><summary><h3>Mejores y peores días</h3><span class="ch">⌄</span></summary><div class="db-dd-in" id="db-dias"></div></details>
+    <details class="db-dd"><summary><h3>Últimas bobinas cargadas en las tablets</h3><span class="ch">⌄</span></summary><div class="db-dd-in" style="overflow-x:auto"><table class="db-tbl"><thead><tr><th>Fecha</th><th>Máquina</th><th>Operario</th><th>Cliente / OC</th><th>Bobina</th><th class="num">Kg</th></tr></thead><tbody id="db-ultimas"></tbody></table></div></details>
+  </div>
+  <div id="pc-prod" class="pct" style="display:none">
     <div class="card">
       <div class="row">
         <div class="f" style="max-width:180px"><label>Día</label><input id="prodDia" type="date" onchange="render()"></div>
@@ -805,7 +955,7 @@ html.celu .login{padding:34px 22px}
 
 <script>
 /* ================= ESTADO ================= */
-const VERSION='v0.48';
+const VERSION='v0.49';
 const CATALOGO=[
  {id:'CAT-01',cliente:'Don Yeyo',medida:'321x300',anchoPet:350,espPet:250,anchoPe:370,espPe:50,anchoFinal:321,tiras:1,pesoBobinaPet:92,metrosBobinaPet:762,pesoBobinaPe:26,metrosBobinaPe:1550,pesoBobinaFinal:35,cilindro:340},
  {id:'CAT-02',cliente:'Molinos',medida:'472x235',anchoPet:500,espPet:200,anchoPe:530,espPe:35,anchoFinal:472,tiras:1,pesoBobinaPet:80,metrosBobinaPet:592,pesoBobinaPe:32,metrosBobinaPe:1900,pesoBobinaFinal:40,cilindro:490},
@@ -1636,6 +1786,237 @@ function renderProd(){
     return`<tr><td>${fh(x.t)}</td><td>${x.proc==='lam'?'Laminadora':'Refiladora '+x.maq}</td><td>${x.op||''}</td><td>${ocLbl(ocOf(x.ocId))}</td><td>${x.lbl}</td><td class="n">${x.kg?fmt(x.kg):'<span class="tag pend">sin pesar</span>'}</td><td class="n">${dm!=null?fmt(dm):''}</td><td class="n">${kh?fmt(kh):''}</td><td class="n">${obj?fmt(obj):''}</td></tr>`}).join('')||'<tr><td colspan="9" class="muted">Sin producción cargada ese día.</td></tr>';
 }
 
+/* ================= v0.49 · DASHBOARD (estilo termoformado / PET Chivilcoy) ================= */
+const DB_MQ=[['Laminadora','lam','Laminadora'],['Refiladora Verde','ref','Verde'],['Refiladora Gris','ref','Gris']];
+let dbPer='mes',dbCh='lam',DBX=null;
+const dKey=iso=>{const d=new Date(iso);return isNaN(d)?'':d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')};
+const dbHm=v=>String(Math.floor(v/60)%24).padStart(2,'0')+':'+String(Math.round(v%60)).padStart(2,'0');
+const dbN=v=>fmt(Math.round(+v||0));
+function dbEfCol(e){return e==null?'var(--pd-text3)':e>=100?'var(--pd-ok)':e>=80?'var(--pd-mid)':'var(--pd-bad)'}
+function dbEfFill(e){return e==null?'#cfd8d0':e>=100?'#2fa86b':e>=80?'#e2b048':'#d9786f'}
+function dbDiaTxt(f,largo){const d=new Date(f+'T12:00');if(isNaN(d))return f;if(largo){const s=d.toLocaleDateString('es-AR',{weekday:'long',day:'numeric',month:'numeric'});return s.charAt(0).toUpperCase()+s.slice(1)}return d.toLocaleDateString('es-AR',{weekday:'short',day:'2-digit',month:'2-digit'}).replace('.','')}
+function dbGo(t){const b=[...document.querySelectorAll('#v-pc>.tabs button')].find(x=>(x.getAttribute('onclick')||'').indexOf("pcTab('"+t+"'")===0);if(b)b.click();try{window.scrollTo(0,0)}catch(_){}}
+function dbOC(id){const o=ocOf(id);if(!o.id)return dbGo('oc');dbGo('oc');$('qOC').value=o.nro||'';render()}
+// índice de cargas por día local: laminadas (sin restos ni PET de Chivilcoy) y bobinas finales
+function dbIdx(){
+  const idx={};
+  S.laminadas.filter(l=>!l.resto&&l.tipo!=='PET'&&l.createdAt).forEach(l=>{const k=dKey(l.createdAt);(idx[k]=idx[k]||[]).push({t:l.createdAt,proc:'lam',mq:'Laminadora',op:l.operario,ocId:l.ocId,kg:+l.kg||0,lbl:lamLbl(l)})});
+  S.finales.filter(f=>f.createdAt).forEach(f=>{const k=dKey(f.createdAt);(idx[k]=idx[k]||[]).push({t:f.createdAt,proc:'ref',mq:'Refiladora '+(f.maq||'?'),op:f.operario,ocId:f.ocId,kg:+f.kg||0,lbl:'bob '+f.nro})});
+  const par={};S.ops.forEach(o=>(o.paradas||[]).forEach(p=>{if(!p.t)return;const k=dKey(p.t),mq=p.maq==='Laminadora'?'Laminadora':'Refiladora '+(p.maq||'?');(par[k+'|'+mq]=par[k+'|'+mq]||[]).push(p)}));
+  return{idx,par};
+}
+// eficiencia de una máquina en un día: misma cuenta que Producción en vivo (jornada única, objetivo ponderado por kg de cada OC)
+function dbMaqDia(dia,mq){
+  const b=((DBX.idx[dia])||[]).filter(x=>x.mq===mq);if(!b.length)return null;
+  const proc=b[0].proc,J=jornada(),ms=b.map(x=>minOf(x.t)),esHoy=dia===hoyISO(),nowMin=minOf(now());
+  const ini=Math.min(J.ini,...ms);let fin=Math.max(J.fin,...ms);if(esHoy)fin=Math.max(Math.min(fin,nowMin),...ms);
+  const hrs=Math.max(0,fin-ini)/60,kg=sum(b,x=>x.kg);
+  let pk=0,pw=0;[...new Set(b.map(x=>x.ocId))].forEach(o=>{const ob=objetivo(o,proc);if(!ob)return;const k=sum(b.filter(x=>x.ocId===o),x=>x.kg)||1;pk+=ob*k;pw+=k});
+  const obj=pw?pk/pw:null,real=hrs?kg/hrs:null,eff=obj&&real?real/obj*100:null;
+  const last=b.slice().sort((x,y)=>x.t>y.t?-1:1)[0];
+  return{b,proc,kg,hrs,obj,real,eff,ini,fin,last,ops:[...new Set(b.map(x=>x.op).filter(Boolean))],par:sum(DBX.par[dia+'|'+mq]||[],p=>p.min)};
+}
+// total por proceso en un día (las dos refiladoras juntas)
+function dbProcDia(dia,proc){let kg=0,kgO=0,teo=0,hrs=0,n=0;DB_MQ.filter(m=>m[1]===proc).forEach(([mq])=>{const r=dbMaqDia(dia,mq);if(!r)return;kg+=r.kg;n+=r.b.length;hrs+=r.hrs;if(r.obj){kgO+=r.kg;teo+=r.hrs*r.obj}});return{kg,n,hrs,eff:teo?Math.round(kgO/teo*100):null,kgh:hrs?kg/hrs:null}}
+function dbOcEnMaq(mq,proc,dia){
+  if(proc==='ref'){const m=mq.replace('Refiladora ','');const l=S.laminadas.find(x=>x.estado==='en refilado'&&x.refMaq===m);if(l)return{ocId:l.ocId,src:'En máquina'}}
+  const r=dbMaqDia(dia,mq);if(r)return{ocId:r.last.ocId,src:'Última carga'};
+  const c=croItems(dia,mq).find(x=>x.ocId);return c?{ocId:c.ocId,src:'Programado hoy'}:null;
+}
+
+// ── EN VIVO ──
+function dbLive(){
+  const el=$('db-live');if(!el)return;
+  const hoy=hoyISO(),J=jornada(),nowMin=minOf(now()),dow=new Date().getDay(),H=Math.max(1,(J.fin-J.ini)/60);
+  const fuera=dow===0||nowMin<J.ini||nowMin>=J.fin,elapsed=Math.max(0,Math.min(H,(nowMin-J.ini)/60));
+  let prod=0;
+  const tiles=DB_MQ.map(([mq,proc])=>{
+    const r=dbMaqDia(hoy,mq),kg=r?r.kg:0;const oc=dbOcEnMaq(mq,proc,hoy),o=oc?ocOf(oc.ocId):null;
+    let obj=r&&r.obj?r.obj:(o&&o.id?objetivo(o.id,proc):null);
+    const sinCarga=r?minsAgo(r.last.t):null;
+    let est,cls;
+    if(fuera){est=r&&nowMin>=J.fin?'Jornada terminada':dow===0?'Domingo':'Fuera de jornada';cls='off'}
+    else if(!r){est=elapsed<1.5?'Arrancando':'Sin cargas hoy';cls=elapsed<1.5?'off':'warn'}
+    else if(sinCarga>90){est='Sin cargas '+agoLbl(r.last.t);cls='warn'}
+    else{est='Produciendo';cls='ok';prod++}
+    const eff=r&&r.eff!=null?Math.round(r.eff):null,proy=r&&r.real?r.real*H:0;
+    const objDia=obj?obj*H:0,pc=objDia?Math.min(100,Math.round(kg/objDia*100)):0,pcEsp=Math.min(100,Math.round(elapsed/H*100));
+    let ocH='';
+    if(o&&o.id){const k=ocKgs(o),hecho=proc==='lam'?k.lam:k.fin,av=o.kg?Math.min(100,Math.round(hecho/o.kg*100)):0,falta=Math.max(0,(+o.kg||0)-hecho);
+      ocH=`<div class="db-oc" onclick="dbOC('${o.id}')" title="Ver la OC"><small>${oc.src}</small><b>${esc(o.cliente||'—')}</b> <span>· OC ${esc(o.nro||'')}${o.desc?' · '+esc(o.desc):''}</span>
+        <div class="db-bar"><div class="db-fill" style="width:${av}%;background:var(--pd-g)"></div></div>
+        <div class="db-bl" style="margin-top:4px"><span>${dbN(hecho)} de ${dbN(o.kg)} kg ${proc==='lam'?'laminados':'refilados'}</span><span>${falta>0?'faltan '+dbN(falta)+' kg':'✓ completa'}</span></div></div>`}
+    else ocH=`<div class="db-oc" onclick="dbGo('cro')"><small>OC</small><span>Sin OC hoy · tocá para ver el cronograma</span></div>`;
+    const prox=croItems(hoy,mq).filter(c=>c.ocId&&(!o||c.ocId!==o.id))[0];
+    return`<div class="db-mq ${cls==='off'&&!r?'off':''}">
+      <div class="db-mqh"><b>${mq}</b><span class="db-est ${cls}"><i></i>${est}</span></div>
+      <div class="db-mqn"><div class="big"><b>${dbN(kg)}</b><span>kg hoy</span></div><div class="ef"><b style="color:${dbEfCol(eff)}">${eff!=null?eff+'%':'—'}</b><span>eficiencia</span></div><div class="ef"><b>${r&&r.real?dbN(r.real):'—'}</b><span>kg/h · obj. ${obj?dbN(obj):'—'}</span></div></div>
+      <div class="db-bar"><div class="db-fill" style="width:${pc}%;background:${dbEfFill(eff)}"></div>${!fuera&&obj?`<div class="db-mark" style="left:${pcEsp}%" title="lo esperado a esta hora"></div>`:''}</div>
+      <div class="db-bl"><span>${obj?`objetivo del día ${dbN(objDia)} kg`:'sin kg/h objetivo cargado'}</span><span>${proy?(fuera?'ritmo × jornada ':'proyección ')+dbN(proy)+' kg':''}</span></div>
+      ${ocH}
+      <div class="db-mm">
+        <div><span>Última bobina</span><b>${r?fh(r.last.t)+' <small>'+(fuera?esc(r.last.lbl):agoLbl(r.last.t))+'</small>':'—'}</b></div>
+        <div><span>Bobinas hoy</span><b class="mono">${r?r.b.length:0}</b></div>
+        <div><span>Operario</span><b style="font-weight:500">${r&&r.ops.length?esc(r.ops.join(', ')):(croItems(hoy,mq)[0]?.operario?esc(croItems(hoy,mq)[0].operario)+' <small>prog.</small>':'—')}</b></div>
+        <div><span>Paradas hoy</span><b>${r&&r.par?r.par+' min':'ninguna'}</b></div>
+        ${prox?`<div style="grid-column:1/-1"><span>Próxima en cronograma</span><b style="font-weight:500">${esc(croLbl(prox))}</b></div>`:''}
+      </div></div>`});
+  const L=dbProcDia(hoy,'lam'),R=dbProcDia(hoy,'ref');
+  let gest,gcls;if(fuera){gest=dow===0?'Domingo · planta parada':nowMin>=J.fin?'Jornada terminada':'Fuera de jornada';gcls='off'}else if(prod){gest=prod+' de 3 máquinas produciendo';gcls='ok'}else{gest='Ninguna máquina con cargas recientes';gcls='warn'}
+  el.innerHTML=`<div class="db-lh"><div><div class="db-k">Ahora en planta</div><div class="db-lt">Jornada <b>${J.txt.replace('-',' a ')}</b> · ${dbDiaTxt(hoy,true)}</div></div><span class="db-est ${gcls}"><i></i>${gest}</span></div>
+    <div class="db-sum"><div><b>${dbN(L.kg)}</b><span>kg laminados hoy · ${L.n} bob.</span></div><div><b>${dbN(R.kg)}</b><span>kg refilados hoy · ${R.n} bob. finales</span></div><div><b>${fmt(sum(S.laminadas.filter(l=>l.estado==='en refilado'),l=>l.kg))}</b><span>kg en refiladoras ahora</span></div></div>
+    <div class="db-mqs">${tiles.join('')}</div>`;
+}
+
+// ── HOY / DÍA ANTERIOR / 7 DÍAS ──
+function dbHoy(){
+  const el=$('db-hoy');if(!el)return;
+  const hoy=hoyISO(),L=dbProcDia(hoy,'lam'),R=dbProcDia(hoy,'ref');
+  const fila=(dia,mq,lbl)=>{const r=dbMaqDia(dia,mq);const e=r&&r.eff!=null?Math.round(r.eff):null;return`<div class="db-ht"><span class="db-hl">${lbl||mq}${r&&r.ops.length?' · '+esc(r.ops.join(', ')):''}</span><b class="mono">${r?dbN(r.kg)+' kg':'—'}</b><span class="db-he" style="color:${dbEfCol(e)}">${e!=null?e+'%':''}</span></div>`};
+  const dias=Object.keys(DBX.idx).filter(f=>f&&f<hoy).sort();const ant=dias[dias.length-1];
+  let antH='',cmp='';
+  if(ant){antH=`<div class="db-k">Último día anterior · ${dbDiaTxt(ant)}</div>${DB_MQ.map(([mq])=>fila(ant,mq)).join('')}`;
+    const nowMin=minOf(now()),kA=sum((DBX.idx[ant]||[]).filter(x=>x.proc==='ref'&&minOf(x.t)<=nowMin),x=>x.kg);
+    if(kA>0||R.kg>0){const d=R.kg-kA;cmp=`${d>=0?'▲':'▼'} a esta hora hoy van ${dbN(Math.abs(d))} kg refilados ${d>=0?'arriba':'abajo'} del ${dbDiaTxt(ant)}`}}
+  let kL=0,kR=0;const d7=new Set();for(let i=1;i<=7;i++){const d=new Date();d.setDate(d.getDate()-i);const f=dKey(d);const it=DBX.idx[f]||[];if(it.length)d7.add(f);kL+=sum(it.filter(x=>x.proc==='lam'),x=>x.kg);kR+=sum(it.filter(x=>x.proc==='ref'),x=>x.kg)}
+  el.innerHTML=`<div class="db-k">Hoy</div><div class="db-hbig"><div><b>${dbN(L.kg)}</b><span>kg laminados</span></div><div><b>${dbN(R.kg)}</b><span>kg refilados</span></div></div>
+    ${DB_MQ.map(([mq])=>fila(hoy,mq)).join('')}
+    <div class="db-sep"></div>${antH}
+    <div class="db-sep"></div><div class="db-k">Últimos 7 días</div>
+    <div class="db-ht"><span class="db-hl">laminado · ${d7.size} día${d7.size===1?'':'s'} con producción</span><b class="mono">${dbN(kL)} kg</b><span class="db-he"></span></div>
+    <div class="db-ht"><span class="db-hl">refilado · promedio por día</span><b class="mono">${dbN(kR)} kg</b><span class="db-he" style="color:var(--pd-text3);font-weight:500">${d7.size?dbN(kR/d7.size):'—'}</span></div>
+    <div class="db-cmp">${cmp}</div>`;
+}
+
+// ── GRÁFICO 14 días ──
+function dbChart(){
+  const el=$('db-chart');if(!el)return;const hoy=hoyISO();
+  const serie=[];for(let i=13;i>=0;i--){const d=new Date();d.setDate(d.getDate()-i);const f=dKey(d);const x=dbProcDia(f,dbCh);serie.push({f,...x})}
+  const mx=Math.max(1,...serie.map(x=>x.kg)),con=serie.filter(x=>x.kg>0),prom=con.length?sum(con,x=>x.kg)/con.length:0;
+  el.innerHTML=`<div class="db-chw">${serie.map(x=>{const h=Math.round(x.kg/mx*100),dd=new Date(x.f+'T12:00');
+    return`<div class="db-chc" title="${dbDiaTxt(x.f)}: ${dbN(x.kg)} kg · ${x.n} bob.${x.kgh?' · '+dbN(x.kgh)+' kg/h':''}${x.eff!=null?' · '+x.eff+'%':''}"><div class="db-chv">${x.kg?(x.kg>=1000?(x.kg/1000).toFixed(1).replace('.',',')+'t':dbN(x.kg)):''}</div><div class="db-chb"><i style="height:${h}%;background:${dbEfFill(x.eff)}"></i></div><div class="db-che" style="color:${dbEfCol(x.eff)}">${x.eff!=null?x.eff+'%':''}</div><div class="db-chd ${x.f===hoy?'hoy':''}">${x.f===hoy?'hoy':dd.toLocaleDateString('es-AR',{weekday:'short'}).replace('.','')+' '+dd.getDate()}</div></div>`}).join('')}</div>
+    <div class="db-leg"><span>${dbCh==='lam'?'laminadora':'las dos refiladoras juntas'} · promedio ${dbN(prom)} kg por día con producción</span><span><i style="background:#2fa86b"></i>≥100%</span><span><i style="background:#e2b048"></i>80–99%</span><span><i style="background:#d9786f"></i>&lt;80%</span><span><i style="background:#cfd8d0"></i>sin kg/h objetivo</span></div>`;
+}
+
+// ── TOTALES del período ──
+function dbPeriodo(){const n=new Date(),y=n.getFullYear(),m=n.getMonth(),k=(yy,mm)=>yy+'-'+String(mm+1).padStart(2,'0'),MES=['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
+  if(dbPer==='mes')return{keys:[k(y,m)],lbl:MES[m]+' '+y};if(dbPer==='mesant'){const d=new Date(y,m-1,1);return{keys:[k(d.getFullYear(),d.getMonth())],lbl:MES[d.getMonth()]+' '+d.getFullYear()}}
+  const keys=[];for(let i=0;i<=m;i++)keys.push(k(y,i));return{keys,lbl:String(y)}}
+function dbAgg(per){
+  const dias=Object.keys(DBX.idx).filter(f=>per.keys.includes(f.slice(0,7))).sort();
+  const A={lam:{kg:0,n:0,kgO:0,teo:0,hrs:0,dias:new Set()},ref:{kg:0,n:0,kgO:0,teo:0,hrs:0,dias:new Set()}},md=[];
+  dias.forEach(f=>DB_MQ.forEach(([mq,proc])=>{const r=dbMaqDia(f,mq);if(!r)return;const a=A[proc];a.kg+=r.kg;a.n+=r.b.length;a.hrs+=r.hrs;a.dias.add(f);if(r.obj){a.kgO+=r.kg;a.teo+=r.hrs*r.obj}if(r.eff!=null)md.push({f,mq,kg:r.kg,real:r.real,eff:Math.round(r.eff),n:r.b.length})}));
+  return{A,md,dias};
+}
+function dbTotales(){
+  const el=$('db-kpis'),mixEl=$('db-mix');if(!el)return;
+  const per=dbPeriodo(),{A}=dbAgg(per),ef=a=>a.teo?Math.round(a.kgO/a.teo*100):null;
+  // rendimiento: laminadas cerradas cuyo refilado terminó en el período
+  const ult={};S.finales.forEach(f=>{if(f.lamId&&f.createdAt&&(!ult[f.lamId]||f.createdAt>ult[f.lamId]))ult[f.lamId]=f.createdAt});
+  const cer=S.laminadas.filter(l=>l.estado==='cerrada'&&ult[l.id]&&per.keys.includes(dKey(ult[l.id]).slice(0,7)));
+  const kEnt=sum(cer,l=>(+l.kg||0)-(+l.resto||0)),kFin=sum(S.finales.filter(f=>cer.some(l=>l.id===f.lamId)),f=>f.kg),scrap=sum(cer,l=>+l.scrap||Math.max(0,(+l.kg||0)-(+l.resto||0)-sum(S.finales.filter(f=>f.lamId===l.id),f=>f.kg)));
+  const rend=kEnt?kFin/kEnt*100:null;
+  const eL=ef(A.lam),eR=ef(A.ref);
+  el.innerHTML=`
+    <div class="db-kpi"><div class="v">${dbN(A.lam.kg)}</div><div class="l">Kg laminados</div><div class="s">${per.lbl} · ${A.lam.n} bobinas</div></div>
+    <div class="db-kpi"><div class="v">${dbN(A.ref.kg)}</div><div class="l">Kg refilados</div><div class="s">${A.ref.n} bobinas finales</div></div>
+    <div class="db-kpi" style="cursor:pointer" onclick="dbGo('prod')"><div class="v" style="color:${dbEfCol(eL)}">${eL!=null?eL+'%':'—'}</div><div class="l">Eficiencia laminadora</div><div class="s">${A.lam.hrs?dbN(A.lam.kg/A.lam.hrs)+' kg/h · '+A.lam.dias.size+' días':'sin producción'}</div></div>
+    <div class="db-kpi" style="cursor:pointer" onclick="dbGo('prod')"><div class="v" style="color:${dbEfCol(eR)}">${eR!=null?eR+'%':'—'}</div><div class="l">Eficiencia refiladoras</div><div class="s">${A.ref.hrs?dbN(A.ref.kg/A.ref.hrs)+' kg/h por máquina':'sin producción'}</div></div>
+    <div class="db-kpi" style="cursor:pointer" onclick="dbGo('rfl')"><div class="v" style="color:${rend==null?'var(--pd-text3)':rend>=95?'var(--pd-ok)':rend>=90?'var(--pd-mid)':'var(--pd-bad)'}">${rend!=null?fmt(rend)+'%':'—'}</div><div class="l">Rendimiento del refilado</div><div class="s">${cer.length?`${cer.length} laminadas · scrap ${dbN(scrap)} kg`:'sin laminadas cerradas'}</div></div>`;
+  if(!mixEl)return;
+  const fin=S.finales.filter(f=>f.createdAt&&per.keys.includes(dKey(f.createdAt).slice(0,7)));
+  const cli={},flu={},maq={};fin.forEach(f=>{const o=ocOf(f.ocId),kg=+f.kg||0;cli[o.cliente||'—']=(cli[o.cliente||'—']||0)+kg;const fl=esPetOC(o)?'PET Chivilcoy (rebobinado)':'Laminado PET/PE';flu[fl]=(flu[fl]||0)+kg;const m='Refiladora '+(f.maq||'?');maq[m]=(maq[m]||0)+kg});
+  const top=Object.entries(cli).sort((a,b)=>b[1]-a[1]);const cli6={};top.slice(0,6).forEach(([k,v])=>cli6[k]=v);if(top.length>6)cli6['Otros ('+(top.length-6)+')']=sum(top.slice(6),x=>x[1]);
+  const pal=['#15a463','#c98a1b','#2b8fb0','#7d6bb3','#d9786f','#94a096','#5aa7a0'];
+  const box=(tit,obj,col)=>{const tot=Object.values(obj).reduce((s,v)=>s+v,0);const rows=Object.entries(obj).sort((a,b)=>b[1]-a[1]).map(([k,v],i)=>{const pc=tot?Math.round(v/tot*100):0,c=col(k,i);return`<div class="db-mr"><div class="db-mrh"><span><b style="color:${c}">●</b> ${esc(k)}</span><span>${dbN(v)} kg · <b>${pc}%</b></span></div><div class="db-mb"><i style="width:${pc}%;background:${c}"></i></div></div>`}).join('');
+    return`<div class="db-box"><div class="db-bh"><h3>${tit}</h3><span class="db-note">${per.lbl} · bobinas finales</span></div>${rows||'<div class="db-ce">Sin bobinas refiladas en el período</div>'}</div>`};
+  const FC={'Laminado PET/PE':'#15a463','PET Chivilcoy (rebobinado)':'#6d8fd6','Refiladora Verde':'#1e9a4f','Refiladora Gris':'#8a948d'};
+  mixEl.innerHTML=box('Lo refilado por cliente',cli6,(k,i)=>pal[i%pal.length])+box('Lo refilado por flujo y máquina',flu,(k,i)=>FC[k]||pal[i]);
+  // agrega las máquinas debajo del flujo en la misma tarjeta
+  const mb=mixEl.lastElementChild;if(mb&&Object.keys(maq).length){const tot=sum(Object.values(maq),v=>v);mb.insertAdjacentHTML('beforeend','<div class="db-tt" style="margin-top:12px">Por refiladora</div>'+Object.entries(maq).sort((a,b)=>b[1]-a[1]).map(([k,v])=>{const pc=tot?Math.round(v/tot*100):0,c=FC[k]||'#94a096';return`<div class="db-mr"><div class="db-mrh"><span><b style="color:${c}">●</b> ${esc(k)}</span><span>${dbN(v)} kg · <b>${pc}%</b></span></div><div class="db-mb"><i style="width:${pc}%;background:${c}"></i></div></div>`}).join(''))}
+}
+
+// ── STOCK por etapas ──
+function dbStock(){
+  const el=$('db-stock');if(!el)return;
+  let B;try{B=stkBase()}catch(e){el.innerHTML='<div class="db-ce">No se pudo calcular el stock</div>';return}
+  const ord=['fin','proc','semi','mp'];
+  el.innerHTML=ord.map(k=>{const [t,c,d]=STKV[k],R=B[k],kg=sum(R,r=>r.kg);
+    const sub=k==='fin'||k==='proc'?`${R.length} pallet${R.length===1?'':'s'} · ${sum(R,r=>r.fs.length)} bobinas`:`${R.length} bobina${R.length===1?'':'s'}${k==='semi'?' laminadas':' jumbo'}`;
+    const cli={};R.forEach(r=>cli[r.cli]=(cli[r.cli]||0)+r.kg);const top=Object.entries(cli).sort((a,b)=>b[1]-a[1]);
+    return`<div class="db-sk" style="--c:${c}" onclick="stkSet('${k}');dbGo('fin')" title="${esc(d)}"><div class="t">${t}</div><div class="n">${dbN(kg)} <small>kg</small></div><div class="s">${sub}</div>
+      ${top.length?`<div class="cl">${top.slice(0,3).map(([n,v])=>`<div><span>${esc(n)}</span><span>${dbN(v)}</span></div>`).join('')}${top.length>3?`<div class="db-note">y ${top.length-3} cliente${top.length-3>1?'s':''} más</div>`:''}</div>`:'<div class="cl db-ce">sin stock</div>'}</div>`}).join('');
+}
+
+// ── CRONOGRAMA hoy + 2 días ──
+function dbCrono(){
+  const el=$('db-crono');if(!el)return;const hoy=hoyISO();
+  const dias=[];const d=new Date();while(dias.length<3){if(d.getDay()!==0||!dias.length)dias.push(dKey(d));d.setDate(d.getDate()+1)}
+  el.innerHTML=`<div class="db-cg">${dias.map((f,i)=>{const dd=new Date(f+'T12:00'),tit=i===0?'Hoy':i===1&&(dd-new Date(hoy+'T12:00'))/864e5===1?'Mañana':dd.toLocaleDateString('es-AR',{weekday:'long'}).replace(/^./,c=>c.toUpperCase());
+    const bl=DB_MQ.map(([mq,proc])=>{const it=croItems(f,mq);if(!it.length)return'';return`<div class="db-cm">${mq}</div>`+it.map(c=>{const hecho=f<=hoy&&c.ocId?sum((DBX.idx[f]||[]).filter(x=>x.mq===mq&&x.ocId===c.ocId),x=>x.kg):0;
+      return`<div class="db-cs" onclick="dbGo('cro')"><b>${esc(croLbl(c))}</b><div class="db-cs-m">${esc(c.turno||'')}${c.operario?' · '+esc(c.operario):''}${hecho?` · <b style="display:inline;color:var(--pd-gd)">${dbN(hecho)} kg hechos</b>`:''}</div>${c.nota&&c.ocId?`<div class="db-cs-m" style="font-style:italic">${esc(c.nota)}</div>`:''}</div>`}).join('')}).join('');
+    return`<div class="db-cd ${i===0?'hoy':''}"><div class="db-cdh">${tit}<small>${dd.toLocaleDateString('es-AR',{day:'2-digit',month:'2-digit'})}</small></div>${bl||'<div class="db-ce">sin planificar</div>'}</div>`}).join('')}</div>`;
+}
+
+// ── OC atrasadas y próximas ──
+function dbUrg(o){const d=diasA(o.fecha);if(d==null)return null;if(d<0)return{d,txt:'hace '+(-d)+' d',cls:'bad'};if(d===0)return{d,txt:'vence hoy',cls:'warn'};return{d,txt:'en '+d+' d',cls:d<=3?'warn':'ok'}}
+function dbOCs(){
+  const kp=$('db-oc-kpis'),nx=$('db-oc-next');if(!kp||!nx)return;const hoy=hoyISO();
+  const ab=S.ocs.filter(o=>o.estado==='abierta'&&!esDirecto(o.cliente));
+  const falta=o=>Math.max(0,(+o.kg||0)-ocKgs(o).fin);
+  const venc=ab.filter(o=>{const u=dbUrg(o);return u&&u.d<0&&ocAvance(o).pctRem<100}).sort((a,b)=>(a.fecha||'').localeCompare(b.fecha||''));
+  const prox=ab.filter(o=>{const u=dbUrg(o);return u&&u.d>=0&&u.d<=7&&ocAvance(o).pctFin<100}).sort((a,b)=>(a.fecha||'').localeCompare(b.fecha||''));
+  kp.innerHTML=`<div><b>${ab.length}</b><span>OC abiertas</span></div><div><b>${dbN(sum(ab,falta))}</b><span>kg por refilar</span></div><div class="${venc.length?'bad':''}"><b>${venc.length}</b><span>atrasadas</span></div><div><b>${prox.length}</b><span>próximos 7 días</span></div>`;
+  const enMaq=new Set([...S.laminadas.filter(l=>l.estado==='en refilado').map(l=>l.ocId),...(DBX.idx[hoy]||[]).filter(x=>minsAgo(x.t)<90).map(x=>x.ocId)]);
+  const row=o=>{const u=dbUrg(o),k=ocKgs(o);const st=enMaq.has(o.id)?'<span class="db-chip ok">en máquina</span>':k.fin>0?'<span class="db-chip blue">refilando</span>':k.lam>0?'<span class="db-chip warn">laminando</span>':'<span class="db-chip">sin arrancar</span>';
+    return`<div class="db-r" onclick="dbOC('${o.id}')"><div class="db-rc"><b>${esc(o.cliente||'—')}</b><span class="mono">OC ${esc(o.nro||'')}${o.desc?' · '+esc(o.desc):''}</span><span class="mono">${dbN(falta(o))} kg</span></div><div class="db-rs">${u?`<span class="db-urg ${u.cls}">${u.txt}</span>`:''}${st}</div></div>`};
+  nx.innerHTML=(venc.length?`<div class="db-tt bad">Atrasadas · la más vieja primero</div>${venc.slice(0,5).map(row).join('')}${venc.length>5?`<div class="db-more">y ${venc.length-5} más</div>`:''}`:'<div class="db-okmsg">✓ No hay OC atrasadas</div>')
+    +(prox.length?`<div class="db-tt">Próximos 7 días</div>${prox.slice(0,5).map(row).join('')}${prox.length>5?`<div class="db-more">y ${prox.length-5} más</div>`:''}`:'');
+}
+
+// ── MEJORES / PEORES DÍAS y ÚLTIMAS BOBINAS ──
+function dbDias(){
+  const el=$('db-dias');if(!el)return;const per=dbPeriodo(),{md}=dbAgg(per);
+  if(!md.length){el.innerHTML='<div class="db-ce">Sin días con eficiencia calculable en el período (falta kg/h objetivo en el catálogo o en ⚙)</div>';return}
+  const s=md.slice().sort((a,b)=>b.eff-a.eff);
+  const row=e=>`<div class="db-bwr"><span><b>${dbDiaTxt(e.f)}</b> <span style="color:var(--pd-text3)">${e.mq} · ${e.n} bob.</span></span><span><span class="mono" style="color:var(--pd-text2)">${dbN(e.kg)} kg · ${dbN(e.real)} kg/h</span> <b class="mono" style="color:${dbEfCol(e.eff)}">${e.eff}%</b></span></div>`;
+  el.innerHTML=`<div class="db-bw"><div><div class="db-tt ok">Mejores · ${per.lbl}</div>${s.slice(0,4).map(row).join('')}</div><div><div class="db-tt bad">Peores</div>${s.slice(-4).reverse().map(row).join('')}</div></div>`;
+}
+function dbUltimas(){
+  const el=$('db-ultimas');if(!el)return;
+  const all=Object.values(DBX.idx).flat().sort((a,b)=>a.t>b.t?-1:1).slice(0,12);
+  el.innerHTML=all.length?all.map(x=>`<tr style="cursor:pointer" onclick="dbOC('${x.ocId}')"><td>${fd(x.t)} <span style="color:var(--pd-text3);font-size:11px">${fh(x.t)}</span></td><td>${x.mq}</td><td>${esc(x.op||'—')}</td><td>${esc(ocLbl(ocOf(x.ocId)))}</td><td class="mono">${esc(x.lbl)}</td><td class="num">${x.kg?fmt(x.kg):'<span class="db-chip warn">sin pesar</span>'}</td></tr>`).join(''):'<tr><td colspan="6" style="text-align:center;color:var(--pd-text3);padding:14px">Sin bobinas cargadas</td></tr>';
+}
+
+// ── ALERTAS ──
+function dbAlertas(){
+  const el=$('db-alertas');if(!el)return;const a=[];
+  const ab=S.ocs.filter(o=>o.estado==='abierta'&&!esDirecto(o.cliente));
+  const venc=ab.filter(o=>{const d=diasA(o.fecha);return d!=null&&d<0&&ocAvance(o).pctRem<100});
+  const pronto=ab.filter(o=>{const d=diasA(o.fecha);return d!=null&&d>=0&&d<=3&&ocAvance(o).pctFin<90});
+  const viejas=S.laminadas.filter(l=>l.estado==='pendiente'&&!l.resto&&minsAgo(l.createdAt)>3*1440);
+  const malas=S.laminadas.filter(l=>l.estado==='cerrada'&&l.kg&&(l.rend??100)<85&&minsAgo(l.updatedAt||l.createdAt)<7*1440);
+  const sp=S.finales.filter(f=>!f.kg);
+  const sinObj=ab.filter(o=>!esPetOC(o)&&!objetivo(o.id,'ref')&&(S.laminadas.some(l=>l.ocId===o.id)));
+  const tt=arr=>esc(arr.slice(0,8).map(o=>ocLbl(o)).join(' · '));
+  if(venc.length)a.push(`<div class="db-al bad" onclick="dbGo('oc')" title="${tt(venc)}">${venc.length} OC atrasada${venc.length>1?'s':''} sin remitir completa${venc.length>1?'s':''}</div>`);
+  if(pronto.length)a.push(`<div class="db-al warn" onclick="dbGo('oc')" title="${tt(pronto)}">${pronto.length} OC entrega${pronto.length>1?'n':''} en 3 días o menos con poco refilado</div>`);
+  if(viejas.length)a.push(`<div class="db-al warn" onclick="dbGo('rfl')" title="${esc(viejas.slice(0,8).map(lamLbl).join(' · '))}">${viejas.length} laminada${viejas.length>1?'s':''} esperando refilado hace más de 3 días (${dbN(sum(viejas,l=>l.kg))} kg)</div>`);
+  if(malas.length)a.push(`<div class="db-al bad" onclick="dbGo('rfl')" title="${esc(malas.map(l=>lamLbl(l)+' '+fmt(l.rend)+'%').join(' · '))}">${malas.length} laminada${malas.length>1?'s':''} cerrada${malas.length>1?'s':''} esta semana con rendimiento &lt; 85%</div>`);
+  if(sp.length)a.push(`<div class="db-al warn" onclick="dbGo('rfl')">${sp.length} bobina${sp.length>1?'s':''} final${sp.length>1?'es':''} sin pesar</div>`);
+  if(sinObj.length)a.push(`<div class="db-al info" onclick="dbGo('cat')" title="${tt(sinObj)}">${sinObj.length} OC en curso sin kg/h objetivo (no se mide la eficiencia)</div>`);
+  el.innerHTML=a.length?`<div class="db-alerts">${a.join('')}</div>`:'';
+}
+
+function renderDash(){
+  if(!$('pc-dash'))return;
+  segInit('db-chseg',v=>{dbCh=v;try{dbChart()}catch(e){console.error(e)}});
+  segInit('db-per',v=>{dbPer=v;try{dbTotales();dbDias()}catch(e){console.error(e)}});
+  DBX=dbIdx();
+  [dbAlertas,dbLive,dbHoy,dbChart,dbTotales,dbStock,dbCrono,dbOCs,dbDias,dbUltimas].forEach(f=>{try{f()}catch(e){console.error('[dashboard] '+f.name,e)}});
+  const s=$('db-sub');if(s)s.textContent='Actualizado '+new Date().toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit',hour12:false})+' · se refresca solo cada 30 s';
+}
+
 /* ================= OPERARIOS ================= */
 function opAdd(){const n=$('opNom').value.trim(),p=$('opPin').value.trim();if(!n||!p)return;if(S.operarios.some(o=>o.pin===p))return toast('Ese PIN ya existe');S.operarios.push({n,pin:p,rol:$('opRol').value,updatedAt:now()});save();$('opNom').value='';$('opPin').value=''}
 async function opRm(pin){if(S.operarios.filter(o=>o.rol==='admin').length<=1&&S.operarios.find(o=>o.pin===pin)?.rol==='admin')return toast('Tiene que quedar al menos un acceso total');if(await confirmUI('¿Quitar operario?')){kill('operarios',pin);save()}}
@@ -1673,6 +2054,7 @@ function render(){
     return`<div class="pick" style="${esPetOC(o)?'border-left-color:#6d8fd6;background:#f3f7ff':''}" onclick="opOpen('${o.id}')"><b>${ocLbl(o)}</b> ${flujoTag(o)} ${op?tagOf('abierta'):''}<small>${o.desc||''} · ${o.ancho||'?'} mm × ${o.esp||'?'} µ</small><small style="color:var(--brand)">🛠 ${trabajoLbl(o)}</small><small>${pend.length} bobinas por refilar (${fmt(sum(pend,l=>l.kg))} kg) · <b>${fmt(kf)}</b> / ${fmt(o.kg)} kg finales</small><div class="bar"><i style="width:${o.kg?Math.min(100,kf/o.kg*100):0}%"></i></div></div>`}).join('')||'<p class="muted">No hay OC con bobinas laminadas para refilar.</p>';}
   if(mode==='op'&&curOP)renderOP();
   if(mode==='pc'){
+    try{renderDash()}catch(e){console.error(e)}
     renderProd();renderCro();renderPet();renderDesp();
     const pv=$('ocProd').value;$('ocProd').innerHTML='<option value="">— elegir producto —</option>'+S.catalogo.slice().sort((a,b)=>a.cliente.localeCompare(b.cliente)).map(p=>`<option value="${p.id}">${prodLbl(p)}</option>`).join('');$('ocProd').value=pv;
     const v2=(x,y,u1,u2)=>x==null&&y==null?'<span class="muted">—</span>':`${x??'?'}${u1} · ${y??'?'}${u2}`;
@@ -1859,11 +2241,11 @@ function wfVista(v){try{localStorage.setItem('wf_vista',v)}catch(e){}const u=new
   if(!CELU){ if(window.WF_ES_TEL){sw.textContent='\uD83D\uDCF1 Ver versi\u00f3n celular';sw.onclick=()=>wfVista('celu');$('v-home').appendChild(sw)} return; }
   sw.textContent='\uD83D\uDDA5 Ver versi\u00f3n completa';sw.onclick=()=>wfVista('full');$('v-home').appendChild(sw);
   const h1=document.querySelector('header h1');
-  const NOM={prod:'Producci\u00f3n en vivo',cro:'Cronograma',oc:'\u00d3rdenes de compra',rfl:'Refilado',fin:'Stock',desp:'Despachos',cat:'Cat\u00e1logo'};
-  const ICO={cro:'\uD83D\uDDD3\uFE0F',rfl:'\u2702\uFE0F',cat:'\uD83D\uDCDA'};
-  const BAJO=[['prod','\uD83D\uDCCA','En vivo'],['oc','\uD83D\uDCC4','\u00d3rdenes'],['fin','\uD83D\uDCE6','Stock'],['desp','\uD83D\uDE9A','Despachos']];
+  const NOM={dash:'Dashboard',prod:'Producci\u00f3n en vivo',cro:'Cronograma',oc:'\u00d3rdenes de compra',rfl:'Refilado',fin:'Stock',desp:'Despachos',cat:'Cat\u00e1logo'};
+  const ICO={prod:'\u23F1\uFE0F',cro:'\uD83D\uDDD3\uFE0F',rfl:'\u2702\uFE0F',cat:'\uD83D\uDCDA'};
+  const BAJO=[['dash','\uD83D\uDCCA','Dashboard'],['oc','\uD83D\uDCC4','\u00d3rdenes'],['fin','\uD83D\uDCE6','Stock'],['desp','\uD83D\uDE9A','Despachos']];
   const MODO={home:'Laminado y Refilado',config:'Configuraci\u00f3n',lam:'Laminado',lamoc:'Laminado',ref:'Refilado',op:'Refilado',wiz:'Carga en planta',login:'Laminado y Refilado'};
-  let PCT='prod';
+  let PCT='dash';
   const btnDe=t=>[...document.querySelectorAll('#v-pc>.tabs button')].find(b=>(b.getAttribute('onclick')||'').indexOf("pcTab('"+t+"'")===0);
   const nav=document.createElement('div');nav.id='c-nav';
   nav.innerHTML=BAJO.map(([k,i,t])=>`<button data-t="${k}"><span>${i}</span>${t}</button>`).join('')+`<button data-t="__mas"><span>\u2630</span>M\u00e1s</button>`;
@@ -1901,7 +2283,7 @@ function wfVista(v){try{localStorage.setItem('wf_vista',v)}catch(e){}const u=new
       const hr=t.querySelectorAll(':scope>thead>tr');if(hr.length!==1)return;
       const ths=[...hr[0].children].map(x=>x.textContent.replace(/\s+/g,' ').trim());if(ths.length<3)return;
       const tb=t.querySelector(':scope>tbody');if(!tb)return;const rows=[...tb.children];if(!rows.length)return;
-      if(t.closest('#pc-cro'))return;                                                     // la grilla del cronograma queda como tabla
+      if(t.closest('#pc-cro')||t.closest('#pc-dash'))return;                                                     // la grilla del cronograma queda como tabla
       if(tb.querySelector('input:not([type=checkbox]),select,textarea'))return;            // grillas de carga: quedan como tabla
       t.classList.add('tc');
       const titL=ths.find(x=>/cliente/i.test(x))||ths.find(x=>x)||'';
