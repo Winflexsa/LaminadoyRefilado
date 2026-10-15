@@ -955,7 +955,7 @@ html.celu .db-cg{grid-template-columns:1fr}html.celu .db-chw{height:150px}html.c
 
 <script>
 /* ================= ESTADO ================= */
-const VERSION='v0.49';
+const VERSION='v0.50';
 const CATALOGO=[
  {id:'CAT-01',cliente:'Don Yeyo',medida:'321x300',anchoPet:350,espPet:250,anchoPe:370,espPe:50,anchoFinal:321,tiras:1,pesoBobinaPet:92,metrosBobinaPet:762,pesoBobinaPe:26,metrosBobinaPe:1550,pesoBobinaFinal:35,cilindro:340},
  {id:'CAT-02',cliente:'Molinos',medida:'472x235',anchoPet:500,espPet:200,anchoPe:530,espPe:35,anchoFinal:472,tiras:1,pesoBobinaPet:80,metrosBobinaPet:592,pesoBobinaPe:32,metrosBobinaPe:1900,pesoBobinaFinal:40,cilindro:490},
@@ -1819,8 +1819,10 @@ function dbMaqDia(dia,mq){
 // total por proceso en un día (las dos refiladoras juntas)
 function dbProcDia(dia,proc){let kg=0,kgO=0,teo=0,hrs=0,n=0;DB_MQ.filter(m=>m[1]===proc).forEach(([mq])=>{const r=dbMaqDia(dia,mq);if(!r)return;kg+=r.kg;n+=r.b.length;hrs+=r.hrs;if(r.obj){kgO+=r.kg;teo+=r.hrs*r.obj}});return{kg,n,hrs,eff:teo?Math.round(kgO/teo*100):null,kgh:hrs?kg/hrs:null}}
 function dbOcEnMaq(mq,proc,dia){
-  if(proc==='ref'){const m=mq.replace('Refiladora ','');const l=S.laminadas.find(x=>x.estado==='en refilado'&&x.refMaq===m);if(l)return{ocId:l.ocId,src:'En máquina'}}
-  const r=dbMaqDia(dia,mq);if(r)return{ocId:r.last.ocId,src:'Última carga'};
+  // manda la última bobina cargada (como Producción en vivo); las laminadas "en refiladora" viejas no cuentan
+  const r=dbMaqDia(dia,mq);if(r&&minsAgo(r.last.t)<=120)return{ocId:r.last.ocId,src:'En máquina'};
+  if(proc==='ref'){const m=mq.replace('Refiladora ','');const l=S.laminadas.filter(x=>x.estado==='en refilado'&&x.refMaq===m&&minsAgo(x.refInicio||x.updatedAt||x.createdAt)<=720).sort((a,b)=>(b.refInicio||b.updatedAt||'')>(a.refInicio||a.updatedAt||'')?1:-1)[0];if(l)return{ocId:l.ocId,src:'En máquina'}}
+  if(r)return{ocId:r.last.ocId,src:'Última carga'};
   const c=croItems(dia,mq).find(x=>x.ocId);return c?{ocId:c.ocId,src:'Programado hoy'}:null;
 }
 
@@ -1864,7 +1866,7 @@ function dbLive(){
   const L=dbProcDia(hoy,'lam'),R=dbProcDia(hoy,'ref');
   let gest,gcls;if(fuera){gest=dow===0?'Domingo · planta parada':nowMin>=J.fin?'Jornada terminada':'Fuera de jornada';gcls='off'}else if(prod){gest=prod+' de 3 máquinas produciendo';gcls='ok'}else{gest='Ninguna máquina con cargas recientes';gcls='warn'}
   el.innerHTML=`<div class="db-lh"><div><div class="db-k">Ahora en planta</div><div class="db-lt">Jornada <b>${J.txt.replace('-',' a ')}</b> · ${dbDiaTxt(hoy,true)}</div></div><span class="db-est ${gcls}"><i></i>${gest}</span></div>
-    <div class="db-sum"><div><b>${dbN(L.kg)}</b><span>kg laminados hoy · ${L.n} bob.</span></div><div><b>${dbN(R.kg)}</b><span>kg refilados hoy · ${R.n} bob. finales</span></div><div><b>${fmt(sum(S.laminadas.filter(l=>l.estado==='en refilado'),l=>l.kg))}</b><span>kg en refiladoras ahora</span></div></div>
+    <div class="db-sum"><div><b>${dbN(L.kg)}</b><span>kg laminados hoy · ${L.n} bob.</span></div><div><b>${dbN(R.kg)}</b><span>kg refilados hoy · ${R.n} bob. finales</span></div><div><b style="color:${dbEfCol(R.eff)}">${R.eff!=null?R.eff+'%':'—'}</b><span>eficiencia refiladoras hoy</span></div></div>
     <div class="db-mqs">${tiles.join('')}</div>`;
 }
 
@@ -1883,8 +1885,10 @@ function dbHoy(){
     ${DB_MQ.map(([mq])=>fila(hoy,mq)).join('')}
     <div class="db-sep"></div>${antH}
     <div class="db-sep"></div><div class="db-k">Últimos 7 días</div>
-    <div class="db-ht"><span class="db-hl">laminado · ${d7.size} día${d7.size===1?'':'s'} con producción</span><b class="mono">${dbN(kL)} kg</b><span class="db-he"></span></div>
-    <div class="db-ht"><span class="db-hl">refilado · promedio por día</span><b class="mono">${dbN(kR)} kg</b><span class="db-he" style="color:var(--pd-text3);font-weight:500">${d7.size?dbN(kR/d7.size):'—'}</span></div>
+    <div class="db-ht"><span class="db-hl">${d7.size} día${d7.size===1?'':'s'} con producción</span><b></b><span class="db-he"></span></div>
+    <div class="db-ht"><span class="db-hl">kg laminados</span><b class="mono">${dbN(kL)} kg</b><span class="db-he"></span></div>
+    <div class="db-ht"><span class="db-hl">kg refilados</span><b class="mono">${dbN(kR)} kg</b><span class="db-he"></span></div>
+    <div class="db-ht"><span class="db-hl">refilado promedio por día</span><b class="mono">${d7.size?dbN(kR/d7.size):'—'} kg</b><span class="db-he"></span></div>
     <div class="db-cmp">${cmp}</div>`;
 }
 
@@ -1967,7 +1971,7 @@ function dbOCs(){
   const venc=ab.filter(o=>{const u=dbUrg(o);return u&&u.d<0&&ocAvance(o).pctRem<100}).sort((a,b)=>(a.fecha||'').localeCompare(b.fecha||''));
   const prox=ab.filter(o=>{const u=dbUrg(o);return u&&u.d>=0&&u.d<=7&&ocAvance(o).pctFin<100}).sort((a,b)=>(a.fecha||'').localeCompare(b.fecha||''));
   kp.innerHTML=`<div><b>${ab.length}</b><span>OC abiertas</span></div><div><b>${dbN(sum(ab,falta))}</b><span>kg por refilar</span></div><div class="${venc.length?'bad':''}"><b>${venc.length}</b><span>atrasadas</span></div><div><b>${prox.length}</b><span>próximos 7 días</span></div>`;
-  const enMaq=new Set([...S.laminadas.filter(l=>l.estado==='en refilado').map(l=>l.ocId),...(DBX.idx[hoy]||[]).filter(x=>minsAgo(x.t)<90).map(x=>x.ocId)]);
+  const enMaq=new Set((DBX.idx[hoy]||[]).filter(x=>minsAgo(x.t)<=120).map(x=>x.ocId));
   const row=o=>{const u=dbUrg(o),k=ocKgs(o);const st=enMaq.has(o.id)?'<span class="db-chip ok">en máquina</span>':k.fin>0?'<span class="db-chip blue">refilando</span>':k.lam>0?'<span class="db-chip warn">laminando</span>':'<span class="db-chip">sin arrancar</span>';
     return`<div class="db-r" onclick="dbOC('${o.id}')"><div class="db-rc"><b>${esc(o.cliente||'—')}</b><span class="mono">OC ${esc(o.nro||'')}${o.desc?' · '+esc(o.desc):''}</span><span class="mono">${dbN(falta(o))} kg</span></div><div class="db-rs">${u?`<span class="db-urg ${u.cls}">${u.txt}</span>`:''}${st}</div></div>`};
   nx.innerHTML=(venc.length?`<div class="db-tt bad">Atrasadas · la más vieja primero</div>${venc.slice(0,5).map(row).join('')}${venc.length>5?`<div class="db-more">y ${venc.length-5} más</div>`:''}`:'<div class="db-okmsg">✓ No hay OC atrasadas</div>')
@@ -2003,6 +2007,8 @@ function dbAlertas(){
   if(pronto.length)a.push(`<div class="db-al warn" onclick="dbGo('oc')" title="${tt(pronto)}">${pronto.length} OC entrega${pronto.length>1?'n':''} en 3 días o menos con poco refilado</div>`);
   if(viejas.length)a.push(`<div class="db-al warn" onclick="dbGo('rfl')" title="${esc(viejas.slice(0,8).map(lamLbl).join(' · '))}">${viejas.length} laminada${viejas.length>1?'s':''} esperando refilado hace más de 3 días (${dbN(sum(viejas,l=>l.kg))} kg)</div>`);
   if(malas.length)a.push(`<div class="db-al bad" onclick="dbGo('rfl')" title="${esc(malas.map(l=>lamLbl(l)+' '+fmt(l.rend)+'%').join(' · '))}">${malas.length} laminada${malas.length>1?'s':''} cerrada${malas.length>1?'s':''} esta semana con rendimiento &lt; 85%</div>`);
+  const colg=S.laminadas.filter(l=>l.estado==='en refilado'&&minsAgo(l.refInicio||l.updatedAt||l.createdAt)>1440);
+  if(colg.length)a.push(`<div class="db-al info" onclick="dbGo('rfl')" title="${esc(colg.map(l=>lamLbl(l)+' · '+ocLbl(ocOf(l.ocId))+' · Ref. '+(l.refMaq||'?')+' desde '+fd(l.refInicio||l.updatedAt)).join(' · '))}">${colg.length} laminada${colg.length>1?'s':''} marcada${colg.length>1?'s':''} "en refiladora" hace más de 1 día (revisar en Refilado)</div>`);
   if(sp.length)a.push(`<div class="db-al warn" onclick="dbGo('rfl')">${sp.length} bobina${sp.length>1?'s':''} final${sp.length>1?'es':''} sin pesar</div>`);
   if(sinObj.length)a.push(`<div class="db-al info" onclick="dbGo('cat')" title="${tt(sinObj)}">${sinObj.length} OC en curso sin kg/h objetivo (no se mide la eficiencia)</div>`);
   el.innerHTML=a.length?`<div class="db-alerts">${a.join('')}</div>`:'';
