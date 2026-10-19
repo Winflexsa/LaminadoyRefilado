@@ -987,7 +987,7 @@ html.celu .db-cg{grid-template-columns:1fr}html.celu .db-chw{height:150px}html.c
 
 <script>
 /* ================= ESTADO ================= */
-const VERSION='v0.51';
+const VERSION='v0.52';
 const CATALOGO=[
  {id:'CAT-01',cliente:'Don Yeyo',medida:'321x300',anchoPet:350,espPet:250,anchoPe:370,espPe:50,anchoFinal:321,tiras:1,pesoBobinaPet:92,metrosBobinaPet:762,pesoBobinaPe:26,metrosBobinaPe:1550,pesoBobinaFinal:35,cilindro:340},
  {id:'CAT-02',cliente:'Molinos',medida:'472x235',anchoPet:500,espPet:200,anchoPe:530,espPe:35,anchoFinal:472,tiras:1,pesoBobinaPet:80,metrosBobinaPet:592,pesoBobinaPe:32,metrosBobinaPe:1900,pesoBobinaFinal:40,cilindro:490},
@@ -1843,13 +1843,11 @@ function dbMaqDia(dia,mq){
   const proc=b[0].proc,J=jornada(),ms=b.map(x=>minOf(x.t)),esHoy=dia===hoyISO(),nowMin=minOf(now());
   const ini=Math.min(J.ini,...ms);let fin=Math.max(J.fin,...ms);if(esHoy)fin=Math.max(Math.min(fin,nowMin),...ms);
   const hrs=Math.max(0,fin-ini)/60,kg=sum(b,x=>x.kg);
-  let pk=0,pw=0;[...new Set(b.map(x=>x.ocId))].forEach(o=>{const ob=objetivo(o,proc)||objCro(dia,mq,o);if(!ob)return;const k=sum(b.filter(x=>x.ocId===o),x=>x.kg)||1;pk+=ob*k;pw+=k});
+  let pk=0,pw=0;[...new Set(b.map(x=>x.ocId))].forEach(o=>{const ob=objetivo(o,proc);if(!ob)return;const k=sum(b.filter(x=>x.ocId===o),x=>x.kg)||1;pk+=ob*k;pw+=k});
   const obj=pw?pk/pw:null,real=hrs?kg/hrs:null,eff=obj&&real?real/obj*100:null;
   const last=b.slice().sort((x,y)=>x.t>y.t?-1:1)[0];
   return{b,proc,kg,hrs,obj,real,eff,ini,fin,last,ops:[...new Set(b.map(x=>x.op).filter(Boolean))],par:sum(DBX.par[dia+'|'+mq]||[],p=>p.min)};
 }
-// kg/h objetivo tomado del cronograma (kg objetivo del día / horas de jornada) cuando el producto no tiene kg/h cargado
-function objCro(dia,mq,ocId){const c=croItems(dia,mq).find(x=>x.ocId===ocId&&x.kgObj);if(!c)return null;const J=jornada();return c.kgObj/Math.max(1,(J.fin-J.ini)/60)}
 // total por proceso en un día (las dos refiladoras juntas)
 function dbProcDia(dia,proc){let kg=0,kgO=0,teo=0,hrs=0,n=0;DB_MQ.filter(m=>m[1]===proc).forEach(([mq])=>{const r=dbMaqDia(dia,mq);if(!r)return;kg+=r.kg;n+=r.b.length;hrs+=r.hrs;if(r.obj){kgO+=r.kg;teo+=r.hrs*r.obj}});return{kg,n,hrs,eff:teo?Math.round(kgO/teo*100):null,kgh:hrs?kg/hrs:null}}
 function dbOcEnMaq(mq,proc,dia){
@@ -1868,8 +1866,7 @@ function dbLive(){
   let prod=0;
   const tiles=DB_MQ.map(([mq,proc])=>{
     const r=dbMaqDia(hoy,mq),kg=r?r.kg:0;const oc=dbOcEnMaq(mq,proc,hoy),o=oc?ocOf(oc.ocId):null;
-    const cro=croItems(hoy,mq).filter(c=>c.ocId),croObj=sum(cro,c=>c.kgObj||0),asig=o&&o.id?cro.find(c=>c.ocId===o.id):null;
-    let obj=r&&r.obj?r.obj:(o&&o.id?(objetivo(o.id,proc)||objCro(hoy,mq,o.id)):null);
+    let obj=r&&r.obj?r.obj:(o&&o.id?objetivo(o.id,proc):null);
     const sinCarga=r?minsAgo(r.last.t):null;
     let est,cls;
     if(fuera){est=r&&nowMin>=J.fin?'Jornada terminada':dow===0?'Domingo':'Fuera de jornada';cls='off'}
@@ -1877,21 +1874,21 @@ function dbLive(){
     else if(sinCarga>90){est='Sin cargas '+agoLbl(r.last.t);cls='warn'}
     else{est='Produciendo';cls='ok';prod++}
     const eff=r&&r.eff!=null?Math.round(r.eff):null,proy=r&&r.real?r.real*H:0;
-    const objDia=croObj||(obj?obj*H:0),pc=objDia?Math.min(100,Math.round(kg/objDia*100)):0,pcEsp=Math.min(100,Math.round(elapsed/H*100));
+    const objDia=obj?obj*H:0,pc=objDia?Math.min(100,Math.round(kg/objDia*100)):0,pcEsp=Math.min(100,Math.round(elapsed/H*100));
     let ocH='';
     if(o&&o.id){const k=ocKgs(o),hecho=proc==='lam'?k.lam:k.fin,av=o.kg?Math.min(100,Math.round(hecho/o.kg*100)):0,falta=Math.max(0,(+o.kg||0)-hecho);
-      const cr=asig?croReal(asig)||0:null,cp=asig&&asig.kgObj?Math.min(100,Math.round(cr/asig.kgObj*100)):0;
-      ocH=`<div class="db-oc" onclick="dbOC('${o.id}')" title="Ver la OC"><small>${asig?'Cronograma de hoy':oc.src}</small><b>${esc(o.cliente||'—')}</b> <span>· OC ${esc(o.nro||'')}${o.desc?' · '+esc(o.desc):''}</span>
-        ${asig?`<div class="db-bar"><div class="db-fill" style="width:${cp}%;background:var(--pd-g)"></div></div>
-        <div class="db-bl" style="margin-top:4px"><span><b>${dbN(cr)}</b>${asig.kgObj?' de '+dbN(asig.kgObj):''} kg hoy</span><span>${asig.kgObj?cp+'% del objetivo':''}</span></div>`:''}
-        <div class="db-bl" style="margin-top:4px;opacity:.8"><span>OC total: ${dbN(hecho)} de ${dbN(o.kg)} kg ${proc==='lam'?'laminados':'refilados'}</span><span>${falta>0?'faltan '+dbN(falta)+' kg':'✓ completa'}</span></div></div>`}
+      const kHoy=r?sum(r.b.filter(x=>x.ocId===o.id),x=>x.kg):0,nHoy=r?r.b.filter(x=>x.ocId===o.id).length:0;
+      ocH=`<div class="db-oc" onclick="dbOC('${o.id}')" title="Ver la OC"><small>${oc.src}</small><b>${esc(o.cliente||'—')}</b> <span>· OC ${esc(o.nro||'')}${o.desc?' · '+esc(o.desc):''}</span>
+        <div class="db-bl" style="margin-top:4px"><span>Producido hoy: <b>${dbN(kHoy)} kg</b> · ${nHoy} bob.</span></div>
+        <div class="db-bar"><div class="db-fill" style="width:${av}%;background:var(--pd-g)"></div></div>
+        <div class="db-bl" style="margin-top:4px"><span>OC total: ${dbN(hecho)} de ${dbN(o.kg)} kg ${proc==='lam'?'laminados':'refilados'}</span><span>${falta>0?'faltan '+dbN(falta)+' kg':'✓ completa'}</span></div></div>`}
     else ocH=`<div class="db-oc" onclick="dbGo('cro')"><small>OC</small><span>Sin OC hoy · tocá para ver el cronograma</span></div>`;
     const prox=croItems(hoy,mq).filter(c=>c.ocId&&(!o||c.ocId!==o.id))[0];
     return`<div class="db-mq ${cls==='off'&&!r?'off':''}">
       <div class="db-mqh"><b>${mq}</b><span class="db-est ${cls}"><i></i>${est}</span></div>
       <div class="db-mqn"><div class="big"><b>${dbN(kg)}</b><span>kg hoy</span></div><div class="ef"><b style="color:${dbEfCol(eff)}">${eff!=null?eff+'%':'—'}</b><span>eficiencia</span></div><div class="ef"><b>${r&&r.real?dbN(r.real):'—'}</b><span>kg/h · obj. ${obj?dbN(obj):'—'}</span></div></div>
-      <div class="db-bar"><div class="db-fill" style="width:${pc}%;background:${dbEfFill(eff)}"></div>${!fuera&&objDia?`<div class="db-mark" style="left:${pcEsp}%" title="lo esperado a esta hora"></div>`:''}</div>
-      <div class="db-bl"><span>${objDia?`objetivo del día ${dbN(objDia)} kg${croObj?' (cronograma)':''}`:'sin objetivo cargado'}</span><span>${proy?(fuera?'ritmo × jornada ':'proyección ')+dbN(proy)+' kg':''}</span></div>
+      <div class="db-bar"><div class="db-fill" style="width:${pc}%;background:${dbEfFill(eff)}"></div>${!fuera&&obj?`<div class="db-mark" style="left:${pcEsp}%" title="lo esperado a esta hora"></div>`:''}</div>
+      <div class="db-bl"><span>${obj?`objetivo del día ${dbN(objDia)} kg`:'sin kg/h objetivo cargado'}</span><span>${proy?(fuera?'ritmo × jornada ':'proyección ')+dbN(proy)+' kg':''}</span></div>
       ${ocH}
       <div class="db-mm">
         <div><span>Última bobina</span><b>${r?fh(r.last.t)+' <small>'+(fuera?esc(r.last.lbl):agoLbl(r.last.t))+'</small>':'—'}</b></div>
