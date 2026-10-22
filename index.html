@@ -993,7 +993,7 @@ html.celu .db-cg{grid-template-columns:1fr}html.celu .db-chw{height:150px}html.c
 
 <script>
 /* ================= ESTADO ================= */
-const VERSION='v0.53';
+const VERSION='v0.54';
 const CATALOGO=[
  {id:'CAT-01',cliente:'Don Yeyo',medida:'321x300',anchoPet:350,espPet:250,anchoPe:370,espPe:50,anchoFinal:321,tiras:1,pesoBobinaPet:92,metrosBobinaPet:762,pesoBobinaPe:26,metrosBobinaPe:1550,pesoBobinaFinal:35,cilindro:340},
  {id:'CAT-02',cliente:'Molinos',medida:'472x235',anchoPet:500,espPet:200,anchoPe:530,espPe:35,anchoFinal:472,tiras:1,pesoBobinaPet:80,metrosBobinaPet:592,pesoBobinaPe:32,metrosBobinaPe:1900,pesoBobinaFinal:40,cilindro:490},
@@ -1799,6 +1799,8 @@ let chivEst={leyendo:false,ult:'',err:''},chivFeed=null;
 try{chivFeed=JSON.parse(localStorage.getItem('wr_chiv_feed')||'null')}catch(e){}
 const chivCod=()=>(S.params&&S.params.chivGist)||'';
 const chivNorm=s=>String(s||'').toLowerCase().replace(/[^a-z0-9]/g,'');
+// clave OP + N° de bobina: el sufijo de la partida (-1T2/-1T3) puede diferir entre etiqueta y app de Chivilcoy
+const chivKey=(partida,nro)=>{const n=String(partida||'').toUpperCase().replace(/[^A-Z0-9]/g,'');return ((n.match(/^\d{4,6}[A-Z]?/)||[n])[0])+'|'+String(nro||'').trim().replace(/^0+/,'');};
 const chivDesde=()=>(S.params&&S.params.chivDesde)||''; // solo lo enviado desde que se conectó (lo anterior ya se manejaba con el Excel)
 const chivEnRango=b=>!chivDesde()||(b.fEnvio||'')>=chivDesde();
 // clase en Lanús: 'termo' | 'lam' | 'dir' | 'ref'
@@ -1827,21 +1829,21 @@ async function chivSync(manual){
     const feed=await chivFeedLeer(cod);chivFeed=feed;try{localStorage.setItem('wr_chiv_feed',JSON.stringify(feed))}catch(e){}
     chivEst.ult=now();chivEst.err='';
     const porId=new Map(S.laminadas.map(l=>[l.id,l]));
-    const ya=new Set(S.laminadas.filter(l=>l.tipo==='PET').map(l=>(l.partida+'|'+(l.nroOrigen||'')).toUpperCase()));
+    const ya=new Set(S.laminadas.filter(l=>l.tipo==='PET').map(l=>chivKey(l.partida,l.nroOrigen)));
     const enFeed=new Set();let n=0,nOC=0,quit=0;const res={};
     for(const b of feed.bobinas){
       const ped=feed.pedidos[b.ped];if(chivClase(ped)!=='ref'||!chivEnRango(b))continue;
       const id='LAM-CHV-'+chivNorm(b.id).toUpperCase();enFeed.add(id);
       if(porId.has(id))continue;
       const partida=String(b.partida||'').toUpperCase().trim(),nroO=String(b.nro||'').trim();
-      if(!partida||!nroO||!(+b.kg)||ya.has((partida+'|'+nroO).toUpperCase()))continue;
+      if(!partida||!nroO||!(+b.kg)||ya.has(chivKey(partida,nroO)))continue;
       const medida=chivMedida(b,ped);
       let oc=chivBuscarOC(ped,medida);if(!oc){oc=chivCrearOC(ped,medida,0);nOC++}
       if(ped.solicitud&&!oc.solicitudChiv){oc.solicitudChiv=ped.solicitud;oc.updatedAt=now()}
       const nro=S.laminadas.filter(l=>l.ocId===oc.id).reduce((m,l)=>Math.max(m,+l.nro||0),0)+1;
       const l={id,ocId:oc.id,tipo:'PET',origen:'Chivilcoy',partida,nroOrigen:nroO,palletChiv:String(b.pallet||''),pedidoChiv:ped.solicitud||'',remitoChiv:b.remito||'',nro,kg:+b.kg,m:0,
         ancho:+b.ancho||+oc.ancho||0,esp:+b.espesor||oc.espPet||0,maq:'Chivilcoy',operario:'Chivilcoy (automático)',obs:'',fechaChiv:b.fEnvio?b.fEnvio.split('-').reverse().join('/'):'',chivId:b.id,estado:'pendiente',createdAt:now(),updatedAt:now()};
-      S.laminadas.push(l);porId.set(id,l);ya.add((partida+'|'+nroO).toUpperCase());n++;res[oc.cliente]=(res[oc.cliente]||0)+1;
+      S.laminadas.push(l);porId.set(id,l);ya.add(chivKey(partida,nroO));n++;res[oc.cliente]=(res[oc.cliente]||0)+1;
     }
     // envíos revertidos en Chivilcoy: solo lo de los últimos 3 días que nadie tocó
     const genOk=feed.generado&&(Date.now()-new Date(feed.generado))<864e5;
@@ -1856,12 +1858,12 @@ async function chivSync(manual){
 // Lo que se ve en vivo del archivo de Chivilcoy: bobinas para laminar (sin laminar todavía) y directas
 function chivVivo(){
   const out={lam:[],dir:[]};if(!chivFeed)return out;
-  const lamUsadas=new Set(S.laminadas.filter(l=>l.tipo!=='PET').map(l=>(String(l.partida||'')+'|'+String(l.nroOrigen||'')).toUpperCase()));
+  const lamUsadas=new Set(S.laminadas.filter(l=>l.tipo!=='PET').map(l=>chivKey(l.partida,l.nroOrigen)));
   const ocsLam=S.ocs.filter(o=>!esPetOC(o));
   for(const b of chivFeed.bobinas){
     const ped=chivFeed.pedidos[b.ped];const c=chivClase(ped);if((c!=='lam'&&c!=='dir')||!chivEnRango(b))continue;
     const partida=String(b.partida||'').toUpperCase().trim(),nro=String(b.nro||'').trim();
-    if(c==='lam'&&lamUsadas.has(partida+'|'+nro))continue;
+    if(c==='lam'&&lamUsadas.has(chivKey(partida,nro)))continue;
     const medida=chivMedida(b,ped);
     let oc=c==='lam'?(ocsLam.find(o=>o.estado==='abierta'&&chivNorm(ped.oc)&&chivNorm(o.nro)===chivNorm(ped.oc))||ocsLam.find(o=>o.estado==='abierta'&&chivNorm(ped.cliente).includes(chivNorm(o.cliente).slice(0,5))&&(!o.espPet||+o.espPet===+(b.espesor||ped.espesor)))):null;
     if(!oc)oc={nro:ped.oc||('pedido '+(ped.solicitud||ped.op||'—')),desc:medida,ancho:b.ancho||ped.ancho,esp:b.espesor||ped.espesor,espPet:b.espesor||ped.espesor,color:ped.color,cliente:ped.cliente,lamina:c==='lam'?'Lamina PET/PE':'Lamina PET',instr:ped.trabajo||''};
