@@ -1799,6 +1799,8 @@ let chivEst={leyendo:false,ult:'',err:''},chivFeed=null;
 try{chivFeed=JSON.parse(localStorage.getItem('wr_chiv_feed')||'null')}catch(e){}
 const chivCod=()=>(S.params&&S.params.chivGist)||'';
 const chivNorm=s=>String(s||'').toLowerCase().replace(/[^a-z0-9]/g,'');
+const chivDesde=()=>(S.params&&S.params.chivDesde)||''; // solo lo enviado desde que se conectó (lo anterior ya se manejaba con el Excel)
+const chivEnRango=b=>!chivDesde()||(b.fEnvio||'')>=chivDesde();
 // clase en Lanús: 'termo' | 'lam' | 'dir' | 'ref'
 function chivClase(ped){if(!ped||ped.clase==='termo')return 'termo';if(ped.clase==='laminado'||esPetPe(ped.cliente))return 'lam';if(esDirecto(ped.cliente))return 'dir';return 'ref'}
 function chivMedida(b,ped){const an=b.ancho||ped.ancho,es=b.espesor||ped.espesor;return an&&es?an+'x'+es:''}
@@ -1828,7 +1830,7 @@ async function chivSync(manual){
     const ya=new Set(S.laminadas.filter(l=>l.tipo==='PET').map(l=>(l.partida+'|'+(l.nroOrigen||'')).toUpperCase()));
     const enFeed=new Set();let n=0,nOC=0,quit=0;const res={};
     for(const b of feed.bobinas){
-      const ped=feed.pedidos[b.ped];if(chivClase(ped)!=='ref')continue;
+      const ped=feed.pedidos[b.ped];if(chivClase(ped)!=='ref'||!chivEnRango(b))continue;
       const id='LAM-CHV-'+chivNorm(b.id).toUpperCase();enFeed.add(id);
       if(porId.has(id))continue;
       const partida=String(b.partida||'').toUpperCase().trim(),nroO=String(b.nro||'').trim();
@@ -1857,7 +1859,7 @@ function chivVivo(){
   const lamUsadas=new Set(S.laminadas.filter(l=>l.tipo!=='PET').map(l=>(String(l.partida||'')+'|'+String(l.nroOrigen||'')).toUpperCase()));
   const ocsLam=S.ocs.filter(o=>!esPetOC(o));
   for(const b of chivFeed.bobinas){
-    const ped=chivFeed.pedidos[b.ped];const c=chivClase(ped);if(c!=='lam'&&c!=='dir')continue;
+    const ped=chivFeed.pedidos[b.ped];const c=chivClase(ped);if((c!=='lam'&&c!=='dir')||!chivEnRango(b))continue;
     const partida=String(b.partida||'').toUpperCase().trim(),nro=String(b.nro||'').trim();
     if(c==='lam'&&lamUsadas.has(partida+'|'+nro))continue;
     const medida=chivMedida(b,ped);
@@ -1872,9 +1874,9 @@ function chivBar(){
   if(!cod){el.innerHTML=`<div class="chivbar off"><div><b>🚚 Recepción automática desde Chivilcoy</b><span>Pegá el código que muestra la app de Chivilcoy en Configuración → "Envíos a Lanús" (una sola vez).</span></div><div class="chivbar-f"><input id="chivCodIn" placeholder="código de Chivilcoy"><button class="btn" onclick="chivGuardar($('chivCodIn').value)">Conectar</button></div></div>`;return}
   const ult=chivEst.ult?fh(chivEst.ult):'';const hoy=hoyISO();
   const hoyN=S.laminadas.filter(l=>l.chivId&&esHoy(l.createdAt)).length;
-  el.innerHTML=`<div class="chivbar ${chivEst.err?'err':''}"><div><b>🚚 Recepción automática desde Chivilcoy</b><span>${chivEst.leyendo?'Buscando envíos…':chivEst.err?'⚠ '+esc(chivEst.err):(ult?'Revisado '+ult:'Esperando la primera lectura')+' · se revisa solo cada 5 min'}${hoyN?` · hoy entraron <b>${hoyN}</b> para refilar`:''}</span></div><div class="chivbar-f"><button class="btn sec" onclick="chivSync(true)">Buscar ahora</button></div></div>`;
+  el.innerHTML=`<div class="chivbar ${chivEst.err?'err':''}"><div><b>🚚 Recepción automática desde Chivilcoy</b><span>${chivEst.leyendo?'Buscando envíos…':chivEst.err?'⚠ '+esc(chivEst.err):(ult?'Revisado '+ult:'Esperando la primera lectura')+' · se revisa solo cada 5 min'}${chivDesde()?' · envíos desde el '+chivDesde().split('-').reverse().join('/'):''}${hoyN?` · hoy entraron <b>${hoyN}</b> para refilar`:''}</span></div><div class="chivbar-f"><button class="btn sec" onclick="chivSync(true)">Buscar ahora</button></div></div>`;
 }
-function chivGuardar(v){const g=chivGid(v);if(!g&&String(v||'').trim())return toast('El código no es válido');S.params={...(S.params||{}),chivGist:g,updatedAt:now()};save();toast(g?'Conectado con Chivilcoy':'Desconectado');chivBar();if(g)chivSync(true)}
+function chivGuardar(v){const g=chivGid(v);if(!g&&String(v||'').trim())return toast('El código no es válido');S.params={...(S.params||{}),chivGist:g,chivDesde:(S.params&&S.params.chivDesde)||hoyISO(),updatedAt:now()};save();toast(g?'Conectado con Chivilcoy':'Desconectado');chivBar();if(g)chivSync(true)}
 // cada 30 s se fija si pasaron 5 min desde el último intento (así arranca apenas alguien entra con su PIN)
 setInterval(()=>{if(document.hidden||!who||!chivCod())return;if(Date.now()-(chivEst.t||0)>5*60000){chivEst.t=Date.now();chivSync(false)}},30000);
 
