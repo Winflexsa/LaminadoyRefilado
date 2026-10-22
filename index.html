@@ -540,6 +540,9 @@ html.celu .db-stk,html.celu .db-kpis,html.celu .db-pk{grid-template-columns:1fr 
 html.celu .db-sum{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}html.celu .db-sum div b{font-size:20px!important}html.celu .db-sum div span{font-size:11px;display:block;line-height:1.25}
 .db-mqh b{white-space:nowrap}
 html.celu .db-cg{grid-template-columns:1fr}html.celu .db-chw{height:150px}html.celu .db-chv{display:none}html.celu .db-sum div b{font-size:26px}
+.chivbar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px 16px;background:#f1f8f3;border:1px solid #cfe5d6;border-radius:12px;padding:10px 14px;margin:10px 0}
+.chivbar span{display:block;color:var(--muted,#6b7a70);font-size:13px;margin-top:2px}.chivbar.off{background:#f7f8f7;border-style:dashed}.chivbar.err{background:#fdf6ee;border-color:#f1dcc0}
+.chivbar-f{display:flex;gap:8px;align-items:center}.chivbar-f input{font-family:monospace;padding:8px 10px;border:1px solid #cfd8d2;border-radius:8px;width:260px;max-width:60vw}
 </style>
 </head>
 <body>
@@ -849,8 +852,9 @@ html.celu .db-cg{grid-template-columns:1fr}html.celu .db-chw{height:150px}html.c
       <div id="stkKpi" class="kpi" style="margin-bottom:6px"></div>
       <p class="muted" id="stkNota" style="margin:6px 0 0"></p>
     </div>
+    <div id="chivBar"></div>
     <div id="stkRecepWrap" style="display:none">
-  <details id="stkRecep" class="recep"><summary>📥 Recibir bobinas PET de Chivilcoy <span class="muted">· Excel de Agustín o carga manual</span></summary>
+  <details id="stkRecep" class="recep"><summary>📥 Recibir bobinas PET a mano <span class="muted">· respaldo: Excel de Agustín o carga manual (normalmente entran solas)</span></summary>
     <div class="card">
       
       <p class="muted" style="margin:0 0 10px">Subí el Excel que manda Agustín, filtrá por cliente o medida, tildá las bobinas que llegaron y asignales la OC. Quedan en <b>Materia prima</b> hasta que se refilan.</p>
@@ -975,6 +979,8 @@ html.celu .db-cg{grid-template-columns:1fr}html.celu .db-chw{height:150px}html.c
     <div class="row"><div class="f" style="flex:3"><label>Lista separada por coma — se ocultan en Recepción PET</label><input id="cfgPP"></div><button class="btn" onclick="ppSave()">Guardar lista</button></div>
     <h3>Clientes directos (la bobina de Chivilcoy va al cliente tal cual, sin refilado ni rebobinado)</h3>
     <div class="row"><div class="f" style="flex:3"><label>Lista separada por coma — se ocultan en Recepción PET</label><input id="cfgDir"></div><button class="btn" onclick="dirSave()">Guardar lista</button></div>
+    <h3>Recepción automática desde Chivilcoy</h3>
+    <div class="row"><div class="f" style="flex:3"><label>Código de envíos (lo muestra la app de Chivilcoy en Configuración → Envíos a Lanús)</label><input id="cfgChiv" placeholder="vacío = desconectado"></div><button class="btn" onclick="chivGuardar($('cfgChiv').value)">Guardar código</button></div>
     <h3>Operarios (PIN)</h3>
     <div id="cfgOps"></div>
     <div class="row"><div class="f"><label>Nombre</label><input id="opNom"></div><div class="f"><label>PIN</label><input id="opPin" inputmode="numeric"></div><div class="f"><label>Acceso</label><select id="opRol"><option value="tablet">Solo tablets</option><option value="admin">Todo</option></select></div><button class="btn sec" onclick="opAdd()">Agregar</button></div>
@@ -987,7 +993,7 @@ html.celu .db-cg{grid-template-columns:1fr}html.celu .db-chw{height:150px}html.c
 
 <script>
 /* ================= ESTADO ================= */
-const VERSION='v0.52';
+const VERSION='v0.53';
 const CATALOGO=[
  {id:'CAT-01',cliente:'Don Yeyo',medida:'321x300',anchoPet:350,espPet:250,anchoPe:370,espPe:50,anchoFinal:321,tiras:1,pesoBobinaPet:92,metrosBobinaPet:762,pesoBobinaPe:26,metrosBobinaPe:1550,pesoBobinaFinal:35,cilindro:340},
  {id:'CAT-02',cliente:'Molinos',medida:'472x235',anchoPet:500,espPet:200,anchoPe:530,espPe:35,anchoFinal:472,tiras:1,pesoBobinaPet:80,metrosBobinaPet:592,pesoBobinaPe:32,metrosBobinaPe:1900,pesoBobinaFinal:40,cilindro:490},
@@ -1121,7 +1127,7 @@ function go(v){
   if(!who&&v!=='login'){v='login'}
   if((v==='pc'||v==='config')&&rol!=='admin'){toast('Solo acceso total');return}
   document.querySelectorAll('.view').forEach(x=>x.classList.remove('active'));
-  if(v==='config'){$('cfgBin').value=cfg.bin||'';$('cfgKey').value=cfg.key||'';$('cfgKeyType').value=cfg.keyType||'master';const p=S.params||{};$('cfgJor').value=p.jornada||'07:00-19:00';$('cfgKhLam').value=p.khLam??'';$('cfgKhRef').value=p.khRef??'';$('cfgT3tab').value=Object.entries(taraTabla()).map(([a,k])=>`${a}=${String(k).replace('.',',')}`).join('; ');$('cfgT6in').value=p.tara6??'';$('cfgTol').value=p.tol??'';$('cfgPP').value=petpeList().join(', ');$('cfgDir').value=dirList().join(', ')}
+  if(v==='config'){if($('cfgChiv'))$('cfgChiv').value=chivCod();$('cfgBin').value=cfg.bin||'';$('cfgKey').value=cfg.key||'';$('cfgKeyType').value=cfg.keyType||'master';const p=S.params||{};$('cfgJor').value=p.jornada||'07:00-19:00';$('cfgKhLam').value=p.khLam??'';$('cfgKhRef').value=p.khRef??'';$('cfgT3tab').value=Object.entries(taraTabla()).map(([a,k])=>`${a}=${String(k).replace('.',',')}`).join('; ');$('cfgT6in').value=p.tara6??'';$('cfgTol').value=p.tol??'';$('cfgPP').value=petpeList().join(', ');$('cfgDir').value=dirList().join(', ')}
   if(v==='login'){$('loginPin').value='';setTimeout(()=>$('loginPin').focus(),50)}
   $('v-'+v).classList.add('active');mode=v;$('modeLbl').textContent={pc:'Administración',lam:'Laminado',lamoc:'Laminado',ref:'Refilado',op:'Refilado',wiz:W.flow==='lam'?'Laminado':'Refilado'}[v]||'';
   document.querySelectorAll('.adminOnly').forEach(x=>x.style.display=rol==='admin'?'':'none');
@@ -1756,6 +1762,122 @@ function renderPet(){
   $('petList').innerHTML=ls.length?`<table><thead><tr><th>Recibida</th><th>Cliente / OC</th><th>Partida</th><th class="n">Nº bob.</th><th class="n">Pallet</th><th>Pedido Chiv.</th><th>Remito</th><th class="n">Kg</th><th class="n">Ancho</th><th class="n">Esp</th><th>Obs.</th><th>Estado</th><th></th></tr></thead><tbody>${ls.map(l=>`<tr><td>${fd(l.createdAt)}</td><td>${ocLbl(ocOf(l.ocId))}</td><td>${l.partida}</td><td class="n">${l.nroOrigen||''}</td><td class="n">${l.palletChiv||''}</td><td>${l.pedidoChiv||''}</td><td>${esc(remDe(l))}</td><td class="n">${fmt(l.kg)}</td><td class="n">${l.ancho||''}</td><td class="n">${l.esp||''}</td><td class="wrap">${obsDe(l)?'⚠️ '+esc(obsDe(l)):''}</td><td>${tagOf(l.estado)}</td><td><button class="btn sec" onclick="lamEdit('${l.id}')">✎</button> <button class="btn sec" onclick="lamDel('${l.id}')">✕</button></td></tr>`).join('')}</tbody></table>`:'<p class="muted">Todavía no se recibieron bobinas PET.</p>';
 }
 
+// ── Envíos de Chivilcoy: lector común (mismo código en Termoformado, Laminado y Refilado y Estado de pedidos) ──
+// La app de PET Chivilcoy publica envios-lanus.json en un Gist. Se lee por la URL "raw" (sin límite de
+// consultas); la primera vez se averigua el dueño del Gist por la API de GitHub y se recuerda en el equipo.
+const CHIV_FILE='envios-lanus.json';
+function chivGid(s){const m=String(s||'').match(/[0-9a-f]{20,40}/i);return m?m[0]:'';}
+async function chivFeedLeer(gidIn){
+  const gid=chivGid(gidIn);if(!gid)throw new Error('falta el código de Chivilcoy');
+  const okFeed=j=>j&&j.v&&Array.isArray(j.bobinas)&&j.pedidos;
+  let owner='';try{owner=localStorage.getItem('chiv_owner_'+gid)||'';}catch(_){}
+  if(owner){
+    try{const r=await fetch(`https://gist.githubusercontent.com/${owner}/${gid}/raw/${CHIV_FILE}?t=${Date.now()}`,{cache:'no-store'});
+      if(r.ok){const j=await r.json();if(okFeed(j))return j;}}catch(_){}
+  }
+  const r=await fetch('https://api.github.com/gists/'+gid,{headers:{'Accept':'application/vnd.github+json'},cache:'no-store'});
+  if(!r.ok)throw new Error('no se pudo leer Chivilcoy (HTTP '+r.status+')');
+  const g=await r.json();const f=g.files&&g.files[CHIV_FILE];if(!f)throw new Error('el código no corresponde a los envíos de Chivilcoy');
+  try{if(g.owner&&g.owner.login)localStorage.setItem('chiv_owner_'+gid,g.owner.login);}catch(_){}
+  let txt=f.content;if(f.truncated||!txt){const rr=await fetch(f.raw_url,{cache:'no-store'});txt=await rr.text();}
+  const j=JSON.parse(txt);if(!okFeed(j))throw new Error('archivo de envíos con formato desconocido');
+  return j;
+}
+
+/* ================= v0.53 · RECEPCIÓN AUTOMÁTICA DESDE CHIVILCOY ================= */
+// Cuando Agustín envía pallets a Lanús, la app de Chivilcoy publica el detalle (envios-lanus.json).
+// Acá se lee cada 5 min y se clasifica cada bobina (las de termoformado no se tocan):
+//   · Para refilar / rebobinar (clientes PET) → entran solas como bobina PET de Chivilcoy en Materia prima,
+//     asignadas a su OC. Si la OC no existe se crea sola con el trabajo que viene del pedido (Jonathan la revisa).
+//   · Para laminar (clientes PET/PE) → se ven en la etapa "PET para laminar" con su OC; salen solas cuando el
+//     laminador carga la laminada con esa partida + N° de bobina.
+//   · Directo al cliente (lista de directos) → se ven en "Directo al cliente": no llevan proceso, solo entregar.
+// No se duplica nada (id fijo por bobina de Chivilcoy + control por partida/N°). Si Agustín revierte un envío
+// de los últimos días y la bobina no se tocó, se saca sola. Lo de laminar y directos se lee en vivo del archivo
+// de Chivilcoy (no se guarda en la nube de esta app).
+let chivEst={leyendo:false,ult:'',err:''},chivFeed=null;
+try{chivFeed=JSON.parse(localStorage.getItem('wr_chiv_feed')||'null')}catch(e){}
+const chivCod=()=>(S.params&&S.params.chivGist)||'';
+const chivNorm=s=>String(s||'').toLowerCase().replace(/[^a-z0-9]/g,'');
+// clase en Lanús: 'termo' | 'lam' | 'dir' | 'ref'
+function chivClase(ped){if(!ped||ped.clase==='termo')return 'termo';if(ped.clase==='laminado'||esPetPe(ped.cliente))return 'lam';if(esDirecto(ped.cliente))return 'dir';return 'ref'}
+function chivMedida(b,ped){const an=b.ancho||ped.ancho,es=b.espesor||ped.espesor;return an&&es?an+'x'+es:''}
+function chivBuscarOC(ped,medida){
+  const ab=S.ocs.filter(o=>o.estado==='abierta');
+  let o=ab.find(o=>o.chivPed===ped.id);if(o)return o;
+  const oc=chivNorm(ped.oc);if(oc){o=ab.find(o=>chivNorm(o.nro)===oc&&chivNorm(ped.cliente).includes(chivNorm(o.cliente).slice(0,5)));if(o)return o}
+  const id=petMatchOC({pedido:ped.solicitud||'',destino:ped.cliente||'',medida});return id?ocOf(id):null;
+}
+function chivCrearOC(ped,medida,kgRec){
+  const id='OC-CHV-'+chivNorm(ped.id).toUpperCase();
+  const ya=S.ocs.find(o=>o.id===id);if(ya)return ya;
+  const [an,es]=String(medida).split(/x/i).map(Number);
+  const cli=S.ocs.find(o=>chivNorm(o.cliente)===chivNorm(ped.cliente))?.cliente||ped.cliente||'?';
+  const o={id,cliente:cli,nro:ped.oc||('CHIV-'+(ped.solicitud||ped.op||'s/n')),desc:medida,ancho:an||0,espPet:es||0,espPe:0,esp:es||0,tiras:1,bxp:0,
+    kxb:ped.cono==='3'&&ped.kgCono3?ped.kgCono3:0,cono:ped.cono==='3'?'3"':'6"',instr:ped.trabajo||'',color:ped.color||'Cristal',trat:'Sin Silicona',lamina:'Lamina PET',
+    solicitudChiv:ped.solicitud||'',chivPed:ped.id,autoChiv:true,cert:false,kg:Math.round(ped.kgPedidos||kgRec||0),fecha:'',estado:'abierta',createdAt:now(),updatedAt:now(),por:'Chivilcoy (automático)',fromChiv:true};
+  S.ocs.push(o);return o;
+}
+async function chivSync(manual){
+  const cod=chivCod();if(!cod||chivEst.leyendo||!who)return;chivEst.t=Date.now();
+  chivEst.leyendo=true;if(manual)chivBar();
+  try{
+    const feed=await chivFeedLeer(cod);chivFeed=feed;try{localStorage.setItem('wr_chiv_feed',JSON.stringify(feed))}catch(e){}
+    chivEst.ult=now();chivEst.err='';
+    const porId=new Map(S.laminadas.map(l=>[l.id,l]));
+    const ya=new Set(S.laminadas.filter(l=>l.tipo==='PET').map(l=>(l.partida+'|'+(l.nroOrigen||'')).toUpperCase()));
+    const enFeed=new Set();let n=0,nOC=0,quit=0;const res={};
+    for(const b of feed.bobinas){
+      const ped=feed.pedidos[b.ped];if(chivClase(ped)!=='ref')continue;
+      const id='LAM-CHV-'+chivNorm(b.id).toUpperCase();enFeed.add(id);
+      if(porId.has(id))continue;
+      const partida=String(b.partida||'').toUpperCase().trim(),nroO=String(b.nro||'').trim();
+      if(!partida||!nroO||!(+b.kg)||ya.has((partida+'|'+nroO).toUpperCase()))continue;
+      const medida=chivMedida(b,ped);
+      let oc=chivBuscarOC(ped,medida);if(!oc){oc=chivCrearOC(ped,medida,0);nOC++}
+      if(ped.solicitud&&!oc.solicitudChiv){oc.solicitudChiv=ped.solicitud;oc.updatedAt=now()}
+      const nro=S.laminadas.filter(l=>l.ocId===oc.id).reduce((m,l)=>Math.max(m,+l.nro||0),0)+1;
+      const l={id,ocId:oc.id,tipo:'PET',origen:'Chivilcoy',partida,nroOrigen:nroO,palletChiv:String(b.pallet||''),pedidoChiv:ped.solicitud||'',remitoChiv:b.remito||'',nro,kg:+b.kg,m:0,
+        ancho:+b.ancho||+oc.ancho||0,esp:+b.espesor||oc.espPet||0,maq:'Chivilcoy',operario:'Chivilcoy (automático)',obs:'',fechaChiv:b.fEnvio?b.fEnvio.split('-').reverse().join('/'):'',chivId:b.id,estado:'pendiente',createdAt:now(),updatedAt:now()};
+      S.laminadas.push(l);porId.set(id,l);ya.add((partida+'|'+nroO).toUpperCase());n++;res[oc.cliente]=(res[oc.cliente]||0)+1;
+    }
+    // envíos revertidos en Chivilcoy: solo lo de los últimos 3 días que nadie tocó
+    const genOk=feed.generado&&(Date.now()-new Date(feed.generado))<864e5;
+    if(genOk&&feed.archivoCargado!==false){
+      const lim=new Date(Date.now()-3*864e5).toISOString();
+      S.laminadas.filter(l=>l.chivId&&!enFeed.has(l.id)&&l.estado==='pendiente'&&(l.createdAt||'')>=lim&&!S.finales.some(f=>f.lamId===l.id)).forEach(l=>{kill('laminadas',l.id);quit++});
+    }
+    if(n||nOC||quit){save();if(n)toast(`🚚 Llegaron de Chivilcoy ${n} bobinas PET para refilar: `+Object.entries(res).map(([c,k])=>c+' '+k).join(' · ')+(nOC?` · ${nOC} OC nueva${nOC>1?'s':''} (revisar el trabajo)`:''))}
+  }catch(e){chivEst.err=e.message||String(e);console.warn('[chivilcoy]',e)}
+  finally{chivEst.leyendo=false;try{if(mode==='pc')renderStock();chivBar()}catch(e){}}
+}
+// Lo que se ve en vivo del archivo de Chivilcoy: bobinas para laminar (sin laminar todavía) y directas
+function chivVivo(){
+  const out={lam:[],dir:[]};if(!chivFeed)return out;
+  const lamUsadas=new Set(S.laminadas.filter(l=>l.tipo!=='PET').map(l=>(String(l.partida||'')+'|'+String(l.nroOrigen||'')).toUpperCase()));
+  const ocsLam=S.ocs.filter(o=>!esPetOC(o));
+  for(const b of chivFeed.bobinas){
+    const ped=chivFeed.pedidos[b.ped];const c=chivClase(ped);if(c!=='lam'&&c!=='dir')continue;
+    const partida=String(b.partida||'').toUpperCase().trim(),nro=String(b.nro||'').trim();
+    if(c==='lam'&&lamUsadas.has(partida+'|'+nro))continue;
+    const medida=chivMedida(b,ped);
+    let oc=c==='lam'?(ocsLam.find(o=>o.estado==='abierta'&&chivNorm(ped.oc)&&chivNorm(o.nro)===chivNorm(ped.oc))||ocsLam.find(o=>o.estado==='abierta'&&chivNorm(ped.cliente).includes(chivNorm(o.cliente).slice(0,5))&&(!o.espPet||+o.espPet===+(b.espesor||ped.espesor)))):null;
+    if(!oc)oc={nro:ped.oc||('pedido '+(ped.solicitud||ped.op||'—')),desc:medida,ancho:b.ancho||ped.ancho,esp:b.espesor||ped.espesor,espPet:b.espesor||ped.espesor,color:ped.color,cliente:ped.cliente,lamina:c==='lam'?'Lamina PET/PE':'Lamina PET',instr:ped.trabajo||''};
+    out[c].push({l:{partida,nroOrigen:nro,palletChiv:b.pallet,kg:+b.kg||0,estado:c==='lam'?'para laminar':'entregar',createdAt:(b.fEnvio||'')+'T12:00:00',remitoChiv:b.remito,chiv:1},oc,kg:+b.kg||0,cli:ped.cliente||oc.cliente||'?',ped});
+  }
+  return out;
+}
+function chivBar(){
+  const el=$('chivBar');if(!el)return;const cod=chivCod();
+  if(!cod){el.innerHTML=`<div class="chivbar off"><div><b>🚚 Recepción automática desde Chivilcoy</b><span>Pegá el código que muestra la app de Chivilcoy en Configuración → "Envíos a Lanús" (una sola vez).</span></div><div class="chivbar-f"><input id="chivCodIn" placeholder="código de Chivilcoy"><button class="btn" onclick="chivGuardar($('chivCodIn').value)">Conectar</button></div></div>`;return}
+  const ult=chivEst.ult?fh(chivEst.ult):'';const hoy=hoyISO();
+  const hoyN=S.laminadas.filter(l=>l.chivId&&esHoy(l.createdAt)).length;
+  el.innerHTML=`<div class="chivbar ${chivEst.err?'err':''}"><div><b>🚚 Recepción automática desde Chivilcoy</b><span>${chivEst.leyendo?'Buscando envíos…':chivEst.err?'⚠ '+esc(chivEst.err):(ult?'Revisado '+ult:'Esperando la primera lectura')+' · se revisa solo cada 5 min'}${hoyN?` · hoy entraron <b>${hoyN}</b> para refilar`:''}</span></div><div class="chivbar-f"><button class="btn sec" onclick="chivSync(true)">Buscar ahora</button></div></div>`;
+}
+function chivGuardar(v){const g=chivGid(v);if(!g&&String(v||'').trim())return toast('El código no es válido');S.params={...(S.params||{}),chivGist:g,updatedAt:now()};save();toast(g?'Conectado con Chivilcoy':'Desconectado');chivBar();if(g)chivSync(true)}
+// cada 30 s se fija si pasaron 5 min desde el último intento (así arranca apenas alguien entra con su PIN)
+setInterval(()=>{if(document.hidden||!who||!chivCod())return;if(Date.now()-(chivEst.t||0)>5*60000){chivEst.t=Date.now();chivSync(false)}},30000);
+
 /* ================= PARÁMETROS ================= */
 const PETPE_DEFAULT=['Don Yeyo','Molinos','MFA','Dantelli','Cadrinorte','La Italiana','El Artesano','Mendia','Smams','Villa D Agri','BarielPack'];
 function petpeList(){return (S.params&&Array.isArray(S.params.petpe))?S.params.petpe:PETPE_DEFAULT}
@@ -2224,7 +2346,7 @@ function paradaEdit(opId,i){const op=S.ops.find(o=>o.id===opId);const p=i>=0?op.
     x=>{Object.assign(p,{mot:x.mot,min:+x.min||0,t:fromLocalIn(x.tL)||p.t,maq:x.maq});if(i<0){op.paradas=op.paradas||[];op.paradas.push(p)}op.updatedAt=now()})}
 /* v0.47 · STOCK por etapas: Terminado · En proceso · Semielaborado · Materia prima (solo kg; sin restos; sin clientes directos) */
 let stkView='fin';
-const STKV={fin:['Terminado','#1e9a4f','Pallets cerrados y bobinas sin pallet, listos para entregar'],proc:['En proceso','#2f6fd0','Pallets que se están armando en refiladora'],semi:['Semielaborado','#c98a00','Bobinas laminadas PET/PE esperando refilado'],mp:['Materia prima','#6d8fd6','Bobinas jumbo PET de Chivilcoy sin refilar']};
+const STKV={fin:['Terminado','#1e9a4f','Pallets cerrados y bobinas sin pallet, listos para entregar'],proc:['En proceso','#2f6fd0','Pallets que se están armando en refiladora'],semi:['Semielaborado','#c98a00','Bobinas laminadas PET/PE esperando refilado'],mp:['Materia prima','#6d8fd6','Bobinas jumbo PET de Chivilcoy sin refilar'],mpl:['PET para laminar','#8b6fd1','Bobinas PET de Chivilcoy para clientes PET/PE, esperando laminado (salen solas al cargar la laminada con su partida y N°)'],dir:['Directo al cliente','#8a8f98','Bobinas de Chivilcoy que se entregan tal cual, sin proceso (llegadas en los últimos 40 días; lo pendiente de entregar se ve en Estado de pedidos)']};
 function stkSet(v){stkView=v;renderStock()}
 function irRecepPET(){const b=[...document.querySelectorAll('#v-pc>.tabs button')].find(x=>(x.getAttribute('onclick')||'').indexOf("pcTab('fin'")===0);if(b)b.click();stkSet('mp');const d=$('stkRecep');if(d){d.open=true;setTimeout(()=>d.scrollIntoView({behavior:'smooth',block:'start'}),50)}}
 function stkLamRest(l){return Math.max(0,(+l.kg||0)-sum(S.finales.filter(f=>f.lamId===l.id),f=>f.kg))}
@@ -2234,19 +2356,20 @@ function stkBase(){
   for(const cli of Object.keys(g))for(const {oc,pallets} of Object.values(g[cli])){if(!okO(oc))continue;for(const pk of Object.keys(pallets)){const fs=pallets[pk].sort((a,b)=>a.nro-b.nro);fin.push({cli,oc,pk,fs,kg:sum(fs,f=>f.kg),kgB:sum(fs,f=>f.kgB||f.kg),ult:fs.map(f=>f.createdAt).sort().slice(-1)[0]})}}
   const proc=S.ocs.filter(okO).map(o=>({o,pk:palArmando(o.id)})).filter(x=>x.pk).map(x=>{const fs=S.finales.filter(f=>f.ocId===x.o.id&&pk$(f)===x.pk&&f.estado==='en stock').sort((a,b)=>a.nro-b.nro),op=opOf(x.o.id);return{cli:x.o.cliente,oc:x.o,pk:x.pk,fs,cap:(op&&op.palletCap)||x.o.bxp||0,kg:sum(fs,f=>f.kg),kgB:sum(fs,f=>f.kgB||f.kg),ult:fs.map(f=>f.createdAt).sort().slice(-1)[0]}}).filter(x=>x.fs.length);
   const bob=tipo=>S.laminadas.filter(l=>l.estado!=='cerrada'&&!l.resto&&(tipo==='PET'?l.tipo==='PET':l.tipo!=='PET')).map(l=>({l,oc:ocOf(l.ocId),kg:stkLamRest(l)})).filter(x=>okO(x.oc)&&x.kg>0).map(x=>({...x,cli:x.oc.cliente}));
-  return{fin,proc,semi:bob('LAM'),mp:bob('PET')};
+  const V=chivVivo();
+  return{fin,proc,semi:bob('LAM'),mp:bob('PET'),mpl:V.lam.filter(x=>okFlujo(x.oc)),dir:V.dir.filter(x=>okFlujo(x.oc))};
 }
 function renderStock(){
   const s=$('qStk').value,B=stkBase();
   const qOk=(r,extra)=>q(s,r.cli+' '+r.oc.nro+' '+(r.oc.desc||'')+' '+(extra||''));
   const kgOf=v=>sum(B[v],r=>r.kg),nOf=v=>v==='fin'||v==='proc'?B[v].length:B[v].length;
-  const pl=n=>n+' pallet'+(n===1?'':'s');const sub={fin:`${pl(B.fin.length)} · ${sum(B.fin,r=>r.fs.length)} bob.`,proc:`${pl(B.proc.length)} · ${sum(B.proc,r=>r.fs.length)} bob.`,semi:`${B.semi.length} bobinas laminadas`,mp:`${B.mp.length} bobinas jumbo`};
+  const pl=n=>n+' pallet'+(n===1?'':'s');const sub={fin:`${pl(B.fin.length)} · ${sum(B.fin,r=>r.fs.length)} bob.`,proc:`${pl(B.proc.length)} · ${sum(B.proc,r=>r.fs.length)} bob.`,semi:`${B.semi.length} bobinas laminadas`,mp:`${B.mp.length} bobinas jumbo`,mpl:`${B.mpl.length} bobinas PET`,dir:`${B.dir.length} bobinas`};
   $('stkTabs').innerHTML=Object.entries(STKV).map(([k,[t,c]])=>`<button class="${k===stkView?'on':''}" style="--c:${c}" onclick="stkSet('${k}')"><span class="t">${t}</span><span class="n">${fmt(kgOf(k))} <small style="font-size:14px">kg</small></span><span class="s">${sub[k]}</span></button>`).join('');
   $('stkTit').textContent='Stock · '+STKV[stkView][0];$('stkSub').textContent=STKV[stkView][2]+'. Por cliente.';
-  $('stkRecepWrap').style.display=stkView==='mp'?'':'none';
-  const tot=Object.keys(STKV).reduce((a,k)=>a+kgOf(k),0);
+  $('stkRecepWrap').style.display=stkView==='mp'?'':'none';chivBar();
+  const tot=Object.keys(STKV).filter(k=>k!=='dir').reduce((a,k)=>a+kgOf(k),0);
   const hoy=Date.now(),dTag=iso=>{const d=Math.floor((hoy-new Date(iso))/864e5);return d>=15?`<span class="tag stk-dias" style="background:#fde3e1;color:var(--bad)">${d} días</span>`:`<span class="muted stk-dias">${d<=0?'hoy':d===1?'1 día':d+' días'}</span>`};
-  const ocTd=o=>`<td><b>${esc(o.nro||'—')}</b> ${flujoTag(o)}${o.fecha?`<br><span class="muted" style="font-size:12px">entrega ${o.fecha.slice(8,10)}/${o.fecha.slice(5,7)}</span>`:''}</td><td>${esc(o.desc||'')}<br><span class="muted" style="font-size:12px">${o.ancho||'?'} mm · ${o.esp||o.espPet||'?'} µ${o.color&&o.color!=='Cristal'?' · '+esc(o.color):''}</span></td>`;
+  const ocTd=o=>`<td><b>${esc(o.nro||'—')}</b> ${flujoTag(o)}${o.autoChiv&&!o.editadoPor?' <span class="tag pend" title="Creada sola con el pedido de Chivilcoy: revisá el trabajo a hacer">auto · revisar</span>':''}${o.instr?`<br><span class="muted" style="font-size:12px">🛠 ${esc(o.instr)}</span>`:''}${o.fecha?`<br><span class="muted" style="font-size:12px">entrega ${o.fecha.slice(8,10)}/${o.fecha.slice(5,7)}</span>`:''}</td><td>${esc(o.desc||'')}<br><span class="muted" style="font-size:12px">${o.ancho||'?'} mm · ${o.esp||o.espPet||'?'} µ${o.color&&o.color!=='Cristal'?' · '+esc(o.color):''}</span></td>`;
   const rango=fs=>{const n=fs.map(f=>f.nro);return n.length>1&&n[n.length-1]-n[0]===n.length-1?`${n[0]} – ${n[n.length-1]}`:n.join(', ')};
   let rows,head,line,kpi;
   if(stkView==='fin'||stkView==='proc'){
@@ -2257,11 +2380,11 @@ function renderStock(){
   }else{
     rows=B[stkView].filter(r=>qOk(r,r.l.partida+' '+(r.l.nroOrigen||'')));
     kpi=`<div><b>${fmt(sum(rows,r=>r.kg))}</b><span>kg</span></div><div><b>${rows.length}</b><span>bobinas</span></div><div><b>${rows.filter(r=>r.l.estado==='en refilado').length}</b><span>en refiladora ahora</span></div><div><b>${[...new Set(rows.map(r=>r.cli))].length}</b><span>clientes</span></div>`;
-    head=`<th>OC</th><th>Medida</th><th>Partida</th><th>Nº bobina</th>${stkView==='mp'?'<th>Pallet Chiv.</th>':''}<th class="n">Kg</th><th>Estado</th><th>Ingresó</th>`;
-    line=r=>{const l=r.l,parcial=r.kg<(+l.kg||0)-0.05;return`<tr>${ocTd(r.oc)}<td><b>${esc(l.partida||'')}</b></td><td>${esc(l.nroOrigen||'L'+l.nro)}</td>${stkView==='mp'?`<td>${esc(l.palletChiv||'')}</td>`:''}<td class="n"><b>${fmt(r.kg)}</b>${parcial?`<br><span class="muted" style="font-size:12px">de ${fmt(l.kg)}</span>`:''}</td><td>${l.estado==='en refilado'?`<span class="tag ref">✂️ en refiladora ${esc(l.refMaq||'')}</span>`:'<span class="tag pend">⏳ para refilar</span>'}</td><td>${fd(l.createdAt)} ${dTag(l.createdAt)}</td></tr>`};
+    head=`<th>OC</th><th>Medida</th><th>Partida</th><th>Nº bobina</th>${stkView!=='semi'?'<th>Pallet Chiv.</th>':''}<th class="n">Kg</th><th>Estado</th><th>Ingresó</th>`;
+    line=r=>{const l=r.l,parcial=r.kg<(+l.kg||0)-0.05;return`<tr>${ocTd(r.oc)}<td><b>${esc(l.partida||'')}</b></td><td>${esc(l.nroOrigen||'L'+l.nro)}</td>${stkView!=='semi'?`<td>${esc(l.palletChiv||'')}</td>`:''}<td class="n"><b>${fmt(r.kg)}</b>${parcial?`<br><span class="muted" style="font-size:12px">de ${fmt(l.kg)}</span>`:''}</td><td>${l.estado==='en refilado'?`<span class="tag ref">✂️ en refiladora ${esc(l.refMaq||'')}</span>`:l.estado==='para laminar'?'<span class="tag pend">🔗 para laminar</span>':l.estado==='entregar'?'<span class="tag rem">📦 entregar tal cual</span>':`<span class="tag pend">⏳ para refilar</span>${l.chivId?' <span class="muted" style="font-size:12px">auto</span>':''}`}</td><td>${fd(l.createdAt)} ${dTag(l.createdAt)}</td></tr>`};
   }
   $('stkKpi').innerHTML=kpi;
-  $('stkNota').innerHTML=`Total del área: <b>${fmt(tot)} kg</b> (MP ${fmt(kgOf('mp'))} · semielaborado ${fmt(kgOf('semi'))} · en proceso ${fmt(kgOf('proc'))} · terminado ${fmt(kgOf('fin'))}). Restos y clientes directos no cuentan.`;
+  $('stkNota').innerHTML=`Total del área: <b>${fmt(tot)} kg</b> (MP ${fmt(kgOf('mp'))} · PET para laminar ${fmt(kgOf('mpl'))} · semielaborado ${fmt(kgOf('semi'))} · en proceso ${fmt(kgOf('proc'))} · terminado ${fmt(kgOf('fin'))}). Restos y directos al cliente (${fmt(kgOf('dir'))} kg) no cuentan.`;
   const byCli={};rows.forEach(r=>{(byCli[r.cli]=byCli[r.cli]||[]).push(r)});
   $('stkRes').innerHTML=Object.keys(byCli).sort().map(cli=>{const R=byCli[cli].sort((a,b)=>((a.oc.fecha||'9')>(b.oc.fecha||'9')?1:-1)||(String(a.oc.nro)>String(b.oc.nro)?1:String(a.oc.nro)<String(b.oc.nro)?-1:0)||((a.l?a.l.createdAt:a.ult||'')>(b.l?b.l.createdAt:b.ult||'')?1:-1));
     return`<div class="card"><div style="display:flex;gap:12px;align-items:baseline;flex-wrap:wrap;margin-bottom:8px"><h2 style="margin:0">${esc(cli)}</h2><span class="muted" style="margin-left:auto"><b>${fmt(sum(R,r=>r.kg))}</b> kg · ${stkView==='fin'||stkView==='proc'?`${pl(R.length)} · ${sum(R,r=>r.fs.length)} bobinas`:`${R.length} bobinas`}</span></div>
