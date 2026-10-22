@@ -998,7 +998,7 @@ html.celu .db-cg{grid-template-columns:1fr}html.celu .db-chw{height:150px}html.c
 
 <script>
 /* ================= ESTADO ================= */
-const VERSION='v0.55';
+const VERSION='v0.56';
 const CATALOGO=[
  {id:'CAT-01',cliente:'Don Yeyo',medida:'321x300',anchoPet:350,espPet:250,anchoPe:370,espPe:50,anchoFinal:321,tiras:1,pesoBobinaPet:92,metrosBobinaPet:762,pesoBobinaPe:26,metrosBobinaPe:1550,pesoBobinaFinal:35,cilindro:340},
  {id:'CAT-02',cliente:'Molinos',medida:'472x235',anchoPet:500,espPet:200,anchoPe:530,espPe:35,anchoFinal:472,tiras:1,pesoBobinaPet:80,metrosBobinaPet:592,pesoBobinaPe:32,metrosBobinaPe:1900,pesoBobinaFinal:40,cilindro:490},
@@ -1857,6 +1857,9 @@ async function chivSync(manual){
         ancho:+b.ancho||+oc.ancho||0,esp:+b.espesor||oc.espPet||0,maq:'Chivilcoy',operario:'Chivilcoy (automático)',obs:'',fechaChiv:b.fEnvio?b.fEnvio.split('-').reverse().join('/'):'',chivId:b.id,estado:'pendiente',createdAt:now(),updatedAt:now()};
       S.laminadas.push(l);porId.set(id,l);ya.add(chivKey(partida,nroO));n++;res[oc.cliente]=(res[oc.cliente]||0)+1;
     }
+    // reclasificadas (ej. cliente pasado a directo, o Bligraf en cono 6"): las cargadas solas que nadie tocó salen de Materia prima
+    const pedDe=new Map(feed.bobinas.map(b=>[b.id,feed.pedidos[b.ped]]));
+    S.laminadas.filter(l=>l.chivId&&l.estado==='pendiente'&&pedDe.has(l.chivId)&&chivClase(pedDe.get(l.chivId))!=='ref'&&!S.finales.some(f=>f.lamId===l.id)).forEach(l=>{kill('laminadas',l.id);quit++});
     // envíos revertidos en Chivilcoy: solo lo de los últimos 3 días que nadie tocó
     const genOk=feed.generado&&(Date.now()-new Date(feed.generado))<864e5;
     if(genOk&&feed.archivoCargado!==false){
