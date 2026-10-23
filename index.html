@@ -1850,7 +1850,7 @@ async function chivSync(manual){
     for(const b of feed.bobinas){
       const ped=feed.pedidos[b.ped];if(chivClase(ped)!=='ref'||!chivEnRango(b))continue;
       const id='LAM-CHV-'+chivNorm(b.id).toUpperCase();enFeed.add(id);
-      if(porId.has(id)||(S.tomb&&S.tomb['laminadas:'+id]))continue;
+      if(porId.has(id)||(S.tomb&&S.tomb['laminadas:'+id])){const ya=porId.get(id);if(ya&&!ya.llega&&b.tEnvio&&ya.estado==='pendiente'){const ll=chivLlega(b.tEnvio);if(ll>now()){ya.llega=ll;ya.tEnvio=b.tEnvio;ya.updatedAt=now();quit++;}}continue;}
       const partida=String(b.partida||'').toUpperCase().trim(),nroO=String(b.nro||'').trim();
       if(!partida||!nroO||!(+b.kg)||ya.has(chivKey(partida,nroO)))continue;
       const medida=chivMedida(b,ped);
