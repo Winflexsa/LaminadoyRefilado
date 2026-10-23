@@ -998,7 +998,7 @@ html.celu .db-cg{grid-template-columns:1fr}html.celu .db-chw{height:150px}html.c
 
 <script>
 /* ================= ESTADO ================= */
-const VERSION='v0.56';
+const VERSION='v0.57';
 const CATALOGO=[
  {id:'CAT-01',cliente:'Don Yeyo',medida:'321x300',anchoPet:350,espPet:250,anchoPe:370,espPe:50,anchoFinal:321,tiras:1,pesoBobinaPet:92,metrosBobinaPet:762,pesoBobinaPe:26,metrosBobinaPe:1550,pesoBobinaFinal:35,cilindro:340},
  {id:'CAT-02',cliente:'Molinos',medida:'472x235',anchoPet:500,espPet:200,anchoPe:530,espPe:35,anchoFinal:472,tiras:1,pesoBobinaPet:80,metrosBobinaPet:592,pesoBobinaPe:32,metrosBobinaPe:1900,pesoBobinaFinal:40,cilindro:490},
@@ -1804,6 +1804,10 @@ let chivEst={leyendo:false,ult:'',err:''},chivFeed=null;
 try{chivFeed=JSON.parse(localStorage.getItem('wr_chiv_feed')||'null')}catch(e){}
 const chivCod=()=>(S.params&&S.params.chivGist)||'';
 const chivNorm=s=>String(s||'').toLowerCase().replace(/[^a-z0-9]/g,'');
+// v0.57: lo que sale de Chivilcoy con remito figura "en camino" 5 h desde que se emite; después entra solo
+const CHIV_CAMINO_H=5;
+const chivLlega=t=>{if(!t)return '';const x=new Date(t).getTime();return isNaN(x)?'':new Date(x+CHIV_CAMINO_H*36e5).toISOString()};
+const enCamino=l=>!!(l&&l.llega&&l.llega>now());
 // clave OP + N° de bobina: el sufijo de la partida (-1T2/-1T3) puede diferir entre etiqueta y app de Chivilcoy
 const chivKey=(partida,nro)=>{const n=String(partida||'').toUpperCase().replace(/[^A-Z0-9]/g,'');return ((n.match(/^\d{4,6}[A-Z]?/)||[n])[0])+'|'+String(nro||'').trim().replace(/^0+/,'');};
 const chivDesde=()=>(S.params&&S.params.chivDesde)||''; // solo lo enviado desde que se conectó (lo anterior ya se manejaba con el Excel)
@@ -1854,7 +1858,7 @@ async function chivSync(manual){
       if(ped.solicitud&&!oc.solicitudChiv){oc.solicitudChiv=ped.solicitud;oc.updatedAt=now()}
       const nro=S.laminadas.filter(l=>l.ocId===oc.id).reduce((m,l)=>Math.max(m,+l.nro||0),0)+1;
       const l={id,ocId:oc.id,tipo:'PET',origen:'Chivilcoy',partida,nroOrigen:nroO,palletChiv:String(b.pallet||''),pedidoChiv:ped.solicitud||'',remitoChiv:b.remito||'',nro,kg:+b.kg,m:0,
-        ancho:+b.ancho||+oc.ancho||0,esp:+b.espesor||oc.espPet||0,maq:'Chivilcoy',operario:'Chivilcoy (automático)',obs:'',fechaChiv:b.fEnvio?b.fEnvio.split('-').reverse().join('/'):'',chivId:b.id,estado:'pendiente',createdAt:now(),updatedAt:now()};
+        ancho:+b.ancho||+oc.ancho||0,esp:+b.espesor||oc.espPet||0,maq:'Chivilcoy',operario:'Chivilcoy (automático)',obs:'',fechaChiv:b.fEnvio?b.fEnvio.split('-').reverse().join('/'):'',chivId:b.id,tEnvio:b.tEnvio||'',llega:chivLlega(b.tEnvio),estado:'pendiente',createdAt:chivLlega(b.tEnvio)||now(),updatedAt:now()};
       S.laminadas.push(l);porId.set(id,l);ya.add(chivKey(partida,nroO));n++;res[oc.cliente]=(res[oc.cliente]||0)+1;
     }
     // reclasificadas (ej. cliente pasado a directo, o Bligraf en cono 6"): las cargadas solas que nadie tocó salen de Materia prima
@@ -1866,7 +1870,7 @@ async function chivSync(manual){
       const lim=new Date(Date.now()-3*864e5).toISOString();
       S.laminadas.filter(l=>l.chivId&&!enFeed.has(l.id)&&l.estado==='pendiente'&&(l.createdAt||'')>=lim&&!S.finales.some(f=>f.lamId===l.id)).forEach(l=>{kill('laminadas',l.id);quit++});
     }
-    if(n||nOC||quit){save();if(n)toast(`🚚 Llegaron de Chivilcoy ${n} bobinas PET para refilar: `+Object.entries(res).map(([c,k])=>c+' '+k).join(' · ')+(nOC?` · ${nOC} OC nueva${nOC>1?'s':''} (revisar el trabajo)`:''))}
+    if(n||nOC||quit){save();if(n)toast(`🚚 En camino desde Chivilcoy ${n} bobinas PET para refilar (entran 5 h después del remito): `+Object.entries(res).map(([c,k])=>c+' '+k).join(' · ')+(nOC?` · ${nOC} OC nueva${nOC>1?'s':''} (revisar el trabajo)`:''))}
   }catch(e){chivEst.err=e.message||String(e);console.warn('[chivilcoy]',e)}
   finally{chivEst.leyendo=false;try{if(mode==='pc')renderStock();chivBar()}catch(e){}}
 }
@@ -1882,7 +1886,7 @@ function chivVivo(){
     const medida=chivMedida(b,ped);
     let oc=c==='lam'?(ocsLam.find(o=>o.estado==='abierta'&&chivNorm(ped.oc)&&chivNorm(o.nro)===chivNorm(ped.oc))||ocsLam.find(o=>o.estado==='abierta'&&chivNorm(ped.cliente).includes(chivNorm(o.cliente).slice(0,5))&&(!o.espPet||+o.espPet===+(b.espesor||ped.espesor)))):null;
     if(!oc)oc={nro:ped.oc||('pedido '+(ped.solicitud||ped.op||'—')),desc:medida,ancho:b.ancho||ped.ancho,esp:b.espesor||ped.espesor,espPet:b.espesor||ped.espesor,color:ped.color,cliente:ped.cliente,lamina:c==='lam'?'Lamina PET/PE':'Lamina PET',instr:ped.trabajo||''};
-    out[c].push({l:{partida,nroOrigen:nro,palletChiv:b.pallet,kg:+b.kg||0,estado:c==='lam'?'para laminar':'entregar',createdAt:(b.fEnvio||'')+'T12:00:00',remitoChiv:b.remito,chiv:1},oc,kg:+b.kg||0,cli:ped.cliente||oc.cliente||'?',ped});
+    out[c].push({l:{partida,nroOrigen:nro,palletChiv:b.pallet,kg:+b.kg||0,estado:c==='lam'?'para laminar':'entregar',createdAt:chivLlega(b.tEnvio)||((b.fEnvio||'')+'T12:00:00'),llega:chivLlega(b.tEnvio),tEnvio:b.tEnvio||'',remitoChiv:b.remito,chiv:1},oc,kg:+b.kg||0,cli:ped.cliente||oc.cliente||'?',ped});
   }
   return out;
 }
@@ -2365,7 +2369,7 @@ function paradaEdit(opId,i){const op=S.ops.find(o=>o.id===opId);const p=i>=0?op.
     x=>{Object.assign(p,{mot:x.mot,min:+x.min||0,t:fromLocalIn(x.tL)||p.t,maq:x.maq});if(i<0){op.paradas=op.paradas||[];op.paradas.push(p)}op.updatedAt=now()})}
 /* v0.47 · STOCK por etapas: Terminado · En proceso · Semielaborado · Materia prima (solo kg; sin restos; sin clientes directos) */
 let stkView='fin';
-const STKV={fin:['Terminado','#1e9a4f','Pallets cerrados y bobinas sin pallet, listos para entregar'],proc:['En proceso','#2f6fd0','Pallets que se están armando en refiladora'],semi:['Semielaborado','#c98a00','Bobinas laminadas PET/PE esperando refilado'],mp:['Materia prima','#6d8fd6','Bobinas jumbo PET de Chivilcoy sin refilar'],mpl:['PET para laminar','#8b6fd1','Bobinas PET de Chivilcoy para clientes PET/PE, esperando laminado (salen solas al cargar la laminada con su partida y N°)'],dir:['Directo al cliente','#8a8f98','Bobinas de Chivilcoy que se entregan tal cual, sin proceso (llegadas en los últimos 40 días; lo pendiente de entregar se ve en Estado de pedidos)']};
+const STKV={fin:['Terminado','#1e9a4f','Pallets cerrados y bobinas sin pallet, listos para entregar'],proc:['En proceso','#2f6fd0','Pallets que se están armando en refiladora'],semi:['Semielaborado','#c98a00','Bobinas laminadas PET/PE esperando refilado'],mp:['Materia prima','#6d8fd6','Bobinas jumbo PET de Chivilcoy sin refilar'],mpl:['PET para laminar','#8b6fd1','Bobinas PET de Chivilcoy para clientes PET/PE, esperando laminado (salen solas al cargar la laminada con su partida y N°)'],dir:['Directo al cliente','#8a8f98','Bobinas de Chivilcoy que se entregan tal cual, sin proceso (llegadas en los últimos 40 días; lo pendiente de entregar se ve en Estado de pedidos)'],cam:['En camino','#5b7fa8','Bobinas que Chivilcoy remitió a Lanús: figuran en camino 5 h desde el remito y después pasan solas a su etapa']};
 function stkSet(v){stkView=v;renderStock()}
 function irRecepPET(){const b=[...document.querySelectorAll('#v-pc>.tabs button')].find(x=>(x.getAttribute('onclick')||'').indexOf("pcTab('fin'")===0);if(b)b.click();stkSet('mp');const d=$('stkRecep');if(d){d.open=true;setTimeout(()=>d.scrollIntoView({behavior:'smooth',block:'start'}),50)}}
 function stkLamRest(l){return Math.max(0,(+l.kg||0)-sum(S.finales.filter(f=>f.lamId===l.id),f=>f.kg))}
@@ -2374,19 +2378,21 @@ function stkBase(){
   const g=palGroups(),fin=[];
   for(const cli of Object.keys(g))for(const {oc,pallets} of Object.values(g[cli])){if(!okO(oc))continue;for(const pk of Object.keys(pallets)){const fs=pallets[pk].sort((a,b)=>a.nro-b.nro);fin.push({cli,oc,pk,fs,kg:sum(fs,f=>f.kg),kgB:sum(fs,f=>f.kgB||f.kg),ult:fs.map(f=>f.createdAt).sort().slice(-1)[0]})}}
   const proc=S.ocs.filter(okO).map(o=>({o,pk:palArmando(o.id)})).filter(x=>x.pk).map(x=>{const fs=S.finales.filter(f=>f.ocId===x.o.id&&pk$(f)===x.pk&&f.estado==='en stock').sort((a,b)=>a.nro-b.nro),op=opOf(x.o.id);return{cli:x.o.cliente,oc:x.o,pk:x.pk,fs,cap:(op&&op.palletCap)||x.o.bxp||0,kg:sum(fs,f=>f.kg),kgB:sum(fs,f=>f.kgB||f.kg),ult:fs.map(f=>f.createdAt).sort().slice(-1)[0]}}).filter(x=>x.fs.length);
-  const bob=tipo=>S.laminadas.filter(l=>l.estado!=='cerrada'&&!l.resto&&(tipo==='PET'?l.tipo==='PET':l.tipo!=='PET')).map(l=>({l,oc:ocOf(l.ocId),kg:stkLamRest(l)})).filter(x=>okO(x.oc)&&x.kg>0).map(x=>({...x,cli:x.oc.cliente}));
+  const bob=tipo=>S.laminadas.filter(l=>l.estado!=='cerrada'&&!l.resto&&!(tipo==='PET'&&enCamino(l)&&l.estado==='pendiente')&&(tipo==='PET'?l.tipo==='PET':l.tipo!=='PET')).map(l=>({l,oc:ocOf(l.ocId),kg:stkLamRest(l)})).filter(x=>okO(x.oc)&&x.kg>0).map(x=>({...x,cli:x.oc.cliente}));
   const V=chivVivo();
-  return{fin,proc,semi:bob('LAM'),mp:bob('PET'),mpl:V.lam.filter(x=>okFlujo(x.oc)),dir:V.dir.filter(x=>okFlujo(x.oc))};
+  const camRef=S.laminadas.filter(l=>l.tipo==='PET'&&l.estado==='pendiente'&&enCamino(l)).map(l=>({l,oc:ocOf(l.ocId),kg:+l.kg||0})).filter(x=>okO(x.oc)).map(x=>({...x,cli:x.oc.cliente}));
+  const vok=x=>okFlujo(x.oc);
+  return{fin,proc,semi:bob('LAM'),mp:bob('PET'),mpl:V.lam.filter(x=>vok(x)&&!enCamino(x.l)),dir:V.dir.filter(x=>vok(x)&&!enCamino(x.l)),cam:camRef.concat(V.lam.filter(x=>vok(x)&&enCamino(x.l)),V.dir.filter(x=>vok(x)&&enCamino(x.l)))};
 }
 function renderStock(){
   const s=$('qStk').value,B=stkBase();
   const qOk=(r,extra)=>q(s,r.cli+' '+r.oc.nro+' '+(r.oc.desc||'')+' '+(extra||''));
   const kgOf=v=>sum(B[v],r=>r.kg),nOf=v=>v==='fin'||v==='proc'?B[v].length:B[v].length;
-  const pl=n=>n+' pallet'+(n===1?'':'s');const sub={fin:`${pl(B.fin.length)} · ${sum(B.fin,r=>r.fs.length)} bob.`,proc:`${pl(B.proc.length)} · ${sum(B.proc,r=>r.fs.length)} bob.`,semi:`${B.semi.length} bobinas laminadas`,mp:`${B.mp.length} bobinas jumbo`,mpl:`${B.mpl.length} bobinas PET`,dir:`${B.dir.length} bobinas`};
+  const pl=n=>n+' pallet'+(n===1?'':'s');const sub={fin:`${pl(B.fin.length)} · ${sum(B.fin,r=>r.fs.length)} bob.`,proc:`${pl(B.proc.length)} · ${sum(B.proc,r=>r.fs.length)} bob.`,semi:`${B.semi.length} bobinas laminadas`,mp:`${B.mp.length} bobinas jumbo`,mpl:`${B.mpl.length} bobinas PET`,dir:`${B.dir.length} bobinas`,cam:`${B.cam.length} bobinas`};
   $('stkTabs').innerHTML=Object.entries(STKV).map(([k,[t,c]])=>`<button class="${k===stkView?'on':''}" style="--c:${c}" onclick="stkSet('${k}')"><span class="t">${t}</span><span class="n">${fmt(kgOf(k))} <small style="font-size:14px">kg</small></span><span class="s">${sub[k]}</span></button>`).join('');
   $('stkTit').textContent='Stock · '+STKV[stkView][0];$('stkSub').textContent=STKV[stkView][2]+'. Por cliente.';
   $('stkRecepWrap').style.display=stkView==='mp'?'':'none';chivBar();
-  const tot=Object.keys(STKV).filter(k=>k!=='dir').reduce((a,k)=>a+kgOf(k),0);
+  const tot=Object.keys(STKV).filter(k=>k!=='dir'&&k!=='cam').reduce((a,k)=>a+kgOf(k),0);
   const hoy=Date.now(),dTag=iso=>{const d=Math.floor((hoy-new Date(iso))/864e5);return d>=15?`<span class="tag stk-dias" style="background:#fde3e1;color:var(--bad)">${d} días</span>`:`<span class="muted stk-dias">${d<=0?'hoy':d===1?'1 día':d+' días'}</span>`};
   const ocTd=o=>`<td><b>${esc(o.nro||'—')}</b> ${flujoTag(o)}${o.autoChiv&&!o.editadoPor?' <span class="tag pend" title="Creada sola con el pedido de Chivilcoy: revisá el trabajo a hacer">auto · revisar</span>':''}${o.instr?`<br><span class="muted" style="font-size:12px">🛠 ${esc(o.instr)}</span>`:''}${o.fecha?`<br><span class="muted" style="font-size:12px">entrega ${o.fecha.slice(8,10)}/${o.fecha.slice(5,7)}</span>`:''}</td><td>${esc(o.desc||'')}<br><span class="muted" style="font-size:12px">${o.ancho||'?'} mm · ${o.esp||o.espPet||'?'} µ${o.color&&o.color!=='Cristal'?' · '+esc(o.color):''}</span></td>`;
   const rango=fs=>{const n=fs.map(f=>f.nro);return n.length>1&&n[n.length-1]-n[0]===n.length-1?`${n[0]} – ${n[n.length-1]}`:n.join(', ')};
@@ -2405,15 +2411,16 @@ function renderStock(){
   $('stkKpi').innerHTML=kpi;
   $('stkNota').innerHTML=`Total del área: <b>${fmt(tot)} kg</b> (MP ${fmt(kgOf('mp'))} · PET para laminar ${fmt(kgOf('mpl'))} · semielaborado ${fmt(kgOf('semi'))} · en proceso ${fmt(kgOf('proc'))} · terminado ${fmt(kgOf('fin'))}). Restos y directos al cliente (${fmt(kgOf('dir'))} kg) no cuentan.`;
   const byCli={};rows.forEach(r=>{(byCli[r.cli]=byCli[r.cli]||[]).push(r)});
-  if(stkView==='dir'||stkView==='mpl'){ // v0.55: tarjeta por cliente (cerrada) → OC desplegable → detalle de bobinas
+  if(stkView==='dir'||stkView==='mpl'||stkView==='cam'){ // v0.55: tarjeta por cliente (cerrada) → OC desplegable → detalle de bobinas
     const pals=R=>[...new Set(R.map(r=>r.l.palletChiv).filter(Boolean))];
-    const dias=R=>{const f=R.map(r=>r.l.createdAt).sort()[0];return f?dTag(f):''};
+    const dias=R=>{if(stkView==='cam'){const f=R.map(r=>r.l.llega).filter(Boolean).sort()[0];return f?'llega ~'+fh(f)+(esHoy(f)?'':' del '+fd(f)):''}const f=R.map(r=>r.l.createdAt).sort()[0];return f?'llegó '+dTag(f):''};
+    const destino=r=>stkView!=='cam'?'':r.l.estado==='para laminar'?'🔗 para laminar':r.l.estado==='entregar'?'📦 directo al cliente':'✂️ para refilar';
     $('stkRes').innerHTML=Object.keys(byCli).sort().map(cli=>{const R=byCli[cli];const kgC=sum(R,r=>r.kg);
       const porOC={};R.forEach(r=>{const k=(r.oc.nro||'—')+'§'+(r.oc.desc||'');(porOC[k]=porOC[k]||[]).push(r)});
       const ocs=Object.values(porOC).sort((a,b)=>String(a[0].oc.nro).localeCompare(String(b[0].oc.nro),undefined,{numeric:true}));
       return`<details class="card stkd"><summary><div class="stkd-h"><h2>${esc(cli)}</h2><span class="muted">${ocs.length} OC · ${pl(pals(R).length)} · ${R.length} bobinas</span><b class="stkd-k">${fmt(kgC)} kg</b><span class="stkd-ch">⌄</span></div></summary>
-        ${ocs.map(G=>{const o=G[0].oc;const ps=pals(G);return`<details class="stkd-oc"><summary><span><b>OC ${esc(o.nro||'—')}</b> · ${esc(o.desc||'')}${o.instr?` <span class="muted">· 🛠 ${esc(o.instr)}</span>`:''}</span><span class="muted">${ps.length?'pallets '+esc(ps.join(', '))+' · ':''}${G.length} bob. · llegó ${dias(G)}</span><b>${fmt(sum(G,r=>r.kg))} kg</b></summary>
-          <div style="overflow-x:auto"><table><thead><tr><th>Pallet Chiv.</th><th>Partida</th><th>Nº bobina</th><th class="n">Kg</th><th>Remito</th><th>Llegó</th></tr></thead><tbody>${G.sort((a,b)=>String(a.l.palletChiv).localeCompare(String(b.l.palletChiv),undefined,{numeric:true})||(+a.l.nroOrigen-+b.l.nroOrigen)).map(r=>`<tr><td>${esc(r.l.palletChiv||'')}</td><td>${esc(r.l.partida)}</td><td>${esc(r.l.nroOrigen)}</td><td class="n">${fmt(r.kg)}</td><td>${esc(r.l.remitoChiv||'')}</td><td>${fd(r.l.createdAt)}</td></tr>`).join('')}</tbody></table></div></details>`}).join('')}</details>`}).join('')||`<div class="card"><p class="muted" style="font-size:15px;margin:0">No hay stock en esta etapa${s||flujoF?' con ese filtro':''}.</p></div>`;
+        ${ocs.map(G=>{const o=G[0].oc;const ps=pals(G);return`<details class="stkd-oc"><summary><span><b>OC ${esc(o.nro||'—')}</b> · ${esc(o.desc||'')}${o.instr?` <span class="muted">· 🛠 ${esc(o.instr)}</span>`:''}</span><span class="muted">${ps.length?'pallets '+esc(ps.join(', '))+' · ':''}${G.length} bob. · ${dias(G)}${stkView==='cam'?' · '+[...new Set(G.map(destino))].join(' / '):''}</span><b>${fmt(sum(G,r=>r.kg))} kg</b></summary>
+          <div style="overflow-x:auto"><table><thead><tr><th>Pallet Chiv.</th><th>Partida</th><th>Nº bobina</th><th class="n">Kg</th><th>Remito</th><th>${stkView==='cam'?'Llega':'Llegó'}</th></tr></thead><tbody>${G.sort((a,b)=>String(a.l.palletChiv).localeCompare(String(b.l.palletChiv),undefined,{numeric:true})||(+a.l.nroOrigen-+b.l.nroOrigen)).map(r=>`<tr><td>${esc(r.l.palletChiv||'')}</td><td>${esc(r.l.partida)}</td><td>${esc(r.l.nroOrigen)}</td><td class="n">${fmt(r.kg)}</td><td>${esc(r.l.remitoChiv||'')}</td><td>${stkView==='cam'&&r.l.llega?'~'+fh(r.l.llega)+' '+fd(r.l.llega):fd(r.l.createdAt)}</td></tr>`).join('')}</tbody></table></div></details>`}).join('')}</details>`}).join('')||`<div class="card"><p class="muted" style="font-size:15px;margin:0">No hay stock en esta etapa${s||flujoF?' con ese filtro':''}.</p></div>`;
     return;
   }
   $('stkRes').innerHTML=Object.keys(byCli).sort().map(cli=>{const R=byCli[cli].sort((a,b)=>((a.oc.fecha||'9')>(b.oc.fecha||'9')?1:-1)||(String(a.oc.nro)>String(b.oc.nro)?1:String(a.oc.nro)<String(b.oc.nro)?-1:0)||((a.l?a.l.createdAt:a.ult||'')>(b.l?b.l.createdAt:b.ult||'')?1:-1));
