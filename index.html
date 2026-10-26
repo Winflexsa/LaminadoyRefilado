@@ -998,7 +998,7 @@ html.celu .db-cg{grid-template-columns:1fr}html.celu .db-chw{height:150px}html.c
 
 <script>
 /* ================= ESTADO ================= */
-const VERSION='v0.57';
+const VERSION='v0.58';
 const CATALOGO=[
  {id:'CAT-01',cliente:'Don Yeyo',medida:'321x300',anchoPet:350,espPet:250,anchoPe:370,espPe:50,anchoFinal:321,tiras:1,pesoBobinaPet:92,metrosBobinaPet:762,pesoBobinaPe:26,metrosBobinaPe:1550,pesoBobinaFinal:35,cilindro:340},
  {id:'CAT-02',cliente:'Molinos',medida:'472x235',anchoPet:500,espPet:200,anchoPe:530,espPe:35,anchoFinal:472,tiras:1,pesoBobinaPet:80,metrosBobinaPet:592,pesoBobinaPe:32,metrosBobinaPe:1900,pesoBobinaFinal:40,cilindro:490},
@@ -1298,6 +1298,9 @@ function edSave(){
 }
 const isAdmin=()=>rol==='admin';
 function kill(k,id){const key=k==='operarios'?'pin':'id';S.tomb=S.tomb||{};S.tomb[k+':'+id]=now();S[k]=S[k].filter(x=>x[key]!==id)}
+// baja automática (la hace la sincronización con Chivilcoy, no una persona): queda marcada '~auto'
+// para que, si la bobina vuelve a corresponder (ej. corrigieron el pedido en Chivilcoy), entre de nuevo sola
+function killAuto(k,id){kill(k,id);S.tomb[k+':'+id]+='~auto'}
 
 /* ================= OC ================= */
 function prodLbl(p){return `${p.cliente} · ${p.medida} (${p.anchoFinal} mm · ${p.espPet}+${p.espPe} µ)`}
@@ -1850,7 +1853,8 @@ async function chivSync(manual){
     for(const b of feed.bobinas){
       const ped=feed.pedidos[b.ped];if(chivClase(ped)!=='ref'||!chivEnRango(b))continue;
       const id='LAM-CHV-'+chivNorm(b.id).toUpperCase();enFeed.add(id);
-      if(porId.has(id)||(S.tomb&&S.tomb['laminadas:'+id])){const ya=porId.get(id);if(ya&&!ya.llega&&b.tEnvio&&ya.estado==='pendiente'){const ll=chivLlega(b.tEnvio);if(ll>now()){ya.llega=ll;ya.tEnvio=b.tEnvio;ya.updatedAt=now();quit++;}}continue;}
+      const _t=S.tomb&&S.tomb['laminadas:'+id];
+      if(porId.has(id)||(_t&&!String(_t).endsWith('~auto'))){const ya=porId.get(id);if(ya&&!ya.llega&&b.tEnvio&&ya.estado==='pendiente'){const ll=chivLlega(b.tEnvio);if(ll>now()){ya.llega=ll;ya.tEnvio=b.tEnvio;ya.updatedAt=now();quit++;}}continue;}
       const partida=String(b.partida||'').toUpperCase().trim(),nroO=String(b.nro||'').trim();
       if(!partida||!nroO||!(+b.kg)||ya.has(chivKey(partida,nroO)))continue;
       const medida=chivMedida(b,ped);
@@ -1863,12 +1867,12 @@ async function chivSync(manual){
     }
     // reclasificadas (ej. cliente pasado a directo, o Bligraf en cono 6"): las cargadas solas que nadie tocó salen de Materia prima
     const pedDe=new Map(feed.bobinas.map(b=>[b.id,feed.pedidos[b.ped]]));
-    S.laminadas.filter(l=>l.chivId&&l.estado==='pendiente'&&pedDe.has(l.chivId)&&chivClase(pedDe.get(l.chivId))!=='ref'&&!S.finales.some(f=>f.lamId===l.id)).forEach(l=>{kill('laminadas',l.id);quit++});
+    S.laminadas.filter(l=>l.chivId&&l.estado==='pendiente'&&pedDe.has(l.chivId)&&chivClase(pedDe.get(l.chivId))!=='ref'&&!S.finales.some(f=>f.lamId===l.id)).forEach(l=>{killAuto('laminadas',l.id);quit++});
     // envíos revertidos en Chivilcoy: solo lo de los últimos 3 días que nadie tocó
     const genOk=feed.generado&&(Date.now()-new Date(feed.generado))<864e5;
     if(genOk&&feed.archivoCargado!==false){
       const lim=new Date(Date.now()-3*864e5).toISOString();
-      S.laminadas.filter(l=>l.chivId&&!enFeed.has(l.id)&&l.estado==='pendiente'&&(l.createdAt||'')>=lim&&!S.finales.some(f=>f.lamId===l.id)).forEach(l=>{kill('laminadas',l.id);quit++});
+      S.laminadas.filter(l=>l.chivId&&!enFeed.has(l.id)&&l.estado==='pendiente'&&(l.createdAt||'')>=lim&&!S.finales.some(f=>f.lamId===l.id)).forEach(l=>{killAuto('laminadas',l.id);quit++});
     }
     if(n||nOC||quit){save();if(n)toast(`🚚 En camino desde Chivilcoy ${n} bobinas PET para refilar (entran 5 h después del remito): `+Object.entries(res).map(([c,k])=>c+' '+k).join(' · ')+(nOC?` · ${nOC} OC nueva${nOC>1?'s':''} (revisar el trabajo)`:''))}
   }catch(e){chivEst.err=e.message||String(e);console.warn('[chivilcoy]',e)}
