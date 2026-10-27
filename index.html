@@ -2607,10 +2607,14 @@ function paradaEdit(opId,i){const op=S.ops.find(o=>o.id===opId);const p=i>=0?op.
     x=>{Object.assign(p,{mot:x.mot,min:+x.min||0,t:fromLocalIn(x.tL)||p.t,maq:x.maq});if(i<0){op.paradas=op.paradas||[];op.paradas.push(p)}op.updatedAt=now()})}
 /* ================= v0.60 · LAMINADO (Administración) ================= */
 let laView='oc';const laOpen=new Set();
-const LAV={oc:['OC en laminado','#2b7fa8','Avance de cada OC de laminado: kg laminados contra pedidos, lo que falta y el PET de Chivilcoy disponible para seguir'],pet:['PET para laminar','#8b6fd1','Bobinas PET de Chivilcoy en Lanús para clientes PET/PE, esperando laminado (salen solas cuando el laminador carga la laminada con su partida y N°)'],bob:['Bobinas laminadas','#1e9a4f','Cada bobina que salió de la laminadora, por día: peso contra el de referencia del catálogo, defectos y observaciones'],cal:['Calidad','#a3271f','Defectos marcados por el laminador y pesos fuera de lo normal, por tipo, partida y operario']};
+const LAV={oc:['OC en laminado','#2b7fa8','Avance de cada OC de laminado: kg laminados contra pedidos, lo que falta y el PET de Chivilcoy disponible para seguir'],pet:['PET para laminar','#8b6fd1','Bobinas PET de Chivilcoy en Lanús para clientes PET/PE, esperando laminado (salen solas cuando el laminador carga la laminada con su partida y N°)'],bob:['Bobinas laminadas','#1e9a4f','Cada bobina que salió de la laminadora, por día: peso contra lo normal de ese producto (mediana de las últimas laminadas), defectos y observaciones'],cal:['Calidad','#a3271f','Defectos marcados por el laminador y pesos fuera de lo normal, por tipo, partida y operario']};
 function laSet(v){laView=v;renderLamAdm()}
 const laLams=()=>S.laminadas.filter(l=>l.tipo!=='PET'&&l.resto!==true);
-function laRef(l){const o=ocOf(l.ocId),p=S.catalogo.find(x=>x.id===o.prodId),r=refLam(p);if(!r||!l.kg)return null;return{r,d:(l.kg-r)/r*100}}
+// referencia de peso: lo normal real de ese producto (mediana de las últimas 30 laminadas del mismo producto/OC); si hay pocas, la del catálogo
+const _laMed={};function laMediana(o){const k=o.prodId||o.id;if(_laMed[k]&&_laMed[k].t>Date.now()-30000)return _laMed[k].v;
+  const ks=laLams().filter(l=>{const x=ocOf(l.ocId);return (o.prodId?x.prodId===o.prodId:x.id===o.id)&&+l.kg>0}).sort((a,b)=>(b.createdAt||'')>(a.createdAt||'')?1:-1).slice(0,30).map(l=>+l.kg).sort((a,b)=>a-b);
+  const v=ks.length>=5?ks[Math.floor(ks.length/2)]:null;_laMed[k]={t:Date.now(),v};return v}
+function laRef(l){const o=ocOf(l.ocId);if(!l.kg)return null;const m=laMediana(o),p=S.catalogo.find(x=>x.id===o.prodId),r=m||refLam(p);if(!r)return null;return{r,d:(l.kg-r)/r*100,real:!!m}}
 function laDefs(l){return obsParse(obsDe(l))}
 function laRango(){if(!$('laHasta').value)$('laHasta').value=hoyISO();if(!$('laDesde').value){const d=new Date();d.setDate(d.getDate()-6);$('laDesde').value=dKey(d)}return[$('laDesde').value,$('laHasta').value]}
 async function lamCompletarAdm(ocId){const oc=ocOf(ocId),k=ocKgs(oc);if(!await confirmUI(`¿Dar por <b>completo el laminado</b> de ${esc(ocLbl(oc))}? Van ${fmt(k.lam)} de ${fmt(oc.kg)} kg. Deja de aparecer en la tablet del laminador (el refilado sigue).`,'Dar por completo','Cancelar'))return;oc.lamCompleto=true;oc.lamCompletoAt=now();oc.lamCompletoPor=who;oc.updatedAt=now();save()}
