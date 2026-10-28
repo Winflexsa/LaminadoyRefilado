@@ -1409,7 +1409,7 @@ function wizLamSave(){const d=W.d,oc=ocOf(d.ocId);const nro=S.laminadas.filter(l
   const k=ocKgs(oc);if(oc.kg&&k.lam>=oc.kg&&!oc.lamCompleto){confirmUI(`Ya laminaste <b>${fmt(k.lam)} kg</b> de los <b>${fmt(oc.kg)}</b> pedidos. ¿Dar el laminado de esta OC por completo?`).then(ok=>{if(ok){oc.lamCompleto=true;oc.lamCompletoAt=now();oc.updatedAt=now();save();wizGo('oc')}else wizGo('nro')});return}
   wizGo('nro')}
 // ---- v0.67 · laminado + refilado en línea ----
-function wizLineaStart(ocId){W.flow='ref';W.d={maq:'Laminadora'};wizRefOC(ocId)}
+function wizLineaStart(ocId){W.flow='ref';W.d={maq:'Laminadora',ocId};W.step='pallet';wizRefOC(ocId)} // step antes de abrir la OP: el render del guardado no tiene que volver a la lista
 function lineaCrear(partida,nro,extra){const d=W.d,oc=ocOf(d.ocId);partida=String(partida||'').toUpperCase().trim();nro=String(nro||'').trim();
   if(!partida||!nro)return toast('Falta partida o nº');
   const ya=S.laminadas.find(l=>l.tipo!=='PET'&&mismaBob(l,partida,nro));if(ya){if(esLinea(ya)&&ya.ocId===oc.id&&ya.estado!=='cerrada')return wizRefLam(ya.id);return toast(`La bobina ${partida} nº ${nro} ya está cargada (${ocLbl(ocOf(ya.ocId))})`)}
