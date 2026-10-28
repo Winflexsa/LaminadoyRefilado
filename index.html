@@ -1154,7 +1154,7 @@ let lastCount=null;function novedades(){const c=S.laminadas.length+S.finales.len
 // v0.66: la OP se une campo por campo: el pallet de cada máquina por su propia hora y las paradas de las dos (antes ganaba la OP entera y una tablet pisaba el pallet de la otra)
 function mergeOp(a,b){const w=(b.updatedAt||'')>(a.updatedAt||'')?b:a,o={...w};
   if(a.pals||b.pals){const P={};for(const src of [a.pals||{},b.pals||{}])for(const [m,p] of Object.entries(src)){if(!P[m]||(p.t||'')>(P[m].t||''))P[m]=p}o.pals=P}
-  const pk=p=>(p.t||'')+'|'+(p.maq||'')+'|'+(p.mot||'');const pm=new Map();[...(a.paradas||[]),...(b.paradas||[])].forEach(p=>{const k=pk(p);if(!pm.has(k)||(p.e||'')>(pm.get(k).e||''))pm.set(k,p)});
+  const pk=p=>p.id||((p.t||'')+'|'+(p.maq||'')+'|'+(p.mot||'')); // v0.66: cada parada con id propioconst pm=new Map();[...(a.paradas||[]),...(b.paradas||[])].forEach(p=>{const k=pk(p);if(!pm.has(k)||(p.e||'')>(pm.get(k).e||''))pm.set(k,p)});
   const borr=new Set([...(a.parBorr||[]),...(b.parBorr||[])]);o.parBorr=[...borr];o.paradas=[...pm.values()].filter(p=>!borr.has(pk(p))).sort((x,y)=>(x.t||'')<(y.t||'')?-1:1);return o}
 function mergeInto(base,inc){ // unión por id, gana updatedAt más nuevo
   for(const k of ['ocs','laminadas','ops','finales','operarios','catalogo','cronograma','despachos']){
@@ -1180,7 +1180,8 @@ const COLS=['ocs','laminadas','ops','finales','operarios','catalogo','cronograma
 // v0.59 · ¿este equipo tiene algo que la nube no tiene? (si dos equipos guardaron a la vez, uno puede haber pisado al otro)
 function faltaSubir(rem){const rt=rem.tomb||{};
   for(const k of COLS){const key=k==='operarios'?'pin':'id';const m=new Map((rem[k]||[]).map(x=>[x[key],x]));
-    for(const x of (S[k]||[])){const r=m.get(x[key]);if(!r){if(!rt[k+':'+x[key]])return true}else if((x.updatedAt||'')>(r.updatedAt||''))return true}}
+    for(const x of (S[k]||[])){const r=m.get(x[key]);if(!r){if(!rt[k+':'+x[key]])return true}else if((x.updatedAt||'')>(r.updatedAt||''))return true;
+      else if(k==='ops'){const pr=r.pals||{};for(const [mq,p] of Object.entries(x.pals||{}))if((p.t||'')>((pr[mq]||{}).t||''))return true;const ids=new Set((r.paradas||[]).map(p=>p.id||p.t));if((x.paradas||[]).some(p=>!ids.has(p.id||p.t)))return true}}}
   for(const [k,t] of Object.entries(S.tomb||{}))if(!rt[k]||t>rt[k])return true;
   if(S.params&&(S.params.updatedAt||'')>((rem.params||{}).updatedAt||''))return true;
   return false}
@@ -1407,12 +1408,12 @@ async function wizFinSave(){const d=W.d,oc=ocOf(d.ocId),op=opOf(d.ocId),l=S.lami
   if(!await confirmaAgotada(l,neto))return wizRender();
   const ti=tiraInfo(l,oc),nro=nroFinSig(oc.id);
   const nf={id:uid('FIN'),opId:op.id,lamId:l.id,ocId:oc.id,partida:l.partida,lamNro:l.nro,nro,m:0,kg:neto,kgB:b,pallet:p.nro,ancho:an,esp:l.esp,cono,etiqueta:'',maq:d.maq,estado:'en stock',createdAt:prodT(),updatedAt:now(),operario:who,...marcaCarga()};S.finales.push(nf);misNuevos.add(nf.id);
-  save();W.val='';const pa=palInfo(op,d.maq); // v0.66: guardar una bobina no toca la OPtoast(`✓ Bobina ${nro}${ti?` (tira ${ti.k} de ${ti.t})`:''} · ${fmt(neto)} kg neto · pallet ${pa.nro} (${pa.n}${pa.cap?'/'+pa.cap:''})`);
+  save();W.val='';const pa=palInfo(op,d.maq); /* v0.66: guardar una bobina no toca la OP */toast(`✓ Bobina ${nro}${ti?` (tira ${ti.k} de ${ti.t})`:''} · ${fmt(neto)} kg neto · pallet ${pa.nro} (${pa.n}${pa.cap?'/'+pa.cap:''})`);
   if(pa.cap&&pa.n>=pa.cap){confirmUI(`<b>Pallet ${pa.nro} completo</b> con ${pa.n} bobinas.<br>¿Cerrarlo y pasar al pallet siguiente?`).then(ok=>{if(ok)wizPalSig();else wizRender()});return}
   wizRender()}
 async function wizLamCerrar(){const l=S.laminadas.find(x=>x.id===W.d.lamId),c=lamCalc(l);if(!c.fin.length)return toast('No cargaste ninguna bobina final');if(c.fin.some(f=>!f.kg))return toast('Hay bobinas sin peso');
   cerrarLamSimple(l,W.d.maq);save();curLam=null;W.d.lamId=null;toast(`✓ ${lamLbl(l)} refilada · rendimiento ${fmt(c.rend)} %`);wizGo('lam')}
-function wizParada(){const op=opOf(W.d.ocId);if(!op)return wizGo('oc');const min=+W.val||0;if(!W.d.pmot)return toast('Elegí el motivo');op.paradas.push({mot:W.d.pmot,min,t:prodT(),lamId:W.d.lamId||null,maq:W.d.maq});op.updatedAt=now();save();toast(`Parada registrada: ${W.d.pmot} · ${min} min`);W.d.pmot='';wizGo(W.prev||'lam')}
+function wizParada(){const op=opOf(W.d.ocId);if(!op)return wizGo('oc');const min=+W.val||0;if(!W.d.pmot)return toast('Elegí el motivo');op.paradas.push({id:uid('PAR'),mot:W.d.pmot,min,t:prodT(),lamId:W.d.lamId||null,maq:W.d.maq});op.updatedAt=now();save();toast(`Parada registrada: ${W.d.pmot} · ${min} min`);W.d.pmot='';wizGo(W.prev||'lam')}
 async function wizOpCerrar(){const op=opOf(W.d.ocId),c=opCalc(op),oc=ocOf(op.ocId);const ab=c.lams.filter(l=>l.estado!=='cerrada').length;
   if(ab&&!await confirmUI(`Hay <b>${ab}</b> bobina(s) sin cerrar. ¿Cerrar la OP igual?`))return;
   if(!ab&&oc.kg&&c.kf<oc.kg*0.98&&!await confirmUI(`Van <b>${fmt(c.kf)} kg</b> finales de <b>${fmt(oc.kg)}</b> pedidos. ¿Cerrar la OP igual?`))return;
@@ -1637,10 +1638,10 @@ async function finDel(id){const f=S.finales.find(x=>x.id===id);const l=S.laminad
   if((f.estado==='remitida'||l?.estado==='cerrada')&&!isAdmin())return toast('Solo Administración puede borrarla');
   if(await confirmUI(`¿Borrar la bobina final ${f.nro}${f.estado==='remitida'?' (ya remitida en '+f.remito+')':''}?`)){kill('finales',id);if(l&&l.estado==='cerrada')recalcLam(l);save()}}
 async function finDesremitir(id){const f=S.finales.find(x=>x.id===id);if(await confirmUI(`¿Sacar la bobina ${f.nro} del remito ${f.remito}? Vuelve a stock.`)){f.estado='en stock';f.remito=null;f.remFecha=null;f.updatedAt=now();save()}}
-async function paradaDel(opId,i){const op=S.ops.find(o=>o.id===opId);if(await confirmUI('¿Borrar la parada?')){const p=op.paradas[i];op.parBorr=[...(op.parBorr||[]),(p.t||'')+'|'+(p.maq||'')+'|'+(p.mot||'')];op.paradas.splice(i,1);op.updatedAt=now();save()}}
+async function paradaDel(opId,i){const op=S.ops.find(o=>o.id===opId);if(await confirmUI('¿Borrar la parada?')){const p=op.paradas[i];op.parBorr=[...(op.parBorr||[]),p.id||((p.t||'')+'|'+(p.maq||'')+'|'+(p.mot||''))];op.paradas.splice(i,1);op.updatedAt=now();save()}}
 async function paradaAdd(){
   const mot=prompt('Motivo de la parada');if(mot===null)return;const min=+prompt('Minutos',15)||0;
-  const op=S.ops.find(o=>o.id===curOP);if(!op)return toast('Primero elegí la OC');op.paradas.push({mot,min,t:prodT(),lamId:curLam,maq});op.updatedAt=now();save();toast('Parada registrada');
+  const op=S.ops.find(o=>o.id===curOP);if(!op)return toast('Primero elegí la OC');op.paradas.push({id:uid('PAR'),mot,min,t:prodT(),lamId:curLam,maq});op.updatedAt=now();save();toast('Parada registrada');
 }
 function lamCalc(l,live){
   const fin=S.finales.filter(f=>f.lamId===l.id),kf=sum(fin,f=>f.kg);
@@ -2096,7 +2097,7 @@ async function chivSync(manual){
   const cod=chivCod();if(!cod||chivEst.leyendo||!who)return;chivEst.t=Date.now();
   chivEst.leyendo=true;if(manual)chivBar();
   try{
-    const feed=await chivFeedLeer(cod);chivFeed=feed;await epLoad();try{localStorage.setItem('wr_chiv_feed',JSON.stringify(feed))}catch(e){}
+    const feed=await chivFeedLeer(cod);chivFeed=feed;await epLoad();if(S.params&&S.params.archBin&&!ARCH)await archLoad();try{localStorage.setItem('wr_chiv_feed',JSON.stringify(feed))}catch(e){}
     chivEst.ult=now();chivEst.err='';
     const porId=new Map(S.laminadas.map(l=>[l.id,l]));
     const ya=new Set(S.laminadas.filter(l=>l.tipo==='PET').map(l=>chivKey(l.partida,l.nroOrigen)));
@@ -2125,6 +2126,7 @@ async function chivSync(manual){
     const pbD=((S.meta||{}).purgedBefore||'').slice(0,10);
     for(const b of feed.bobinas){const ped=feed.pedidos[b.ped];if(!ped||chivClase(ped)!=='lam'||!chivEnRango(b)||hechos.has(ped.id)||(pbD&&(b.fEnvio||'9')<pbD))continue;
       if(lamUsadas.has(chivKey(b.partida,b.nro)))continue;hechos.add(ped.id);
+      if(S.params&&S.params.archBin&&!ARCH)continue; // sin poder leer el archivo no se crean OC (podría existir archivada)
       if(!chivBuscarOCLam(ped,b)){const o=chivCrearOCLam(ped,b);nOC++;res[o.cliente+' (OC de laminado nueva)']=1}}
     // v0.63: bobinas cargadas solas en la OC de OTRO pedido (ej. Silmag 450x700 que cayó en la OC 320 de 305x700): si nadie las tocó, pasan a la OC de su pedido
     const pedDe0=new Map(feed.bobinas.map(b=>[b.id,b]));
@@ -2687,7 +2689,7 @@ function opEdit(id){const op=S.ops.find(o=>o.id===id);const pv=palCur(op,'Verde'
 const MOTIVOS=['Cambio de cuchillas','Falta material','Rotura / atasco','Limpieza','Mantenimiento','Otro'];
 function paradaEdit(opId,i){const op=S.ops.find(o=>o.id===opId);const p=i>=0?op.paradas[i]:{mot:'Otro',min:0,t:now(),maq:''};const mots=MOTIVOS.includes(p.mot)?MOTIVOS:[p.mot,...MOTIVOS];
   edit(i>=0?'Editar parada':'Nueva parada',[{k:'mot',l:'Motivo',opts:mots},{k:'min',l:'Minutos',t:'number'},{k:'tL',l:'Cuándo',t:'datetime-local'},{k:'maq',l:'Refiladora',opts:['','Verde','Gris']}],{mot:p.mot,min:p.min,tL:toLocalIn(p.t),maq:p.maq||''},
-    x=>{if(i>=0)op.parBorr=[...(op.parBorr||[]),(p.t||'')+'|'+(p.maq||'')+'|'+(p.mot||'')];Object.assign(p,{mot:x.mot,min:+x.min||0,t:fromLocalIn(x.tL)||p.t,maq:x.maq,e:now()});if(i<0){op.paradas=op.paradas||[];op.paradas.push(p)}op.updatedAt=now()})}
+    x=>{if(i>=0&&!p.id)op.parBorr=[...(op.parBorr||[]),(p.t||'')+'|'+(p.maq||'')+'|'+(p.mot||'')];Object.assign(p,{id:p.id||uid('PAR'),mot:x.mot,min:+x.min||0,t:fromLocalIn(x.tL)||p.t,maq:x.maq,e:now()});if(i<0){op.paradas=op.paradas||[];op.paradas.push(p)}op.updatedAt=now()})}
 /* ================= v0.60 · LAMINADO (Administración) ================= */
 let laView='oc';const laOpen=new Set();
 const LAV={oc:['OC en laminado','#2b7fa8','Avance de cada OC de laminado: kg laminados contra pedidos, lo que falta y el PET de Chivilcoy disponible para seguir'],pet:['PET para laminar','#8b6fd1','Bobinas PET de Chivilcoy en Lanús para clientes PET/PE, esperando laminado (salen solas cuando el laminador carga la laminada con su partida y N°)'],bob:['Bobinas laminadas','#1e9a4f','Cada bobina que salió de la laminadora, por día: peso contra lo normal de ese producto (mediana de las últimas laminadas), defectos y observaciones'],cal:['Calidad','#a3271f','Defectos marcados por el laminador y pesos fuera de lo normal, por tipo, partida y operario']};
