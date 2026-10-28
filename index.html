@@ -1154,7 +1154,8 @@ let lastCount=null;function novedades(){const c=S.laminadas.length+S.finales.len
 // v0.66: la OP se une campo por campo: el pallet de cada máquina por su propia hora y las paradas de las dos (antes ganaba la OP entera y una tablet pisaba el pallet de la otra)
 function mergeOp(a,b){const w=(b.updatedAt||'')>(a.updatedAt||'')?b:a,o={...w};
   if(a.pals||b.pals){const P={};for(const src of [a.pals||{},b.pals||{}])for(const [m,p] of Object.entries(src)){if(!P[m]||(p.t||'')>(P[m].t||''))P[m]=p}o.pals=P}
-  const pk=p=>p.id||((p.t||'')+'|'+(p.maq||'')+'|'+(p.mot||'')); // v0.66: cada parada con id propioconst pm=new Map();[...(a.paradas||[]),...(b.paradas||[])].forEach(p=>{const k=pk(p);if(!pm.has(k)||(p.e||'')>(pm.get(k).e||''))pm.set(k,p)});
+  const pk=p=>p.id||((p.t||'')+'|'+(p.maq||'')+'|'+(p.mot||'')); /* v0.66: cada parada con id propio */
+  const pm=new Map();[...(a.paradas||[]),...(b.paradas||[])].forEach(p=>{const k=pk(p);if(!pm.has(k)||(p.e||'')>(pm.get(k).e||''))pm.set(k,p)});
   const borr=new Set([...(a.parBorr||[]),...(b.parBorr||[])]);o.parBorr=[...borr];o.paradas=[...pm.values()].filter(p=>!borr.has(pk(p))).sort((x,y)=>(x.t||'')<(y.t||'')?-1:1);return o}
 function mergeInto(base,inc){ // unión por id, gana updatedAt más nuevo
   for(const k of ['ocs','laminadas','ops','finales','operarios','catalogo','cronograma','despachos']){
