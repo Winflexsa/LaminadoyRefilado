@@ -2055,7 +2055,7 @@ async function chivFeedLeer(gidIn){
 let chivEst={leyendo:false,ult:'',err:''},chivFeed=null;
 try{chivFeed=JSON.parse(localStorage.getItem('wr_chiv_feed')||'null')}catch(e){}
 const chivCod=()=>(S.params&&S.params.chivGist)||'';
-const chivNorm=s=>String(s||'').toLowerCase().replace(/[^a-z0-9]/g,'');
+const chivNorm=s=>String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]/g,''); // v0.67: sin acentos (Mendía = Mendia)
 // v0.57: lo que sale de Chivilcoy con remito figura "en camino" 5 h desde que se emite; después entra solo
 const CHIV_CAMINO_H=5;
 const chivLlega=t=>{if(!t)return '';const x=new Date(t).getTime();return isNaN(x)?'':new Date(x+CHIV_CAMINO_H*36e5).toISOString()};
@@ -2155,6 +2155,9 @@ async function chivSync(manual){
         ancho:+b.ancho||+oc.ancho||0,esp:+b.espesor||oc.espPet||0,maq:'Chivilcoy',operario:'Chivilcoy (automático)',obs:'',fechaChiv:b.fEnvio?b.fEnvio.split('-').reverse().join('/'):'',chivId:b.id,tEnvio:b.tEnvio||'',llega:chivLlega(b.tEnvio),estado:'pendiente',createdAt:chivLlega(b.tEnvio)||now(),updatedAt:now()};
       S.laminadas.push(l);porId.set(id,l);ya.add(chivKey(partida,nroO));n++;res[oc.cliente]=(res[oc.cliente]||0)+1;
     }
+    // v0.67: OC creadas solas que quedaron duplicadas de una OC cargada a mano (ej. "Mendía" con tilde): si están vacías, se borran
+    S.ocs.filter(o=>o.autoChiv&&!o.editadoPor&&o.estado==='abierta'&&!S.laminadas.some(l=>l.ocId===o.id)&&!S.finales.some(f=>f.ocId===o.id)&&!S.ops.some(x=>x.ocId===o.id)&&!S.cronograma.some(c=>c.ocId===o.id)).forEach(o=>{
+      const dup=S.ocs.find(x=>x.id!==o.id&&!x.autoChiv&&x.estado==='abierta'&&nroN(x.nro)&&nroN(x.nro)===nroN(o.nro)&&chivNorm(x.cliente).slice(0,5)===chivNorm(o.cliente).slice(0,5));if(dup){kill('ocs',o.id);quit++}});
     // v0.66: laminadas que quedaron "en refiladora" en OC ya cerradas: se cierran (si tienen finales) o vuelven a pendiente
     S.laminadas.filter(x=>x.estado==='en refilado'&&ocOf(x.ocId).estado==='cerrada').forEach(x=>{if(S.finales.some(f=>f.lamId===x.id))cerrarLamSimple(x,x.refMaq);else{x.estado='pendiente';x.refMaq=null;x.updatedAt=now()}quit++});
     // v0.65: las OC creadas solas que nadie editó se mantienen al día con Estado de pedidos
