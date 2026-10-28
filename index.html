@@ -817,6 +817,7 @@ html.celu #c-nav button span{filter:none}
         <div class="f"><label>Tratamiento</label><select id="ocTrat"><option>Sin Silicona</option><option>Con Silicona</option></select></div>
         <div class="f"><label>Lámina</label><select id="ocLam"><option>Lamina PET/PE</option><option>Lamina PET</option><option>Lamina PE</option></select></div>
         <div class="f"><label>Pedido Chivilcoy (opcional)</label><input id="ocSol" placeholder="ej: 10-0926"></div>
+        <div class="f w2"><label>Laminado + refilado en línea</label><select id="ocLinea"><option value="1">Sí · sale producto final de la laminadora</option><option value="0">No · laminar y después refilar</option></select></div>
         <div class="f"><label>Certificado de calidad</label><select id="ocCert"><option value="">No pide</option><option value="1">Sí, pide certificado</option></select></div>
       </div>
       <p class="muted">Elegí el producto y se completan las medidas; podés corregirlas para esta OC sin tocar el catálogo.</p>
@@ -1043,6 +1044,7 @@ html.celu #c-nav button span{filter:none}
         <div class="f"><label>Peso cono 6" (kg)</label><input id="catCono6" type="number" step="any"></div>
         <div class="f"><label>Objetivo laminado (kg/h)</label><input id="catKhLam" type="number" step="any"></div>
         <div class="f"><label>Objetivo refilado (kg/h)</label><input id="catKhRef" type="number" step="any"></div>
+        <div class="f w2"><label>Laminado + refilado en línea</label><select id="catLinea"><option value="1">Sí · la laminadora entrega la bobina final</option><option value="0">No · laminar y después refilar</option></select></div>
       </div>
       <div class="row" style="margin-top:10px"><button class="btn" onclick="catSave()">Guardar producto</button><button class="btn sec" onclick="catNew()">Limpiar</button></div>
     </div>
@@ -1058,7 +1060,7 @@ html.celu #c-nav button span{filter:none}
 
 <script>
 /* ================= ESTADO ================= */
-const VERSION='v0.66';
+const VERSION='v0.67';
 const ICN={"dash": "<path d=\"M3.5 16.5a8.5 8.5 0 1 1 17 0\"/><path d=\"M12 16.5l4.2-5.2\"/><circle cx=\"12\" cy=\"16.5\" r=\"1.3\"/><path d=\"M6.2 12.4l1.2.8M12 8v1.5M17.8 12.4l-1.2.8M3 20.5h18\"/>", "plan": "<rect x=\"3\" y=\"4.5\" width=\"18\" height=\"16\" rx=\"1.5\"/><path d=\"M3 9.5h18M8 2.5v4M16 2.5v4M7 13h3M14 13h3M7 16.5h3M14 16.5h3\"/>", "lamadm": "<circle cx=\"6.5\" cy=\"7.5\" r=\"3.5\"/><circle cx=\"6.5\" cy=\"16.5\" r=\"3.5\"/><circle cx=\"6.5\" cy=\"7.5\" r=\"1\"/><circle cx=\"6.5\" cy=\"16.5\" r=\"1\"/><path d=\"M10 7.5l4 3.2M10 16.5l4-3.2M14 12h7\"/><path d=\"M17 9.5v5\"/>", "rfl": "<circle cx=\"6\" cy=\"12\" r=\"3.8\"/><circle cx=\"6\" cy=\"12\" r=\"1\"/><path d=\"M9.8 9.5H21M9.8 14.5H21M15.5 4.5v15\"/><path d=\"M14 4.5h3\"/>", "fin": "<rect x=\"4\" y=\"11\" width=\"7\" height=\"7\"/><rect x=\"13\" y=\"11\" width=\"7\" height=\"7\"/><rect x=\"8.5\" y=\"4\" width=\"7\" height=\"7\"/><path d=\"M2.5 18h19M4.5 18v2.5M12 18v2.5M19.5 18v2.5\"/>", "desp": "<path d=\"M2.5 6h11v10h-11z\"/><path d=\"M13.5 9.5h4l3 3.5V16h-7\"/><circle cx=\"6.5\" cy=\"17.5\" r=\"1.8\"/><circle cx=\"17\" cy=\"17.5\" r=\"1.8\"/>", "rec": "<path d=\"M3 10.5L12 4l9 6.5V20H3z\"/><path d=\"M12 8.5v7M8.8 12.5l3.2 3.2 3.2-3.2\"/><path d=\"M8 20v-2.5h8V20\"/>", "prod": "<circle cx=\"12\" cy=\"13\" r=\"8\"/><path d=\"M12 9v4.5l3 2M10 2.5h4\"/>", "cro": "<rect x=\"3\" y=\"4.5\" width=\"18\" height=\"16\" rx=\"1.5\"/><path d=\"M3 9.5h18M8 2.5v4M16 2.5v4M7 13h3M14 13h3M7 16.5h3M14 16.5h3\"/>", "oc": "<path d=\"M6 2.5h9l4 4V21.5H6z\"/><path d=\"M15 2.5v4h4M9 11h7M9 14.5h7M9 18h4\"/>", "sync": "<path d=\"M20 11a8 8 0 0 0-14.5-4.5L3.5 9M4 13a8 8 0 0 0 14.5 4.5l2-2.5\"/><path d=\"M3.5 4v5h5M20.5 20v-5h-5\"/>", "config": "<circle cx=\"12\" cy=\"12\" r=\"3\"/><path d=\"M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1\"/>", "full": "<rect x=\"2.5\" y=\"4\" width=\"19\" height=\"12.5\" rx=\"1.5\"/><path d=\"M8 20.5h8M12 16.5v4\"/>", "salir": "<path d=\"M14 4.5H5v15h9\"/><path d=\"M10 12h11M17.5 8.5L21 12l-3.5 3.5\"/>"};
 const ico=k=>`<svg class="ico" viewBox="0 0 24 24" aria-hidden="true">${ICN[k]||''}</svg>`;
 const CATALOGO=[
@@ -1103,7 +1105,7 @@ const ocOf=id=>S.ocs.find(o=>o.id===id)||(ARCH&&ARCH.ocs.find(o=>o.id===id))||{}
 const ocSub=o=>{const c=[o.tiras>1?`${o.tiras} tiras`:'',o.kxb?`Bobinas ~${o.kxb} kg`:'',o.cono?`Cono ${o.cono}`:''].filter(Boolean);if(!c.length&&!o.instr)return'';return`<tr class="ocsub"><td></td><td colspan="7"><span class="ocsub-l">🛠 Trabajo</span>${c.map(x=>`<span class="ocsub-c">${x}</span>`).join('')}${o.instr?`<span class="ocsub-i">${o.instr}</span>`:''}</td></tr>`};
 const trabajoLbl=o=>[o.ancho?`refilar a ${o.ancho} mm`:'',o.tiras>1?`${o.tiras} tiras`:'',o.kxb?`bobinas de ~${o.kxb} kg`:'',o.cono?`cono ${o.cono}`:'',o.bxp?`${o.bxp} bob/pallet`:'',o.instr||''].filter(Boolean).join(' · ');
 const ocLbl=o=>o.cliente?`${o.cliente} · OC ${o.nro}`:'—';
-const lamLbl=l=>`${l.partida} · bob ${l.nroOrigen||('L'+l.nro)}${l.tipo==='PET'?' · PET':''}`;
+const lamLbl=l=>`${l.partida} · bob ${l.nroOrigen||('L'+l.nro)}${l.tipo==='PET'?' · PET':l.tipo==='LINEA'?' · PET en línea':''}`;
 const finLbl=f=>`bob ${f.nro}`;
 // v0.39: la info de origen de Chivilcoy ya no se guarda como observación (antes sí): se separa para no marcarla como defecto
 const obsDe=l=>{const o=(l&&l.obs)||'';return l&&l.tipo==='PET'&&/^Chivilcoy /.test(o)?'':o};
@@ -1111,7 +1113,14 @@ const origenDe=l=>{if(!l)return'';if(l.tipo==='PET'){const leg=/^Chivilcoy /.tes
 const remDe=l=>l.remitoChiv||((String(l.obs||'').match(/remito\s*(\S+)/)||[])[1]||'');
 /* v0.47 · flujos del área: Laminado (PET/PE → laminado → refilado) y PET (jumbo Chivilcoy → refilado) */
 const esPetOC=o=>!!o&&(o.lamina==='Lamina PET'||(!o.lamina&&S.laminadas.some(l=>l.ocId===o.id&&l.tipo==='PET')));
-const flujoTag=o=>esPetOC(o)?'<span class="tag tipo-pet">PET</span>':'<span class="tag tipo-lam">Laminado</span>';
+/* v0.67 · LAMINADO + REFILADO EN LÍNEA: la laminadora entrega directo la bobina final (sin laminada intermedia ni refiladora).
+   Se marca por producto (catálogo) y la OC lo hereda (se puede cambiar por OC). La bobina PET que entra queda como registro tipo 'LINEA'
+   (trazabilidad de partida) y las finales salen de la máquina 'Laminadora'. El rendimiento de estas OC queda para más adelante. */
+const prodOf=o=>o&&S.catalogo.find(p=>p.id===o.prodId);
+const ocEnLinea=o=>!!o&&!!o.id&&!esPetOC(o)&&(o.enLinea!=null?!!o.enLinea:!!(prodOf(o)||{}).enLinea);
+const esLinea=l=>!!l&&l.tipo==='LINEA';
+const maqTxt=m=>m==='Laminadora'?'laminadora':'refiladora '+m;
+const flujoTag=o=>esPetOC(o)?'<span class="tag tipo-pet">PET</span>':ocEnLinea(o)?'<span class="tag tipo-lam" style="background:#dff1e7;color:#0a6b3a">En línea</span>':'<span class="tag tipo-lam">Laminado</span>';
 let flujoF='';const okFlujo=o=>!flujoF||(flujoF==='pet'?esPetOC(o):!esPetOC(o));
 document.addEventListener('click',e=>{const b=e.target.closest('.flujoSeg button');if(!b)return;flujoF=b.dataset.v;document.querySelectorAll('.flujoSeg button').forEach(x=>x.classList.toggle('on',x.dataset.v===flujoF));render()});
 const tipoTag=l=>l.tipo==='PET'?'<span class="tag tipo-pet">PET Chivilcoy</span>':'<span class="tag tipo-lam">Laminada PET/PE</span>';
@@ -1169,7 +1178,7 @@ function mergeInto(base,inc){ // unión por id, gana updatedAt más nuevo
   base.operarios.forEach(o=>{if(!o.rol)o.rol='tablet'});
   (base.laminadas||[]).forEach(l=>{if('tL' in l)delete l.tL});(base.ocs||[]).forEach(o=>{if('entregasTxt' in o)delete o.entregasTxt;if('certTxt' in o)delete o.certTxt});
   if(!base.catalogo||!base.catalogo.length)base.catalogo=CATALOGO.map(p=>({...p,cono3:CONO3_SEED[p.anchoFinal]??null}));
-  base.catalogo.forEach(p=>{if(p.cono3==null&&CONO3_SEED[p.anchoFinal]!=null)p.cono3=CONO3_SEED[p.anchoFinal]});
+  base.catalogo.forEach(p=>{if(p.cono3==null&&CONO3_SEED[p.anchoFinal]!=null)p.cono3=CONO3_SEED[p.anchoFinal];if(p.enLinea===undefined)p.enLinea=!/yeyo|mendia/i.test(p.cliente||'')}); // v0.67: en línea todos menos Don Yeyo y Mendía
   base.cronograma=(base.cronograma||[]).filter(x=>!x.del);
   if(inc.params&&(inc.params.updatedAt||'')>=(base.params?.updatedAt||''))base.params={...(base.params||{}),...inc.params};
   // v0.59: lo archivado o borrado hace mucho (tombstone ya limpiado) no vuelve desde un equipo con datos viejos
@@ -1262,7 +1271,7 @@ function go(v){
   document.querySelectorAll('.view').forEach(x=>x.classList.remove('active'));
   if(v==='config'){if($('cfgChiv'))$('cfgChiv').value=chivCod();$('cfgBin').value=cfg.bin||'';$('cfgKey').value=cfg.key||'';$('cfgKeyType').value=cfg.keyType||'master';const p=S.params||{};$('cfgJor').value=p.jornada||'07:00-19:00';const jm=p.jorMaq||{};$('cfgJorL').value=jm.Laminadora||'';$('cfgJorV').value=jm.Verde||'';$('cfgJorG').value=jm.Gris||'';$('cfgKhLam').value=p.khLam??'';$('cfgKhRef').value=p.khRef??'';$('cfgT3tab').value=Object.entries(taraTabla()).map(([a,k])=>`${a}=${String(k).replace('.',',')}`).join('; ');$('cfgT6in').value=p.tara6??'';$('cfgTol').value=p.tol??'';$('cfgPP').value=petpeList().join(', ');$('cfgDir').value=dirList().join(', ');if($('cfgDir6'))$('cfgDir6').value=dir6List().join(', ');const ct=p.certTxt||{},cc=p.certCumple||{};$('cfgCertPP').value=ct.PETPE||'';$('cfgCertP').value=ct.PET||'';$('cfgCumPP').value=cc.PETPE||'';$('cfgCumP').value=cc.PET||''}
   if(v==='login'){$('loginPin').value='';setTimeout(()=>$('loginPin').focus(),50)}
-  $('v-'+v).classList.add('active');mode=v;$('modeLbl').textContent={pc:'Administración',lam:'Laminado',lamoc:'Laminado',ref:'Refilado',op:'Refilado',wiz:W.flow==='lam'?'Laminado':'Refilado'}[v]||'';
+  $('v-'+v).classList.add('active');mode=v;$('modeLbl').textContent={pc:'Administración',lam:'Laminado',lamoc:'Laminado',ref:'Refilado',op:'Refilado',wiz:W.flow==='lam'||W.d.maq==='Laminadora'?'Laminado':'Refilado'}[v]||'';
   document.querySelectorAll('.adminOnly').forEach(x=>x.style.display=rol==='admin'?'':'none');
   window.scrollTo(0,0);if(v==='pc')pcTab(pcCur);else render();
 }
@@ -1284,10 +1293,10 @@ let modo=localStorage.getItem('wr_modo')||'asistente';
 function toggleModo(){modo=modo==='asistente'?'clasico':'asistente';localStorage.setItem('wr_modo',modo);render()}
 function tabletGo(flow){if(modo==='asistente'){wizStart(flow)}else go(flow)}
 const W={flow:'',step:'',d:{}};
-const STEPS={lam:['oc','partida','nro','kg','ok'],ref:['maq','oc','pallet','lam','bruto','cierre']};
+const STEPS={lam:['oc','partida','nro','kg','ok'],ref:['maq','oc','pallet','lam','bruto','cierre']};const STEP_ALIAS={linManual:'lam'};
 function wizStart(flow){W.flow=flow;W.d={};if(flow==='ref'&&maq)W.d.maq=maq;wizGo(flow==='ref'&&maq?'oc':STEPS[flow][0])}
 function wizGo(step){W.step=step;W.val='';W.pre=false;go('wiz')}
-function wizBack(){if(W.step==='obsEd')return wizObsBack();const s=STEPS[W.flow],i=s.indexOf(W.step);if(W.step==='bruto'){wizGo('lam');return}if(W.step==='cierre'){wizGo('bruto');return}if(W.step==='parada'||W.step==='obs'){wizGo(W.prev||'bruto');return}if(i>0)wizGo(s[i-1]);else go('home')}
+function wizBack(){if(W.step==='obsEd')return wizObsBack();if(W.step==='linManual')return wizGo('lam');const s=STEPS[W.flow],i=s.indexOf(W.step);if(W.step==='bruto'){wizGo('lam');return}if(W.step==='cierre'){wizGo('bruto');return}if(W.step==='parada'||W.step==='obs'){wizGo(W.prev||'bruto');return}if(i>0)wizGo(s[i-1]);else go('home')}
 // teclado numérico: escribe en W.val
 function kp(k){if(W.pre&&/\d/.test(k)){W.val='';}W.pre=false;if(k==='⌫')W.val=W.val.slice(0,-1);else if(k===','){if(!W.val.includes('.'))W.val+='.'}else if(k==='C')W.val='';else W.val+=k;wizRender()}
 const KP=(dec=true)=>`<div class="kp">${['1','2','3','4','5','6','7','8','9',dec?',':'C','0','⌫'].map(k=>`<button class="${/\d/.test(k)?'':'fn'}" onclick="kp('${k}')">${k}</button>`).join('')}</div>`;
@@ -1295,12 +1304,12 @@ const showVal=(unit,ph)=>`<div class="wz-val">${W.val||`<span style="color:#c9d2
 const dots=()=>{const s=STEPS[W.flow],i=s.indexOf(W.step);return`<div class="wz-dots">${s.map((x,j)=>`<i class="${j<i?'done':j===i?'on':''}"></i>`).join('')}</div>`};
 const nav=(next,label,extra)=>`<div class="wz-nav"><button class="btn sec" onclick="wizBack()">← Atrás</button>${extra||''}<button class="btn" onclick="${next}">${label||'Siguiente →'}</button></div>`;
 function wizRender(){
-  const d=W.d,oc=ocOf(d.ocId);let top=`<div class="wz-top"><span class="crumb">${W.flow==='lam'?'Laminado':'Refilado'+(d.maq?' · '+d.maq:'')}</span>${oc.id?`<span class="crumb">${ocLbl(oc)} · ${oc.desc||''}</span>`:''}${d.palNro?`<span class="crumb">Pallet ${d.palNro}</span>`:''}${dots()}</div>`;
+  const d=W.d,oc=ocOf(d.ocId);let top=`<div class="wz-top"><span class="crumb">${W.flow==='lam'?'Laminado':d.maq==='Laminadora'?'Laminado + refilado en línea':'Refilado'+(d.maq?' · '+d.maq:'')}</span>${oc.id?`<span class="crumb">${ocLbl(oc)} · ${oc.desc||''}</span>`:''}${d.palNro?`<span class="crumb">Pallet ${d.palNro}</span>`:''}${dots()}</div>`;
   let body='';
   /* ---------- LAMINADO ---------- */
   if(W.flow==='lam'){
     if(W.step==='oc'){const ab=S.ocs.filter(o=>o.estado==='abierta'&&!o.lamCompleto&&o.lamina!=='Lamina PET');const prog=progHoy('Laminadora');
-      const card=o=>{const k=ocKgs(o),lams=S.laminadas.filter(l=>l.ocId===o.id&&!l.resto&&l.tipo!=='PET');return`<div class="pick" onclick="W.d.ocId='${o.id}';wizLamPrefill();wizGo('partida')"><b>${ocLbl(o)}</b>${lams.length?' <span class="tag ref">en curso</span>':''}<small>${o.desc||''} · ${o.ancho||'?'} mm · ${o.espPet?o.espPet+'+'+o.espPe:o.esp} µ</small><small>${lams.length?`${lams.length} bobinas · <b>${fmt(k.lam)}</b> / ${fmt(o.kg)} kg`:`${fmt(o.kg)} kg pedidos`}</small>${lams.length?`<div class="bar"><i style="width:${o.kg?Math.min(100,k.lam/o.kg*100):0}%"></i></div>`:''}</div>`};
+      const card=o=>{const k=ocKgs(o),lin=ocEnLinea(o),lams=S.laminadas.filter(l=>l.ocId===o.id&&!l.resto&&l.tipo!=='PET');return`<div class="pick" style="${lin?'border-left-color:#0a6b3a':''}" onclick="${lin?`wizLineaStart('${o.id}')`:`W.d.ocId='${o.id}';wizLamPrefill();wizGo('partida')`}"><b>${ocLbl(o)}</b>${lin?' <span class="tag cerr">en línea · sale producto final</span>':''}${lams.length?' <span class="tag ref">en curso</span>':''}<small>${o.desc||''} · ${o.ancho||'?'} mm · ${o.espPet?o.espPet+'+'+o.espPe:o.esp} µ</small><small>${lams.length?`${lams.length} bobinas · <b>${fmt(k.lam)}</b> / ${fmt(o.kg)} kg`:`${fmt(o.kg)} kg pedidos`}</small>${lams.length?`<div class="bar"><i style="width:${o.kg?Math.min(100,k.lam/o.kg*100):0}%"></i></div>`:''}</div>`};
       const progIds=prog.map(c=>c.ocId);
       body=`<div class="wz-q">¿Qué OC vas a laminar?</div>${prog.length?`<h3>Programado para hoy</h3><div class="wz-grid">${ab.filter(o=>progIds.includes(o.id)).map(card).join('')}</div>`:''}<h3>${prog.length?'Otras OC':'OC abiertas'}</h3><div class="wz-grid">${ab.filter(o=>!progIds.includes(o.id)).map(card).join('')||'<p class="muted">No hay OC abiertas para laminar.</p>'}</div><div class="wz-nav"><button class="btn sec" onclick="go('home')">← Inicio</button></div>`}
     else if(W.step==='partida'){body=`<div class="wz-q">Partida del PET (Chivilcoy)</div><div class="wz-sub">Viene precargada con la última usada en esta OC. Tocá para corregir.</div><div class="wz-val txt"><input id="wzTxt" value="${d.partida||''}" style="text-transform:uppercase" placeholder="12926S-1T5" oninput="W.d.partida=this.value.toUpperCase()"></div>${nav("if(!W.d.partida)return toast('Falta la partida');wizGo('nro')")}`}
@@ -1319,23 +1328,36 @@ function wizRender(){
   if(W.flow==='ref'){
     const op=d.ocId?opOf(d.ocId):null,l=d.lamId?S.laminadas.find(x=>x.id===d.lamId):null;
     if(['pallet','lam','bruto','cierre'].includes(W.step)&&!op)W.step='oc';if(['bruto','cierre'].includes(W.step)&&!l)W.step='lam';
+    const LIN=d.maq==='Laminadora';if(LIN&&(W.step==='oc'||W.step==='maq')){W.flow='lam';W.d={};W.step='oc';return wizRender()}
     if(W.step==='maq'){body=`<div class="wz-q">¿En qué refiladora estás?</div><div class="wz-big2"><div class="pick" onclick="setMaq('Verde');W.d.maq='Verde';wizGo('oc')">Verde</div><div class="pick" onclick="setMaq('Gris');W.d.maq='Gris';wizGo('oc')">Gris</div></div><div class="wz-nav"><button class="btn sec" onclick="go('home')">← Inicio</button></div>`}
     else if(W.step==='oc'){const prog=progHoy('Refiladora '+d.maq),progIds=prog.map(c=>c.ocId);
-      const ab=S.ocs.filter(o=>o.estado==='abierta'&&(S.laminadas.some(x=>x.ocId===o.id)||opOf(o.id)));
-      const card=o=>{const pend=S.laminadas.filter(x=>x.ocId===o.id&&x.estado!=='cerrada'),kf=sum(S.finales.filter(f=>f.ocId===o.id),f=>f.kg);const cerr=!opOf(o.id)&&S.ops.filter(x=>x.ocId===o.id&&x.estado==='cerrada').sort((a,b)=>b.fin>a.fin?1:-1)[0];return`<div class="pick" style="${cerr?'opacity:.6;border-left-color:#c9d2cc':esPetOC(o)?'border-left-color:#6d8fd6;background:#f3f7ff':''}" onclick="${cerr?`wizRefReabrir('${cerr.id}')`:`wizRefOC('${o.id}')`}"><b>${ocLbl(o)}</b> ${flujoTag(o)} ${opOf(o.id)?'<span class="tag ref">OP abierta</span>':cerr?`<span class="tag rem">🔒 OP cerrada ${fd(cerr.fin)}</span>`:''}<small>${o.desc||''} · ${o.ancho||'?'} mm${o.tiras>1?' · '+o.tiras+' tiras':''}</small><small>${pend.length} bobinas por refilar · <b>${fmt(kf)}</b> / ${fmt(o.kg)} kg finales</small><div class="bar"><i style="width:${o.kg?Math.min(100,kf/o.kg*100):0}%"></i></div></div>`};
+      const ab=S.ocs.filter(o=>o.estado==='abierta'&&(S.laminadas.some(x=>x.ocId===o.id&&!esLinea(x))||opOf(o.id))&&(!ocEnLinea(o)||S.laminadas.some(x=>x.ocId===o.id&&!esLinea(x)&&x.tipo!=='PET'&&x.estado!=='cerrada'))); // v0.67: las OC en línea no pasan por refiladora
+      const card=o=>{const pend=S.laminadas.filter(x=>x.ocId===o.id&&x.estado!=='cerrada'&&!esLinea(x)),kf=sum(S.finales.filter(f=>f.ocId===o.id),f=>f.kg);const cerr=!opOf(o.id)&&S.ops.filter(x=>x.ocId===o.id&&x.estado==='cerrada').sort((a,b)=>b.fin>a.fin?1:-1)[0];return`<div class="pick" style="${cerr?'opacity:.6;border-left-color:#c9d2cc':esPetOC(o)?'border-left-color:#6d8fd6;background:#f3f7ff':''}" onclick="${cerr?`wizRefReabrir('${cerr.id}')`:`wizRefOC('${o.id}')`}"><b>${ocLbl(o)}</b> ${flujoTag(o)} ${opOf(o.id)?'<span class="tag ref">OP abierta</span>':cerr?`<span class="tag rem">🔒 OP cerrada ${fd(cerr.fin)}</span>`:''}<small>${o.desc||''} · ${o.ancho||'?'} mm${o.tiras>1?' · '+o.tiras+' tiras':''}</small><small>${pend.length} bobinas por refilar · <b>${fmt(kf)}</b> / ${fmt(o.kg)} kg finales</small><div class="bar"><i style="width:${o.kg?Math.min(100,kf/o.kg*100):0}%"></i></div></div>`};
       body=`<div class="wz-q">¿Qué OC vas a refilar?</div>${prog.length?`<h3>Programado para hoy · ${d.maq}</h3><div class="wz-grid">${ab.filter(o=>progIds.includes(o.id)).map(card).join('')}</div>`:''}<h3>${prog.length?'Otras OC':'OC con bobinas'}</h3><div class="wz-grid">${ab.filter(o=>!progIds.includes(o.id)).map(card).join('')||'<p class="muted">No hay bobinas laminadas para refilar.</p>'}</div><div class="wz-nav"><button class="btn sec" onclick="wizGo('maq')">← Atrás</button></div>`}
     else if(W.step==='pallet'){const p=palInfo(op,d.maq);if(W.palField==null){W.palField='nro';W.pn=p.nro||'';W.pc=p.cap||''}
       const box=(f,label,val,unit)=>`<div onclick="W.palField='${f}';wizRender()" style="cursor:pointer"><div class="muted" style="text-align:center;font-weight:600">${label}</div><div class="wz-val" style="${W.palField===f?'':'border-color:var(--line)'}">${val||'<span style=\'color:#c9d2cc\'>—</span>'}${unit?`<small>${unit}</small>`:''}</div></div>`;
       body=`<div class="wz-q">¿En qué pallet vas a apilar?</div><div class="wz-sub">${p.n?`El pallet ${p.nro} ya tiene ${p.n} bobinas`:'Tocá el recuadro que querés escribir'}</div><div class="wz-big2">${box('nro','Nº de pallet',W.pn)}${box('cap','Bobinas por pallet',W.pc,'bob')}</div><div class="kp">${['1','2','3','4','5','6','7','8','9','C','0','⌫'].map(k=>`<button class="${/\d/.test(k)?'':'fn'}" onclick="wizPalKey('${k}')">${k}</button>`).join('')}</div>${nav("wizPalOk()")}`}
+    else if(W.step==='lam'&&LIN){const c=opCalc(op),p=palInfo(op,d.maq),pals=[...new Set(S.finales.filter(f=>f.ocId===d.ocId&&f.pallet).map(f=>f.pallet))];
+      const enM=S.laminadas.filter(x=>x.ocId===d.ocId&&esLinea(x)&&x.estado!=='cerrada'),hechas=S.laminadas.filter(x=>x.ocId===d.ocId&&esLinea(x)&&x.estado==='cerrada').sort((a,b)=>(b.refFin||'')>(a.refFin||'')?1:-1).slice(0,6);
+      const disp=chivVivo().lam.filter(r=>r.oc&&r.oc.id===d.ocId).sort((a,b)=>String(a.l.palletChiv).localeCompare(String(b.l.palletChiv),undefined,{numeric:true})||(+a.l.nroOrigen-+b.l.nroOrigen));W._disp=disp;
+      const fin=x=>{const k=lamCalc(x);return`${k.fin.length} finales · ${fmt(k.kf)} kg`};
+      body=`<div class="wz-q">¿Qué bobina PET ponés en la laminadora?</div><div class="wz-info" style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;text-align:center;padding:10px"><div><b style="font-size:22px">${fmt(oc.kg)}</b><br><span class="muted">kg pedidos</span></div><div><b style="font-size:22px;color:var(--brand)">${fmt(c.kf)}</b><br><span class="muted">kg finales (${oc.kg?fmt(c.kf/oc.kg*100):0} %)</span></div><div><b style="font-size:22px">${c.fin.length}</b><br><span class="muted">bobinas · ${pals.length} pallet${pals.length!==1?'s':''}</span></div></div><div class="wz-sub">Pallet actual ${p.nro} · ${p.n}${p.cap?' / '+p.cap:''} bobinas · laminado y refilado en línea: sale producto final</div>
+      ${enM.length?`<h3>En la máquina</h3><div class="wz-grid">${enM.map(x=>`<div class="pick" style="border-left-color:var(--brand2);background:#f6fbf7" onclick="wizRefLam('${x.id}')"><b>${esc(lamLbl(x))}</b> <span class="tag ref">en máquina</span><small>${x.kg?fmt(x.kg)+' kg PET · ':''}salieron ${fin(x)}</small><small>Tocá para seguir cargando</small></div>`).join('')}</div>`:''}
+      <h3>PET disponible para esta OC</h3><div class="wz-grid">${disp.map((r,i)=>`<div class="pick" onclick="wizLinPet(${i})"><b>${esc(r.l.partida)} · nº ${esc(r.l.nroOrigen)}</b><small>${fmt(r.kg)} kg · pallet Chivilcoy ${esc(r.l.palletChiv||'—')}</small></div>`).join('')||'<p class="muted">No hay PET de Chivilcoy asignado a esta OC. Usá «Otra bobina PET».</p>'}</div>
+      ${hechas.length?`<h3>Terminadas</h3><div class="wz-grid">${hechas.map(x=>`<div class="pick" style="opacity:.55;border-left-color:#c9d2cc;cursor:default"><b>${esc(lamLbl(x))}</b><small>${fin(x)}</small></div>`).join('')}</div>`:''}
+      <div class="wz-side"><button class="btn sec" onclick="W.d.lp='';W.d.ln='';wizGo('linManual')">＋ Otra bobina PET (escribir partida y nº)</button><button class="btn sec" onclick="wizGo('pallet')">Cambiar pallet</button><button class="btn sec" onclick="wizOpCerrar()">Cerrar OP</button></div><div class="wz-nav"><button class="btn sec" onclick="wizGo('oc')">← Atrás</button></div>`}
+    else if(W.step==='linManual'){body=`<div class="wz-q">Bobina PET que entra</div><div class="wz-sub">Partida y número que trae la etiqueta de Chivilcoy</div><div class="wz-big2"><div><div class="muted" style="text-align:center;font-weight:600">Partida</div><div class="wz-val txt"><input id="wzTxt" value="${esc(d.lp||'')}" style="text-transform:uppercase" placeholder="25826S-1LX" oninput="W.d.lp=this.value.toUpperCase()"></div></div><div><div class="muted" style="text-align:center;font-weight:600">Nº bobina</div><div class="wz-val txt"><input value="${esc(d.ln||'')}" inputmode="numeric" placeholder="nº" oninput="W.d.ln=this.value.trim()"></div></div></div>${nav("wizLinManualOk()",'Siguiente →')}`}
     else if(W.step==='lam'){const lams=S.laminadas.filter(x=>x.ocId===d.ocId).sort((a,b)=>(a.estado==='cerrada')-(b.estado==='cerrada')||a.nro-b.nro);const p=palInfo(op,d.maq);const c=opCalc(op),pals=[...new Set(S.finales.filter(f=>f.ocId===d.ocId&&f.pallet).map(f=>f.pallet))];
       body=`<div class="wz-q">¿Qué bobina laminada ponés en la máquina?</div><div class="wz-info" style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;text-align:center;padding:10px"><div><b style="font-size:22px">${fmt(oc.kg)}</b><br><span class="muted">kg pedidos</span></div><div><b style="font-size:22px">${fmt(c.kl)}</b><br><span class="muted">kg laminados</span></div><div><b style="font-size:22px;color:var(--brand)">${fmt(c.kf)}</b><br><span class="muted">kg finales (${oc.kg?fmt(c.kf/oc.kg*100):0} %)</span></div><div><b style="font-size:22px">${c.fin.length}</b><br><span class="muted">bobinas · ${pals.length} pallet${pals.length!==1?'s':''}</span></div></div><div class="wz-sub">Pallet actual ${p.nro} · ${p.n}${p.cap?' / '+p.cap:''} bobinas · ${c.cerr.length} de ${c.lams.length} laminadas terminadas</div><div class="wz-grid">${lams.map(x=>{const k=lamCalc(x);const bloq=x.estado==='en refilado'&&x.refMaq&&x.refMaq!==d.maq;const rest=Math.max(0,x.kg-k.kf);return`<div class="pick" style="${x.estado==='cerrada'?'opacity:.55;border-left-color:#c9d2cc':''}" onclick="${x.estado==='cerrada'?'':`wizRefLam('${x.id}')`}"><b>${lamLbl(x)}</b> ${tagOf(x.estado)}${bloq?` <span class="tag rem">${x.refMaq}</span>`:''}<small>Entró <b>${fmt(x.kg)} kg</b> · ${x.ancho||'?'} mm · ${x.esp||'?'} µ</small><small>${x.estado==='cerrada'?`Salieron ${k.fin.length} finales · ${fmt(k.kf)} kg · scrap ${fmt(x.scrap)} kg · rend. ${fmt(x.rend)} %`:k.fin.length?`Salieron <b>${k.fin.length} finales · ${fmt(k.kf)} kg</b> · quedan ~${fmt(rest)} kg`:'Sin refilar todavía'}</small>${x.estado!=='cerrada'&&k.fin.length?`<div class="bar"><i style="width:${x.kg?Math.min(100,k.kf/x.kg*100):0}%"></i></div>`:''}${obsDe(x)?`<small style="color:var(--warn)">⚠ ${esc(obsDe(x))}</small>`:''}</div>`}).join('')||'<p class="muted">Esta OC no tiene bobinas laminadas.</p>'}</div><div class="wz-side"><button class="btn sec" onclick="wizGo('pallet')">Cambiar pallet</button><button class="btn sec" onclick="wizOpCerrar()">Cerrar OP</button></div><div class="wz-nav"><button class="btn sec" onclick="wizGo('oc')">← Atrás</button></div>`}
     else if(W.step==='bruto'){const k=lamCalc(l),p=palInfo(op,d.maq),an=+oc.ancho||l.ancho||0,cono=d.cono||oc.cono||'3"',t=taraKg(cono,an,oc),b=+W.val,neto=b?(t!=null?+(b-t).toFixed(1):b):0;const tiras=+oc.tiras||1,ti=tiraInfo(l,oc);const lleno=p.cap&&p.n>=p.cap;
       const c=opCalc(op),rest=Math.max(0,l.kg-k.kf),exc=b&&lamExcede(l,neto);
-      body=`<div class="wz-q">Kg bruto de la bobina final${ti?` <span class="tag ref" style="font-size:16px;vertical-align:middle">tira ${ti.k} de ${ti.t}</span>`:''}</div>${exc?`<div class="wz-alert bad">⛔ Con esta bobina, de ${esc(lamLbl(l))} saldrían ${fmt(exc.kf+neto)} kg y entraron ${fmt(exc.ent)} kg. Si ya pusiste la laminada siguiente, cerrá esta (botón naranja) y elegí la nueva.</div>`:''}<div class="wz-alert" style="background:var(--ref);color:var(--brand)">🛠 ${trabajoLbl(oc)||'sin instrucciones en la OC'}</div>${oc.kxb&&b&&Math.abs(neto-oc.kxb)/oc.kxb>0.15?`<div class="wz-alert">⚠ La OC pide bobinas de ~${oc.kxb} kg y esta da ${fmt(neto)} kg netos.</div>`:''}<div class="wz-info" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:10px 12px;font-size:14px"><div><span class="muted">Esta bobina · ${lamLbl(l)}</span><br>Entró <b>${fmt(l.kg)} kg</b> → salieron <b>${k.fin.length} finales · ${fmt(k.kf)} kg</b><br>Quedan ~<b>${fmt(rest)} kg</b> por sacar<div class="bar" style="margin-top:6px"><i style="width:${l.kg?Math.min(100,k.kf/l.kg*100):0}%"></i></div></div><div><span class="muted">OC ${oc.nro} · ${oc.cliente}</span><br><b>${fmt(c.kf)}</b> / ${fmt(oc.kg)} kg finales (${oc.kg?fmt(c.kf/oc.kg*100):0} %)<br>${c.fin.length} bobinas · pallet ${p.nro}: <b>${p.n}${p.cap?' / '+p.cap:''}</b><div class="bar" style="margin-top:6px"><i style="width:${oc.kg?Math.min(100,c.kf/oc.kg*100):0}%"></i></div></div></div>${lleno?`<div class="wz-alert bad">Pallet ${p.nro} COMPLETO. Cerralo para seguir.</div>`:''}${(()=>{const ref=+oc.kxb||0,casi=rest>0&&((ref&&rest<ref*0.6)||rest<l.kg*0.12);const nada=rest<=0;return nada?`<div class="wz-alert bad">⚠ Ya salieron ${fmt(k.kf)} kg de los ${fmt(l.kg)} kg que entraron: esta laminada está <b>terminada</b>. Cerrala con el botón naranja.</div>`:casi?`<div class="wz-alert">⚠ Quedan ~${fmt(rest)} kg: esta laminada está por terminarse. Cuando saques la última, cerrala.</div>`:''})()}
+      body=`<div class="wz-q">Kg bruto de la bobina final${ti?` <span class="tag ref" style="font-size:16px;vertical-align:middle">tira ${ti.k} de ${ti.t}</span>`:''}</div>${exc?`<div class="wz-alert bad">⛔ Con esta bobina, de ${esc(lamLbl(l))} saldrían ${fmt(exc.kf+neto)} kg y entraron ${fmt(exc.ent)} kg. Si ya pusiste la laminada siguiente, cerrá esta (botón naranja) y elegí la nueva.</div>`:''}<div class="wz-alert" style="background:var(--ref);color:var(--brand)">🛠 ${trabajoLbl(oc)||'sin instrucciones en la OC'}</div>${oc.kxb&&b&&Math.abs(neto-oc.kxb)/oc.kxb>0.15?`<div class="wz-alert">⚠ La OC pide bobinas de ~${oc.kxb} kg y esta da ${fmt(neto)} kg netos.</div>`:''}<div class="wz-info" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:10px 12px;font-size:14px"><div><span class="muted">Esta bobina · ${lamLbl(l)}</span><br>${esLinea(l)?`${l.kg?'PET de <b>'+fmt(l.kg)+' kg</b> → ':''}salieron <b>${k.fin.length} finales · ${fmt(k.kf)} kg</b>`:`Entró <b>${fmt(l.kg)} kg</b> → salieron <b>${k.fin.length} finales · ${fmt(k.kf)} kg</b><br>Quedan ~<b>${fmt(rest)} kg</b> por sacar<div class="bar" style="margin-top:6px"><i style="width:${l.kg?Math.min(100,k.kf/l.kg*100):0}%"></i></div>`}</div><div><span class="muted">OC ${oc.nro} · ${oc.cliente}</span><br><b>${fmt(c.kf)}</b> / ${fmt(oc.kg)} kg finales (${oc.kg?fmt(c.kf/oc.kg*100):0} %)<br>${c.fin.length} bobinas · pallet ${p.nro}: <b>${p.n}${p.cap?' / '+p.cap:''}</b><div class="bar" style="margin-top:6px"><i style="width:${oc.kg?Math.min(100,c.kf/oc.kg*100):0}%"></i></div></div></div>${lleno?`<div class="wz-alert bad">Pallet ${p.nro} COMPLETO. Cerralo para seguir.</div>`:''}${esLinea(l)?'':(()=>{const ref=+oc.kxb||0,casi=rest>0&&((ref&&rest<ref*0.6)||rest<l.kg*0.12);const nada=rest<=0;return nada?`<div class="wz-alert bad">⚠ Ya salieron ${fmt(k.kf)} kg de los ${fmt(l.kg)} kg que entraron: esta laminada está <b>terminada</b>. Cerrala con el botón naranja.</div>`:casi?`<div class="wz-alert">⚠ Quedan ~${fmt(rest)} kg: esta laminada está por terminarse. Cuando saques la última, cerrala.</div>`:''})()}
       <div class="wz-big2" style="margin-top:8px;align-items:start"><div><div class="muted" style="text-align:center;font-weight:600">Kg BRUTO (con cono)</div><div class="wz-val">${b?fmt(b):'<span style=\'color:#c9d2cc\'>0</span>'}<small>kg</small></div></div><div><div class="muted" style="text-align:center;font-weight:600">Kg NETO</div><div class="wz-val" style="border-color:var(--line);background:var(--soft);color:var(--brand)">${b?fmt(neto):'<span style=\'color:#c9d2cc\'>0</span>'}<small>kg</small></div></div></div>
       <div class="wz-sub" style="margin-top:14px;clear:both">${t!=null?`Cono ${cono} de ${an} mm = ${kgTxt(t)} kg de tara${(S.catalogo.find(x=>x.id===oc.prodId)||{})[cono==='6"'?'cono6':'cono3']!=null?' (catálogo)':' (estimado)'}`:'<span style="color:var(--warn)">Sin ancho en la OC: neto = bruto</span>'}${tiras>1?` · <b>${tiras} tiras</b>: pesá cada tira por separado`:''} · <a href="#" onclick="wizCono();return false">cambiar cono</a></div>${KP(true)}
       ${lleno?`<div class="wz-side"><button class="btn ok" onclick="wizPalSig()">Cerrar pallet → siguiente</button></div>`:''}
-      <div class="wz-nav" style="flex-direction:column"><button class="btn" style="font-size:22px;min-height:68px" onclick="wizFinSave()" ${lleno?'disabled':''}>✓ Guardar bobina final</button><button class="btn warn" style="min-height:56px" onclick="wizGo('cierre')">■ Cerrar bobina laminada (terminé ${lamLbl(l)})</button><button class="btn sec" style="min-height:44px;flex:0 0 auto" onclick="wizGo('lam')">← Atrás</button></div>`}
+      <div class="wz-nav" style="flex-direction:column"><button class="btn" style="font-size:22px;min-height:68px" onclick="wizFinSave()" ${lleno?'disabled':''}>✓ Guardar bobina final</button><button class="btn warn" style="min-height:56px" onclick="wizGo('cierre')">■ ${esLinea(l)?'Terminé la bobina PET':'Cerrar bobina laminada'} (${lamLbl(l)})</button><button class="btn sec" style="min-height:44px;flex:0 0 auto" onclick="wizGo('lam')">← Atrás</button></div>`}
+    else if(W.step==='cierre'&&esLinea(l)){const k=lamCalc(l);
+      body=`<div class="wz-q">Terminar ${esc(lamLbl(l))}</div><div class="wz-info">Salieron <b>${k.fin.length} bobinas finales</b> · <b>${fmt(k.kf)} kg netos</b>${l.kg?`<br><span class="muted">Bobina PET de ${fmt(l.kg)} kg</span>`:''}${k.fin.some(f=>!f.kg)?'<br><span style="color:var(--bad)">⚠ Hay bobinas sin peso</span>':''}</div>${nav("wizLamCerrar()",'✓ Terminé esta bobina PET')}`}
     else if(W.step==='cierre'){const k=lamCalc(l),pct=k.ent?k.scrap/k.ent*100:0;
       body=`<div class="wz-q">Cerrar ${lamLbl(l)}</div><div class="wz-info">Entró <b>${fmt(k.ent)} kg</b><br>Salieron <b>${k.fin.length} bobinas</b> · <b>${fmt(k.kf)} kg netos</b><br>Scrap <b class="${pct>10?'bal bad':''}">${fmt(k.scrap)} kg (${fmt(pct)} %)</b> · rendimiento <b>${fmt(k.rend)} %</b>${k.fin.some(f=>!f.kg)?'<br><span style="color:var(--bad)">⚠ Hay bobinas sin peso</span>':''}</div>${pct>15?`<div class="wz-alert bad">⚠ Salió mucho menos de lo que entró (${fmt(k.rend)} %). ¿Te faltó cargar alguna bobina final, o la cargaste en otra laminada? Revisalo antes de cerrar.</div>`:pct>10?'<div class="wz-alert">El scrap es alto. Si es correcto, confirmá.</div>':''}${k.kf>k.ent*1.03+1?`<div class="wz-alert bad">⚠ Salió más de lo que entró (${fmt(k.rend)} %): alguna bobina final de otra laminada quedó cargada en esta.</div>`:''}${nav("wizLamCerrar()",'✓ Confirmar cierre')}`}
     else if(W.step==='parada'){const mots=['Cambio de cuchillas','Falta material','Rotura / atasco','Limpieza','Mantenimiento','Otro'];
@@ -1361,7 +1383,7 @@ function wizObsBack(){const b=W.bak||{step:'oc'};W.editLam=null;wizGo(b.step);W.
 function wizObsSave(){const l=S.laminadas.find(x=>x.id===W.editLam);if(l){l.obs=W.eObs||'';l.obsPor=who;l.updatedAt=now();save();toast(l.obs?'⚠ Observación guardada':'Observación borrada')}wizObsBack()}
 function wizSide(){const d=W.d;
   if(W.flow==='lam'&&['oc','partida','nro','kg','ok','obs','obsEd'].includes(W.step))return lamDiaPanel(d.ocId,'wizObsEdit');
-  if(W.flow==='ref'&&d.ocId&&['pallet','lam','bruto','cierre','parada'].includes(W.step))return palPanel(d.ocId,d.maq);
+  if(W.flow==='ref'&&d.ocId&&['pallet','lam','bruto','cierre','parada','linManual'].includes(W.step))return palPanel(d.ocId,d.maq);
   return''}
 function lamDiaPanel(ocId,fn){const todo=isAdmin();const hoy=S.laminadas.filter(l=>l.tipo!=='PET'&&!l.resto&&esHoy(l.createdAt)&&(todo||l.operario===who)).sort((a,b)=>b.createdAt>a.createdAt?1:-1);
   const ocs=[...new Set(hoy.map(l=>l.ocId))].sort((a,b)=>(b===ocId)-(a===ocId));
@@ -1386,6 +1408,17 @@ function wizLamSave(){const d=W.d,oc=ocOf(d.ocId);const nro=S.laminadas.filter(l
   save();toast(`✓ ${d.partida} · bob ${d.nro} · ${fmt(d.kg)} kg guardada`);d.nroSug=+d.nro?+d.nro+1:'';d.obs='';d.kg=0;
   const k=ocKgs(oc);if(oc.kg&&k.lam>=oc.kg&&!oc.lamCompleto){confirmUI(`Ya laminaste <b>${fmt(k.lam)} kg</b> de los <b>${fmt(oc.kg)}</b> pedidos. ¿Dar el laminado de esta OC por completo?`).then(ok=>{if(ok){oc.lamCompleto=true;oc.lamCompletoAt=now();oc.updatedAt=now();save();wizGo('oc')}else wizGo('nro')});return}
   wizGo('nro')}
+// ---- v0.67 · laminado + refilado en línea ----
+function wizLineaStart(ocId){W.flow='ref';W.d={maq:'Laminadora'};wizRefOC(ocId)}
+function lineaCrear(partida,nro,extra){const d=W.d,oc=ocOf(d.ocId);partida=String(partida||'').toUpperCase().trim();nro=String(nro||'').trim();
+  if(!partida||!nro)return toast('Falta partida o nº');
+  const ya=S.laminadas.find(l=>l.tipo!=='PET'&&mismaBob(l,partida,nro));if(ya){if(esLinea(ya)&&ya.ocId===oc.id&&ya.estado!=='cerrada')return wizRefLam(ya.id);return toast(`La bobina ${partida} nº ${nro} ya está cargada (${ocLbl(ocOf(ya.ocId))})`)}
+  let fb=null;if(chivFeed){const k=chivKey(partida,nro);fb=chivFeed.bobinas.find(b=>chivKey(b.partida,b.nro)===k)}
+  const nl={id:uid('LAM'),ocId:oc.id,tipo:'LINEA',partida,nroOrigen:nro,nro:S.laminadas.filter(l=>l.ocId===oc.id).reduce((m,l)=>Math.max(m,+l.nro||0),0)+1,kg:+((extra&&extra.kg)||(fb&&fb.kg)||0),palletChiv:String((extra&&extra.pallet)||(fb&&fb.pallet)||''),remitoChiv:(fb&&fb.remito)||'',
+    m:0,ancho:+((fb&&fb.ancho)||0),esp:oc.esp||0,maq:'Laminadora',operario:who,obs:'',estado:'pendiente',createdAt:prodT(),updatedAt:now(),...marcaCarga()};
+  S.laminadas.push(nl);misNuevos.add(nl.id);wizRefLam(nl.id)}
+function wizLinPet(i){const r=(W._disp||[])[i];if(!r)return;lineaCrear(r.l.partida,r.l.nroOrigen,{kg:r.kg,pallet:r.l.palletChiv})}
+function wizLinManualOk(){lineaCrear(W.d.lp,W.d.ln)}
 // ---- acciones refilado ----
 async function wizRefReabrir(opId){const op=S.ops.find(o=>o.id===opId),oc=ocOf(op.ocId);
   if(!await confirmUI(`La OP de <b>${ocLbl(oc)}</b> está <b>cerrada</b> desde el ${fd(op.fin)} ${fh(op.fin)} (${op.operario||''}).<br>¿Estás seguro de reabrirla?`))return;
@@ -1413,7 +1446,7 @@ async function wizFinSave(){const d=W.d,oc=ocOf(d.ocId),op=opOf(d.ocId),l=S.lami
   if(pa.cap&&pa.n>=pa.cap){confirmUI(`<b>Pallet ${pa.nro} completo</b> con ${pa.n} bobinas.<br>¿Cerrarlo y pasar al pallet siguiente?`).then(ok=>{if(ok)wizPalSig();else wizRender()});return}
   wizRender()}
 async function wizLamCerrar(){const l=S.laminadas.find(x=>x.id===W.d.lamId),c=lamCalc(l);if(!c.fin.length)return toast('No cargaste ninguna bobina final');if(c.fin.some(f=>!f.kg))return toast('Hay bobinas sin peso');
-  cerrarLamSimple(l,W.d.maq);save();curLam=null;W.d.lamId=null;toast(`✓ ${lamLbl(l)} refilada · rendimiento ${fmt(c.rend)} %`);wizGo('lam')}
+  cerrarLamSimple(l,W.d.maq);save();curLam=null;W.d.lamId=null;toast(esLinea(l)?`✓ ${lamLbl(l)} terminada · ${c.fin.length} bobinas finales · ${fmt(c.kf)} kg`:`✓ ${lamLbl(l)} refilada · rendimiento ${fmt(c.rend)} %`);wizGo('lam')}
 function wizParada(){const op=opOf(W.d.ocId);if(!op)return wizGo('oc');const min=+W.val||0;if(!W.d.pmot)return toast('Elegí el motivo');op.paradas.push({id:uid('PAR'),mot:W.d.pmot,min,t:prodT(),lamId:W.d.lamId||null,maq:W.d.maq});op.updatedAt=now();save();toast(`Parada registrada: ${W.d.pmot} · ${min} min`);W.d.pmot='';wizGo(W.prev||'lam')}
 async function wizOpCerrar(){const op=opOf(W.d.ocId),c=opCalc(op),oc=ocOf(op.ocId);const ab=c.lams.filter(l=>l.estado!=='cerrada').length;
   if(ab&&!await confirmUI(`Hay <b>${ab}</b> bobina(s) sin cerrar. ¿Cerrar la OP igual?`))return;
@@ -1443,25 +1476,25 @@ function killAuto(k,id){kill(k,id);S.tomb[k+':'+id]+='~auto'}
 /* ================= OC ================= */
 function prodLbl(p){return `${p.cliente} · ${p.medida} (${p.anchoFinal} mm · ${p.espPet}+${p.espPe} µ)`}
 function ocProdChange(){
-  const p=S.catalogo.find(x=>x.id===$('ocProd').value);if(!p)return;
+  const p=S.catalogo.find(x=>x.id===$('ocProd').value);if(!p)return;$('ocLinea').value=p.enLinea?'1':'0';
   $('ocCli').value=p.cliente;$('ocDesc').value=p.medida;if(/negro/i.test(p.cliente))$('ocColor').value='Negro';$('ocAncho').value=p.anchoFinal;$('ocEspPet').value=p.espPet;$('ocEspPe').value=p.espPe;$('ocTiras').value=p.tiras||1;$('ocKxB').value=p.pesoBobinaFinal||'';$('ocBxP').value=p.bxp||'';
 }
 async function ocSave(){
   const espPet=+$('ocEspPet').value,espPe=+$('ocEspPe').value;
-  const o={id:uid('OC'),prodId:$('ocProd').value||null,cliente:$('ocCli').value.trim(),nro:$('ocNro').value.trim(),desc:$('ocDesc').value.trim(),ancho:+$('ocAncho').value,espPet,espPe,esp:espPet+espPe,tiras:+$('ocTiras').value||1,mxb:+$('ocMxB').value,bxp:+$('ocBxP').value,kxb:+$('ocKxB').value,cono:$('ocCono').value,instr:$('ocInstr').value.trim(),color:$('ocColor').value,trat:$('ocTrat').value,lamina:$('ocLam').value,solicitudChiv:$('ocSol').value.trim(),cert:$('ocCert').value==='1',kg:+$('ocKg').value,fecha:$('ocFecha').value,estado:'abierta',createdAt:now(),updatedAt:now(),por:who||'PC'};
+  const o={id:uid('OC'),enLinea:$('ocLam').value==='Lamina PET'?false:$('ocLinea').value==='1',prodId:$('ocProd').value||null,cliente:$('ocCli').value.trim(),nro:$('ocNro').value.trim(),desc:$('ocDesc').value.trim(),ancho:+$('ocAncho').value,espPet,espPe,esp:espPet+espPe,tiras:+$('ocTiras').value||1,mxb:+$('ocMxB').value,bxp:+$('ocBxP').value,kxb:+$('ocKxB').value,cono:$('ocCono').value,instr:$('ocInstr').value.trim(),color:$('ocColor').value,trat:$('ocTrat').value,lamina:$('ocLam').value,solicitudChiv:$('ocSol').value.trim(),cert:$('ocCert').value==='1',kg:+$('ocKg').value,fecha:$('ocFecha').value,estado:'abierta',createdAt:now(),updatedAt:now(),por:who||'PC'};
   if(!o.cliente||!o.nro)return toast('Falta cliente o nº OC');
   o.entregas=entParse($('ocEnt').value,now());if(o.entregas.length&&!o.fecha)o.fecha=o.entregas[o.entregas.length-1].fecha;
   const dup=ocDup(o);if(dup&&!await confirmUI(`Ya existe la <b>${esc(ocLbl(dup))}</b> (${dup.estado}, ${fmt(dup.kg)} kg, cargada el ${fd(dup.createdAt)}).<br>¿Cargar otra OC con el mismo número?`,'Cargar igual','Cancelar'))return;
   S.ocs.push(o);save();['ocCli','ocNro','ocDesc','ocAncho','ocEspPet','ocEspPe','ocBxP','ocKxB','ocKg','ocFecha','ocEnt','ocSol','ocInstr'].forEach(i=>$(i).value='');$('ocProd').value='';$('ocTiras').value=1;toast('OC guardada');
 }
 /* ---- catálogo ---- */
-function catNew(){$('catId').value='';$('catTitle').textContent='Nuevo producto';['catCli','catMed','catAPet','catEPet','catAPe','catEPe','catAF','catPPet','catMPet','catPPe','catMPe','catPLam','catCil','catKhLam','catKhRef','catCono3','catCono6','catBxP'].forEach(i=>$(i).value='');$('catTiras').value=1}
+function catNew(){$('catId').value='';$('catTitle').textContent='Nuevo producto';['catCli','catMed','catAPet','catEPet','catAPe','catEPe','catAF','catPPet','catMPet','catPPe','catMPe','catPLam','catCil','catKhLam','catKhRef','catCono3','catCono6','catBxP'].forEach(i=>$(i).value='');$('catTiras').value=1;$('catLinea').value='1'}
 function catEdit(id){const p=S.catalogo.find(x=>x.id===id);$('catId').value=id;$('catTitle').textContent='Editar producto';
   $('catCli').value=p.cliente;$('catMed').value=p.medida;$('catAPet').value=p.anchoPet;$('catEPet').value=p.espPet;$('catAPe').value=p.anchoPe;$('catEPe').value=p.espPe;$('catAF').value=p.anchoFinal;$('catTiras').value=p.tiras||1;
-  $('catPPet').value=p.pesoBobinaPet??'';$('catMPet').value=p.metrosBobinaPet??'';$('catPPe').value=p.pesoBobinaPe??'';$('catMPe').value=p.metrosBobinaPe??'';$('catPLam').value=p.pesoBobinaFinal??'';$('catCil').value=p.cilindro??'';$('catKhLam').value=p.kgHoraLam??'';$('catKhRef').value=p.kgHoraRef??'';$('catCono3').value=p.cono3??'';$('catCono6').value=p.cono6??'';$('catBxP').value=p.bxp??'';$('cfgCat').scrollIntoView({behavior:'smooth'})}
+  $('catPPet').value=p.pesoBobinaPet??'';$('catMPet').value=p.metrosBobinaPet??'';$('catPPe').value=p.pesoBobinaPe??'';$('catMPe').value=p.metrosBobinaPe??'';$('catPLam').value=p.pesoBobinaFinal??'';$('catCil').value=p.cilindro??'';$('catKhLam').value=p.kgHoraLam??'';$('catKhRef').value=p.kgHoraRef??'';$('catCono3').value=p.cono3??'';$('catCono6').value=p.cono6??'';$('catBxP').value=p.bxp??'';$('catLinea').value=p.enLinea?'1':'0';$('cfgCat').scrollIntoView({behavior:'smooth'})}
 function catSave(){
   const n=id=>{const v=parseFloat($(id).value);return isNaN(v)?null:v};
-  const p={cliente:$('catCli').value.trim(),medida:$('catMed').value.trim(),anchoPet:n('catAPet'),espPet:n('catEPet'),anchoPe:n('catAPe'),espPe:n('catEPe'),anchoFinal:n('catAF'),tiras:n('catTiras')||1,pesoBobinaPet:n('catPPet'),metrosBobinaPet:n('catMPet'),pesoBobinaPe:n('catPPe'),metrosBobinaPe:n('catMPe'),pesoBobinaFinal:n('catPLam'),cilindro:n('catCil'),kgHoraLam:n('catKhLam'),kgHoraRef:n('catKhRef'),cono3:n('catCono3'),cono6:n('catCono6'),bxp:n('catBxP'),updatedAt:now()};
+  const p={cliente:$('catCli').value.trim(),medida:$('catMed').value.trim(),anchoPet:n('catAPet'),espPet:n('catEPet'),anchoPe:n('catAPe'),espPe:n('catEPe'),anchoFinal:n('catAF'),tiras:n('catTiras')||1,pesoBobinaPet:n('catPPet'),metrosBobinaPet:n('catMPet'),pesoBobinaPe:n('catPPe'),metrosBobinaPe:n('catMPe'),pesoBobinaFinal:n('catPLam'),cilindro:n('catCil'),kgHoraLam:n('catKhLam'),kgHoraRef:n('catKhRef'),cono3:n('catCono3'),cono6:n('catCono6'),bxp:n('catBxP'),enLinea:$('catLinea').value==='1',updatedAt:now()};
   if(!p.cliente||!p.medida||!p.anchoFinal)return toast('Falta cliente, medida o ancho final');
   const id=$('catId').value;if(id){Object.assign(S.catalogo.find(x=>x.id===id),p)}else{S.catalogo.push({id:uid('CAT'),...p})}
   // v0.46: la OC guarda una copia de los datos del producto al crearse; si se corrige el catálogo, ofrecer actualizar las OC abiertas de ese producto
@@ -1477,9 +1510,10 @@ async function catDel(id){if(S.ocs.some(o=>o.prodId===id))return toast('Hay OC q
 const ocDup=o=>S.ocs.find(x=>x.id!==o.id&&chivNorm(x.nro)&&chivNorm(x.nro)===chivNorm(o.nro)&&chivNorm(x.cliente).slice(0,5)===chivNorm(o.cliente).slice(0,5));
 function ocKgs(o){const src=o.arch&&ARCH?ARCH:S;
   const lam=src.laminadas.filter(l=>l.ocId===o.id&&l.resto!==true),fin=src.finales.filter(f=>f.ocId===o.id); // v0.59: los restos no se cuentan dos veces
-  return{lam:sum(lam,l=>l.kg),fin:sum(fin,f=>f.kg),rem:sum(fin.filter(f=>f.estado==='remitida'),f=>f.kg)};
+  const lin=new Set(lam.filter(esLinea).map(l=>l.id)); // v0.67: en línea, lo laminado = las bobinas finales que salieron de la laminadora
+  return{lam:sum(lam.filter(l=>!esLinea(l)),l=>l.kg)+sum(fin.filter(f=>lin.has(f.lamId)),f=>f.kg),fin:sum(fin,f=>f.kg),rem:sum(fin.filter(f=>f.estado==='remitida'),f=>f.kg)};
 }
-function ocEdit(id){const o=ocOf(id);if(o.arch)return toast('OC archivada: solo lectura');edit('Editar OC '+o.nro,[{k:'cliente',l:'Cliente'},{k:'nro',l:'Nº OC'},{k:'desc',l:'Medida / descripción'},{k:'ancho',l:'Ancho final (mm)',t:'number'},{k:'espPet',l:'Esp. PET (µ)',t:'number'},{k:'espPe',l:'Esp. PE (µ)',t:'number'},{k:'tiras',l:'Tiras',t:'number'},{k:'bxp',l:'Bobinas por pallet',t:'number'},{k:'kxb',l:'Kg por bobina final',t:'number'},{k:'cono',l:'Cono',opts:['3"','6"']},{k:'instr',l:'Trabajo a realizar / instrucciones'},{k:'kg',l:'Kg totales',t:'number'},{k:'fecha',l:'Fecha entrega',t:'date'},{k:'entregasTxt',l:'Entregas parciales (dd/mm=kg; …)',w:1,h:'ej: 15/10=1000; 22/10=1000 · vacío = una sola entrega en la fecha de arriba'},{k:'color',l:'Color',opts:['Cristal','Negro','Blanco','Azulino','Gris']},{k:'trat',l:'Tratamiento',opts:['Sin Silicona','Con Silicona']},{k:'lamina',l:'Lámina',opts:['Lamina PET/PE','Lamina PET','Lamina PE']},{k:'solicitudChiv',l:'Solicitud de pedido Chivilcoy'},{k:'certTxt',l:'Certificado de calidad',opts:['No pide','Sí, pide certificado']}],{...o,certTxt:o.cert?'Sí, pide certificado':'No pide',entregasTxt:entTxt(o)},x=>{const c={...x};delete c.certTxt;delete c.entregasTxt;Object.assign(o,c,{cert:x.certTxt==='Sí, pide certificado',entregas:entParse(x.entregasTxt,o.createdAt),esp:(+x.espPet||0)+(+x.espPe||0),updatedAt:now(),editadoPor:who});delete o.certTxt;delete o.entregasTxt;const dup=ocDup(o);if(dup)setTimeout(()=>toast(`⚠ Ojo: ya existe otra ${ocLbl(dup)} (${dup.estado})`),2400)})}
+function ocEdit(id){const o=ocOf(id);if(o.arch)return toast('OC archivada: solo lectura');edit('Editar OC '+o.nro,[{k:'cliente',l:'Cliente'},{k:'nro',l:'Nº OC'},{k:'desc',l:'Medida / descripción'},{k:'ancho',l:'Ancho final (mm)',t:'number'},{k:'espPet',l:'Esp. PET (µ)',t:'number'},{k:'espPe',l:'Esp. PE (µ)',t:'number'},{k:'tiras',l:'Tiras',t:'number'},{k:'bxp',l:'Bobinas por pallet',t:'number'},{k:'kxb',l:'Kg por bobina final',t:'number'},{k:'cono',l:'Cono',opts:['3"','6"']},{k:'instr',l:'Trabajo a realizar / instrucciones'},{k:'kg',l:'Kg totales',t:'number'},{k:'fecha',l:'Fecha entrega',t:'date'},{k:'entregasTxt',l:'Entregas parciales (dd/mm=kg; …)',w:1,h:'ej: 15/10=1000; 22/10=1000 · vacío = una sola entrega en la fecha de arriba'},{k:'color',l:'Color',opts:['Cristal','Negro','Blanco','Azulino','Gris']},{k:'trat',l:'Tratamiento',opts:['Sin Silicona','Con Silicona']},{k:'lamina',l:'Lámina',opts:['Lamina PET/PE','Lamina PET','Lamina PE']},{k:'solicitudChiv',l:'Solicitud de pedido Chivilcoy'},{k:'certTxt',l:'Certificado de calidad',opts:['No pide','Sí, pide certificado']},{k:'lineaTxt',l:'Laminado + refilado',opts:['En línea (sale producto final)','Aparte (laminar y después refilar)']}],{...o,lineaTxt:ocEnLinea(o)?'En línea (sale producto final)':'Aparte (laminar y después refilar)',certTxt:o.cert?'Sí, pide certificado':'No pide',entregasTxt:entTxt(o)},x=>{const c={...x};delete c.certTxt;delete c.entregasTxt;delete c.lineaTxt;c.enLinea=x.lineaTxt.startsWith('En línea');Object.assign(o,c,{cert:x.certTxt==='Sí, pide certificado',entregas:entParse(x.entregasTxt,o.createdAt),esp:(+x.espPet||0)+(+x.espPe||0),updatedAt:now(),editadoPor:who});delete o.certTxt;delete o.entregasTxt;const dup=ocDup(o);if(dup)setTimeout(()=>toast(`⚠ Ojo: ya existe otra ${ocLbl(dup)} (${dup.estado})`),2400)})}
 async function ocToggle(id){const o=ocOf(id);if(o.arch)return toast('OC archivada: solo lectura');
   if(o.estado==='abierta'){const pend=S.laminadas.filter(l=>l.ocId===o.id&&l.estado!=='cerrada'&&l.resto!==true),stk=S.finales.filter(f=>f.ocId===o.id&&f.estado==='en stock'),op=opOf(o.id);
     if(!await confirmUI(`¿Cerrar la <b>${esc(ocLbl(o))}</b>?${pend.length?`<br><br>⚠ Quedan <b>${pend.length} bobinas sin refilar</b> (${fmt(sum(pend,l=>stkLamRest(l)))} kg): salen del stock de semielaborado / materia prima y las que figuran en refiladora se liberan.`:''}${stk.length?`<br>⚠ Hay <b>${stk.length} bobinas finales en stock</b> sin despachar: siguen en Stock terminado.`:''}${op?'<br>La OP abierta se cierra.':''}`,'Cerrar OC','Cancelar'))return;
@@ -1502,7 +1536,8 @@ function refLam(p){if(!p||!p.pesoBobinaPet)return null;const pe=p.pesoBobinaPe&&
 async function lamCheckCompleta(oc){const k=ocKgs(oc);if(oc.kg&&k.lam>=oc.kg&&!oc.lamCompleto){if(await confirmUI(`Ya laminaste <b>${fmt(k.lam)} kg</b> de los <b>${fmt(oc.kg)}</b> pedidos. ¿Dar el laminado de esta OC por completo? Deja de aparecer en la lista del laminador (el refilado sigue).`)){oc.lamCompleto=true;oc.lamCompletoAt=now();oc.updatedAt=now();save();go('lam')}}}
 async function lamCompletar(){const oc=ocOf($('lamOC').value),k=ocKgs(oc);if(await confirmUI(`Laminados <b>${fmt(k.lam)} kg</b> de <b>${fmt(oc.kg)}</b>. ¿Dar el laminado por completo?`)){oc.lamCompleto=true;oc.lamCompletoAt=now();oc.updatedAt=now();save();go('lam')}}
 async function lamReabrirOC(ocId){const oc=ocOf(ocId);if(await confirmUI(`¿Reabrir el laminado de ${ocLbl(oc)}? Vuelve a aparecer en la lista para cargar más bobinas.`)){oc.lamCompleto=false;oc.updatedAt=now();save()}}
-function lamOpen(ocId){$('lamOC').value=ocId;$('lamPartida').value='';lamOCChange();go('lamoc')}
+function lamOpen(ocId){if(ocEnLinea(ocOf(ocId)))return wizLineaStart(ocId); // v0.67: en línea siempre con el asistente
+  $('lamOC').value=ocId;$('lamPartida').value='';lamOCChange();go('lamoc')}
 function lamOCChange(){
   const o=ocOf($('lamOC').value);
   if(o.id){const last=S.laminadas.filter(l=>l.ocId===o.id).sort((a,b)=>b.createdAt>a.createdAt?1:-1)[0];if(last)$('lamPartida').value=last.partida;$('lamEsp').value=o.esp||'';
@@ -1590,7 +1625,8 @@ function horaRealUI(){$('edTitle').textContent='Hora real de producción';
   $('edFields').innerHTML=`<p class="muted" style="margin:0 0 8px;flex-basis:100%">Si cargás bobinas que salieron antes (otro día u otra hora), poné cuándo salieron. Las bobinas que guardes desde ahora quedan con esa fecha y hora, así la producción del día, la eficiencia y el cronograma cuentan bien. Cambiala a medida que avanzás.</p><div class="f"><label>Fecha y hora en que salió la bobina</label><input id="hr_t" type="datetime-local" value="${toLocalIn(tReal||now())}"></div>`;
   edCtx={custom:true,save:()=>{const v=fromLocalIn($('hr_t').value);if(!v)return toast('Poné fecha y hora');if(v>now())return toast('No puede ser una hora futura');if(minsAgo(v)>45*1440)return toast('Más de 45 días atrás: corregilo desde Administración');horaRealSet(v);edClose();toast('Hora real: '+fd(v)+' '+fh(v))}};$('ed').classList.add('show')}
 /* v0.59 · control de bobina laminada agotada: no dejar cargar finales a una laminada que ya dio todo lo que entró */
-function lamExcede(l,neto){const k=lamCalc(l);const tope=k.ent*1.03+1;return k.ent>0&&(k.kf+(+neto||0))>tope?k:null}
+function lamExcede(l,neto){if(esLinea(l))return null; // en línea: el PET gana peso con el PE, no se controla
+  const k=lamCalc(l);const tope=k.ent*1.03+1;return k.ent>0&&(k.kf+(+neto||0))>tope?k:null}
 async function confirmaAgotada(l,neto){const k=lamExcede(l,neto);if(!k)return true;
   return await confirmUI(`<b>⚠ ${esc(lamLbl(l))}</b> entró con <b>${fmt(k.ent)} kg</b> y ya salieron <b>${fmt(k.kf)} kg</b> en ${k.fin.length} bobinas.<br>Con esta serían <b>${fmt(k.kf+(+neto||0))} kg</b>: más de lo que entró.<br><br>Lo más probable es que ya hayas puesto la <b>bobina laminada siguiente</b> en la máquina. Tocá <b>Cancelar</b>, cerrá ${esc(lamLbl(l))} y elegí la nueva.`,'Guardar igual en esta','Cancelar')}
 // al elegir otra laminada en la misma máquina: cerrar (o devolver) la que quedó abierta
@@ -1600,9 +1636,9 @@ async function chequeoCambio(lamId,m){
   S.laminadas.filter(x=>x.id!==lamId&&x.estado==='en refilado'&&ocOf(x.ocId).estado!=='abierta').forEach(x=>{if(S.finales.some(f=>f.lamId===x.id))cerrarLamSimple(x,x.refMaq);else{x.estado='pendiente';x.refMaq=null;x.updatedAt=now()}});
   const otras=S.laminadas.filter(x=>x.id!==lamId&&x.estado==='en refilado'&&x.refMaq===m);
   for(const o of otras){const k=lamCalc(o);
-    if(!k.fin.length){if(await confirmUI(`<b>${esc(lamLbl(o))}</b> (${esc(ocLbl(ocOf(o.ocId)))}) figura puesta en la refiladora ${m} pero no salió ninguna bobina final.<br>¿La sacaste de la máquina? Vuelve a <b>lista para refilar</b>.`,'Sí, la saqué','No, sigue')){o.estado='pendiente';o.refMaq=null;o.refInicio=null;o.updatedAt=now()}continue}
+    if(!k.fin.length){if(await confirmUI(`<b>${esc(lamLbl(o))}</b> (${esc(ocLbl(ocOf(o.ocId)))}) figura puesta en la ${maqTxt(m)} pero no salió ninguna bobina final.<br>¿La sacaste de la máquina? Vuelve a <b>lista para refilar</b>.`,'Sí, la saqué','No, sigue')){o.estado='pendiente';o.refMaq=null;o.refInicio=null;o.updatedAt=now()}continue}
     if(k.fin.some(f=>!f.kg))continue;
-    if(await confirmUI(`<b>${esc(lamLbl(o))}</b> (${esc(ocLbl(ocOf(o.ocId)))}) sigue abierta en la refiladora ${m}:<br>entró ${fmt(k.ent)} kg · salieron <b>${k.fin.length} bobinas · ${fmt(k.kf)} kg</b> (rend. ${fmt(k.rend)} %).<br><br>¿La terminaste? Se cierra antes de pasar a la nueva.${k.rend<85?'<br><b style="color:var(--bad)">⚠ Salió poco de lo que entró: si todavía le queda material, tocá «No, sigue abierta».</b>':''}`,'Sí, cerrarla','No, sigue abierta'))cerrarLamSimple(o,m)}
+    if(await confirmUI(`<b>${esc(lamLbl(o))}</b> (${esc(ocLbl(ocOf(o.ocId)))}) sigue abierta en la ${maqTxt(m)}:<br>entró ${fmt(k.ent)} kg · salieron <b>${k.fin.length} bobinas · ${fmt(k.kf)} kg</b> (rend. ${fmt(k.rend)} %).<br><br>¿La terminaste? Se cierra antes de pasar a la nueva.${k.rend<85?'<br><b style="color:var(--bad)">⚠ Salió poco de lo que entró: si todavía le queda material, tocá «No, sigue abierta».</b>':''}`,'Sí, cerrarla','No, sigue abierta'))cerrarLamSimple(o,m)}
 }
 // tiras: cada tira es una bobina final y se pesa por separado
 function tiraInfo(l,oc){const t=Math.max(1,+oc.tiras||1);if(t<2)return null;const n=S.finales.filter(f=>f.lamId===l.id).length;return{k:n%t+1,t}}
@@ -1653,7 +1689,8 @@ function lamCalc(l,live){
 function opCalc(op){
   const lams=S.laminadas.filter(l=>l.ocId===op.ocId&&!l.resto),fin=S.finales.filter(f=>f.ocId===op.ocId);
   const cerr=lams.filter(l=>l.estado==='cerrada');
-  const kl=sum(lams,l=>l.kg),kf=sum(fin,f=>f.kg),scrap=sum(cerr,l=>l.scrap),resto=sum(cerr,l=>l.resto),kEnt=sum(cerr,l=>l.kg-(+l.resto||0)),kfC=sum(fin.filter(f=>cerr.some(l=>l.id===f.lamId)),f=>f.kg);
+  const lin=new Set(lams.filter(esLinea).map(l=>l.id)),cerrR=cerr.filter(l=>!esLinea(l)); // v0.67: en línea no hay scrap/rendimiento por ahora
+  const kl=sum(lams.filter(l=>!esLinea(l)),l=>l.kg)+sum(fin.filter(f=>lin.has(f.lamId)),f=>f.kg),kf=sum(fin,f=>f.kg),scrap=sum(cerrR,l=>l.scrap),resto=sum(cerrR,l=>l.resto),kEnt=sum(cerrR,l=>l.kg-(+l.resto||0)),kfC=sum(fin.filter(f=>cerrR.some(l=>l.id===f.lamId)),f=>f.kg);
   return{lams,fin,cerr,kl,kf,trim:0,scrap,resto,dif:scrap,rend:kEnt?kfC/kEnt*100:0};
 }
 $('cResto').addEventListener('input',renderOP);
@@ -1893,7 +1930,7 @@ function croPNG(){
 }
 function croReal(c){ // kg producidos ese día en esa máquina para esa OC
   if(!c.ocId)return null;
-  if(c.maq==='Laminadora')return sum(ALL('laminadas').filter(l=>!l.resto&&l.tipo!=='PET'&&l.ocId===c.ocId&&dKey(l.createdAt)===c.fecha),l=>l.kg);
+  if(c.maq==='Laminadora')return sum(ALL('laminadas').filter(l=>!l.resto&&l.tipo!=='PET'&&!esLinea(l)&&l.ocId===c.ocId&&dKey(l.createdAt)===c.fecha),l=>l.kg)+sum(ALL('finales').filter(f=>f.maq==='Laminadora'&&f.ocId===c.ocId&&dKey(f.createdAt)===c.fecha),f=>f.kg);
   const mq=c.maq.replace('Refiladora ','');return sum(ALL('finales').filter(f=>f.ocId===c.ocId&&f.maq===mq&&dKey(f.createdAt)===c.fecha),f=>f.kg);
 }
 function croColor(c){const cols=['#1e9a4f','#0a6b3a','#2ebb62','#3a7ca5','#8a5cb8','#c0731a','#b53c6d'];if(!c.ocId)return '#b45f06';let s=0;for(const ch of c.ocId)s=(s*31+ch.charCodeAt(0))>>>0;return cols[s%cols.length]}
@@ -2196,20 +2233,21 @@ function enTurno(iso,t){const m=minOf(iso);return t.ini<t.fin?(m>=t.ini&&m<t.fin
 function effBadge(e){if(e==null)return'<span class="muted">—</span>';const c=e>=90?'cerr':e>=70?'pend':'bad';return`<span class="tag ${c}" style="${c==='bad'?'background:#fde3e1;color:var(--bad)':''}">${fmt(e)} %</span>`}
 function renderProd(){
   const dia=$('prodDia').value||hoyISO();if(!$('prodDia').value)$('prodDia').value=dia;
-  const lam=S.laminadas.filter(l=>!l.resto&&l.tipo!=='PET'&&dKey(l.createdAt)===dia).map(l=>({t:l.createdAt,proc:'lam',maq:'Laminadora',op:l.operario,ocId:l.ocId,lbl:lamLbl(l),kg:l.kg,m:l.m}));
-  const fin=S.finales.filter(f=>dKey(f.createdAt)===dia).map(f=>({t:f.createdAt,proc:'ref',maq:f.maq||'?',op:f.operario,ocId:f.ocId,lbl:'bob '+f.nro,kg:f.kg,m:f.m}));
+  const lam=S.laminadas.filter(l=>!l.resto&&l.tipo!=='PET'&&!esLinea(l)&&dKey(l.createdAt)===dia).map(l=>({t:l.createdAt,proc:'lam',maq:'Laminadora',op:l.operario,ocId:l.ocId,lbl:lamLbl(l),kg:l.kg,m:l.m}));
+  const fin=S.finales.filter(f=>dKey(f.createdAt)===dia).map(f=>({t:f.createdAt,proc:f.maq==='Laminadora'?'lam':'ref',maq:f.maq||'?',op:f.operario,ocId:f.ocId,lbl:'bob '+f.nro,kg:f.kg,m:f.m}));
   const all=[...lam,...fin].sort((a,b)=>a.t>b.t?1:-1);
   const par=S.ops.flatMap(o=>o.paradas.filter(p=>dKey(p.t)===dia));
-  $('prodKpi').innerHTML=`<div><b>${lam.length}</b><span>laminadas</span></div><div><b>${fmt(sum(lam,x=>x.kg))}</b><span>kg laminados</span></div><div><b>${fin.length}</b><span>bobinas finales</span></div><div><b>${fmt(sum(fin,x=>x.kg))}</b><span>kg refilados</span></div><div><b>${sum(par,p=>p.min)}</b><span>min de parada</span></div>`;
+  const finL=fin.filter(x=>x.proc==='lam'),finR=fin.filter(x=>x.proc==='ref');
+  $('prodKpi').innerHTML=`<div><b>${lam.length}</b><span>laminadas</span></div><div><b>${fmt(sum(lam,x=>x.kg))}</b><span>kg laminados</span></div>${finL.length?`<div><b>${fmt(sum(finL,x=>x.kg))}</b><span>kg en línea · ${finL.length} bob.</span></div>`:''}<div><b>${finR.length}</b><span>bobinas refiladas</span></div><div><b>${fmt(sum(finR,x=>x.kg))}</b><span>kg refilados</span></div><div><b>${sum(par,p=>p.min)}</b><span>min de parada</span></div>`;
   // Ahora en planta
   const maqs=[['Laminadora',null,'lam'],['Refiladora Verde','Verde','ref'],['Refiladora Gris','Gris','ref']];
   $('prodAhora').innerHTML=maqs.map(([nm,mq,proc])=>{
-    const ult=(proc==='lam'?S.laminadas.filter(l=>!l.resto&&l.tipo!=='PET'):S.finales.filter(f=>f.maq===mq)).sort((a,b)=>b.createdAt>a.createdAt?1:-1)[0];
+    const ult=(proc==='lam'?[...S.laminadas.filter(l=>!l.resto&&l.tipo!=='PET'&&!esLinea(l)),...S.finales.filter(f=>f.maq==='Laminadora')]:S.finales.filter(f=>f.maq===mq)).sort((a,b)=>b.createdAt>a.createdAt?1:-1)[0];
     const activa=ult&&minsAgo(ult.createdAt)<90;const oc=ult?ocOf(ult.ocId):null;
     const enRef=proc==='ref'?S.laminadas.filter(l=>l.estado==='en refilado'&&l.refMaq===mq):[];
     const objTxt=oc?(objetivo(oc.id,proc)?`objetivo ${objetivo(oc.id,proc)} kg/h`:''):'';
     return`<div class="pick" style="cursor:default;border-left-color:${activa?'var(--brand3)':'#c9d2cc'}"><b>${nm}</b> <span class="tag ${activa?'cerr':'rem'}">${activa?'activa':'sin actividad'}</span>
-      <small>${ult?`${oc?ocLbl(oc)+' · ':''}${proc==='lam'?lamLbl(ult):'bob '+ult.nro} · ${ult.kg?fmt(ult.kg)+' kg':'sin pesar'} · ${ult.operario||''}`:'Sin registros'}</small>
+      <small>${ult?`${oc?ocLbl(oc)+' · ':''}${ult.lamId?'bob '+ult.nro+(ult.maq==='Laminadora'?' (en línea)':''):lamLbl(ult)} · ${ult.kg?fmt(ult.kg)+' kg':'sin pesar'} · ${ult.operario||''}`:'Sin registros'}</small>
       <small>${ult?`Última bobina ${agoLbl(ult.createdAt)}`:''}${enRef.length?` · en máquina: ${enRef.map(l=>lamLbl(l)).join(', ')}`:''}</small>
       ${objTxt?`<small>${objTxt}</small>`:''}</div>`}).join('');
   // Gráfico kg por hora
@@ -2238,7 +2276,7 @@ function renderProd(){
   $('prodTurnos').innerHTML=rows||'<tr><td colspan="9" class="muted">Sin producción cargada ese día.</td></tr>';
   const last={};
   $('prodLista').innerHTML=all.map(x=>{const k=x.proc+x.maq;const prev=last[k];last[k]=x.t;const dm=prev?(new Date(x.t)-new Date(prev))/60000:null;const kh=dm&&x.kg?x.kg/(dm/60):null;const obj=objetivo(x.ocId,x.proc);
-    return`<tr><td>${fh(x.t)}</td><td>${x.proc==='lam'?'Laminadora':'Refiladora '+x.maq}</td><td>${x.op||''}</td><td>${ocLbl(ocOf(x.ocId))}</td><td>${x.lbl}</td><td class="n">${x.kg?fmt(x.kg):'<span class="tag pend">sin pesar</span>'}</td><td class="n">${dm!=null?fmt(dm):''}</td><td class="n">${kh?fmt(kh):''}</td><td class="n">${obj?fmt(obj):''}</td></tr>`}).join('')||'<tr><td colspan="9" class="muted">Sin producción cargada ese día.</td></tr>';
+    return`<tr><td>${fh(x.t)}</td><td>${x.proc==='lam'?'Laminadora'+(x.maq==='Laminadora'?' (en línea)':''):'Refiladora '+x.maq}</td><td>${x.op||''}</td><td>${ocLbl(ocOf(x.ocId))}</td><td>${x.lbl}</td><td class="n">${x.kg?fmt(x.kg):'<span class="tag pend">sin pesar</span>'}</td><td class="n">${dm!=null?fmt(dm):''}</td><td class="n">${kh?fmt(kh):''}</td><td class="n">${obj?fmt(obj):''}</td></tr>`}).join('')||'<tr><td colspan="9" class="muted">Sin producción cargada ese día.</td></tr>';
 }
 
 /* ================= v0.49 · DASHBOARD (estilo termoformado / PET Chivilcoy) ================= */
@@ -2255,8 +2293,8 @@ function dbOC(id){const o=ocOf(id);if(!o.id)return dbGo('oc');dbGo('oc');$('qOC'
 // índice de cargas por día local: laminadas (sin restos ni PET de Chivilcoy) y bobinas finales
 function dbIdx(){
   const idx={};
-  ALL('laminadas').filter(l=>!l.resto&&l.tipo!=='PET'&&l.createdAt).forEach(l=>{const k=dKey(l.createdAt);(idx[k]=idx[k]||[]).push({t:l.createdAt,proc:'lam',mq:'Laminadora',op:l.operario,ocId:l.ocId,kg:+l.kg||0,lbl:lamLbl(l)})});
-  ALL('finales').filter(f=>f.createdAt).forEach(f=>{const k=dKey(f.createdAt);(idx[k]=idx[k]||[]).push({t:f.createdAt,proc:'ref',mq:'Refiladora '+(f.maq||'?'),op:f.operario,ocId:f.ocId,kg:+f.kg||0,lbl:'bob '+f.nro})});
+  ALL('laminadas').filter(l=>!l.resto&&l.tipo!=='PET'&&!esLinea(l)&&l.createdAt).forEach(l=>{const k=dKey(l.createdAt);(idx[k]=idx[k]||[]).push({t:l.createdAt,proc:'lam',mq:'Laminadora',op:l.operario,ocId:l.ocId,kg:+l.kg||0,lbl:lamLbl(l)})});
+  ALL('finales').filter(f=>f.createdAt).forEach(f=>{const k=dKey(f.createdAt),lin=f.maq==='Laminadora';(idx[k]=idx[k]||[]).push({t:f.createdAt,proc:lin?'lam':'ref',mq:lin?'Laminadora':'Refiladora '+(f.maq||'?'),op:f.operario,ocId:f.ocId,kg:+f.kg||0,lbl:'bob '+f.nro})});
   const par={};ALL('ops').forEach(o=>(o.paradas||[]).forEach(p=>{if(!p.t)return;const k=dKey(p.t),mq=p.maq==='Laminadora'?'Laminadora':'Refiladora '+(p.maq||'?');(par[k+'|'+mq]=par[k+'|'+mq]||[]).push(p)}));
   return{idx,par};
 }
@@ -2376,7 +2414,7 @@ function dbTotales(){
   const per=dbPeriodo(),{A}=dbAgg(per),ef=a=>a.teo?Math.round(a.kgO/a.teo*100):null;
   // rendimiento: laminadas cerradas cuyo refilado terminó en el período
   const FA=ALL('finales'),LA=ALL('laminadas');const ult={};FA.forEach(f=>{if(f.lamId&&f.createdAt&&(!ult[f.lamId]||f.createdAt>ult[f.lamId]))ult[f.lamId]=f.createdAt});
-  const cer=LA.filter(l=>l.estado==='cerrada'&&ult[l.id]&&per.keys.includes(dKey(ult[l.id]).slice(0,7)));const cerIds=new Set(cer.map(l=>l.id));
+  const cer=LA.filter(l=>l.estado==='cerrada'&&!esLinea(l)&&ult[l.id]&&per.keys.includes(dKey(ult[l.id]).slice(0,7)));const cerIds=new Set(cer.map(l=>l.id));
   const kEnt=sum(cer,l=>(+l.kg||0)-(+l.resto||0)),kFin=sum(FA.filter(f=>cerIds.has(f.lamId)),f=>f.kg),scrap=sum(cer,l=>+l.scrap||0);
   const rend=kEnt?kFin/kEnt*100:null;
   const eL=ef(A.lam),eR=ef(A.ref);
@@ -2388,15 +2426,15 @@ function dbTotales(){
     <div class="db-kpi" style="cursor:pointer" onclick="dbGo('rfl')"><div class="v" style="color:${rend==null?'var(--pd-text3)':rend>=95?'var(--pd-ok)':rend>=90?'var(--pd-mid)':'var(--pd-bad)'}">${rend!=null?fmt(rend)+'%':'—'}</div><div class="l">Rendimiento del refilado</div><div class="s">${cer.length?`${cer.length} laminadas · scrap ${dbN(scrap)} kg`:'sin laminadas cerradas'}</div></div>`;
   if(!mixEl)return;
   const fin=FA.filter(f=>f.createdAt&&per.keys.includes(dKey(f.createdAt).slice(0,7)));
-  const cli={},flu={},maq={};fin.forEach(f=>{const o=ocOf(f.ocId),kg=+f.kg||0;cli[o.cliente||'—']=(cli[o.cliente||'—']||0)+kg;const fl=esPetOC(o)?'PET Chivilcoy (rebobinado)':'Laminado PET/PE';flu[fl]=(flu[fl]||0)+kg;const m='Refiladora '+(f.maq||'?');maq[m]=(maq[m]||0)+kg});
+  const cli={},flu={},maq={};fin.forEach(f=>{const o=ocOf(f.ocId),kg=+f.kg||0;cli[o.cliente||'—']=(cli[o.cliente||'—']||0)+kg;const fl=esPetOC(o)?'PET Chivilcoy (rebobinado)':'Laminado PET/PE';flu[fl]=(flu[fl]||0)+kg;const m=f.maq==='Laminadora'?'Laminadora (en línea)':'Refiladora '+(f.maq||'?');maq[m]=(maq[m]||0)+kg});
   const top=Object.entries(cli).sort((a,b)=>b[1]-a[1]);const cli6={};top.slice(0,6).forEach(([k,v])=>cli6[k]=v);if(top.length>6)cli6['Otros ('+(top.length-6)+')']=sum(top.slice(6),x=>x[1]);
   const pal=['#15a463','#c98a1b','#2b8fb0','#7d6bb3','#d9786f','#94a096','#5aa7a0'];
   const box=(tit,obj,col)=>{const tot=Object.values(obj).reduce((s,v)=>s+v,0);const rows=Object.entries(obj).sort((a,b)=>b[1]-a[1]).map(([k,v],i)=>{const pc=tot?Math.round(v/tot*100):0,c=col(k,i);return`<div class="db-mr"><div class="db-mrh"><span><b style="color:${c}">●</b> ${esc(k)}</span><span>${dbN(v)} kg · <b>${pc}%</b></span></div><div class="db-mb"><i style="width:${pc}%;background:${c}"></i></div></div>`}).join('');
     return`<div class="db-box"><div class="db-bh"><h3>${tit}</h3><span class="db-note">${per.lbl} · bobinas finales</span></div>${rows||'<div class="db-ce">Sin bobinas refiladas en el período</div>'}</div>`};
-  const FC={'Laminado PET/PE':'#15a463','PET Chivilcoy (rebobinado)':'#6d8fd6','Refiladora Verde':'#1e9a4f','Refiladora Gris':'#8a948d'};
+  const FC={'Laminado PET/PE':'#15a463','PET Chivilcoy (rebobinado)':'#6d8fd6','Refiladora Verde':'#1e9a4f','Refiladora Gris':'#8a948d','Laminadora (en línea)':'#2b7fa8'};
   mixEl.innerHTML=box('Lo refilado por cliente',cli6,(k,i)=>pal[i%pal.length])+box('Lo refilado por flujo y máquina',flu,(k,i)=>FC[k]||pal[i]);
   // agrega las máquinas debajo del flujo en la misma tarjeta
-  const mb=mixEl.lastElementChild;if(mb&&Object.keys(maq).length){const tot=sum(Object.values(maq),v=>v);mb.insertAdjacentHTML('beforeend','<div class="db-tt" style="margin-top:12px">Por refiladora</div>'+Object.entries(maq).sort((a,b)=>b[1]-a[1]).map(([k,v])=>{const pc=tot?Math.round(v/tot*100):0,c=FC[k]||'#94a096';return`<div class="db-mr"><div class="db-mrh"><span><b style="color:${c}">●</b> ${esc(k)}</span><span>${dbN(v)} kg · <b>${pc}%</b></span></div><div class="db-mb"><i style="width:${pc}%;background:${c}"></i></div></div>`}).join(''))}
+  const mb=mixEl.lastElementChild;if(mb&&Object.keys(maq).length){const tot=sum(Object.values(maq),v=>v);mb.insertAdjacentHTML('beforeend','<div class="db-tt" style="margin-top:12px">Por máquina</div>'+Object.entries(maq).sort((a,b)=>b[1]-a[1]).map(([k,v])=>{const pc=tot?Math.round(v/tot*100):0,c=FC[k]||'#94a096';return`<div class="db-mr"><div class="db-mrh"><span><b style="color:${c}">●</b> ${esc(k)}</span><span>${dbN(v)} kg · <b>${pc}%</b></span></div><div class="db-mb"><i style="width:${pc}%;background:${c}"></i></div></div>`}).join(''))}
 }
 
 // ── STOCK por etapas ──
@@ -2497,8 +2535,8 @@ function homeRender(){
   const hoy=hoyISO(),h=new Date().getHours();
   $('hmHola').textContent=(h<12?'Buen día':h<20?'Buenas tardes':'Buenas noches')+(who?', '+who.split(' ')[0]:'');
   $('hmFecha').textContent=new Date().toLocaleDateString('es-AR',{weekday:'long',day:'numeric',month:'long'}).replace(/^./,c=>c.toUpperCase());
-  const lamH=S.laminadas.filter(l=>!l.resto&&l.tipo!=='PET'&&l.createdAt&&dKey(l.createdAt)===hoy);
-  const finH=S.finales.filter(f=>f.createdAt&&dKey(f.createdAt)===hoy);
+  const lamH=[...S.laminadas.filter(l=>!l.resto&&l.tipo!=='PET'&&!esLinea(l)&&l.createdAt&&dKey(l.createdAt)===hoy),...S.finales.filter(f=>f.maq==='Laminadora'&&f.createdAt&&dKey(f.createdAt)===hoy)]; // v0.67: incluye lo que sale en línea
+  const finH=S.finales.filter(f=>f.maq!=='Laminadora'&&f.createdAt&&dKey(f.createdAt)===hoy);
   const prog=mq=>{const c=croItems(hoy,mq).find(x=>x.ocId);if(!c)return'<b class="t">Sin programar</b>';const o=ocOf(c.ocId);return`<b class="t">${esc(o.cliente||'—')} <small>OC ${esc(o.nro||'')}${c.operario?' · '+esc(c.operario):''}</small></b>`};
   const kgM=(arr,mq)=>{const x=arr.filter(f=>f.maq===mq);return x.length?`${fmt(sum(x,f=>f.kg))} kg <small>${x.length} bob.</small>`:'—'};
   $('hmLam').innerHTML=`<div><span>Hoy</span><b>${lamH.length?fmt(sum(lamH,l=>l.kg))+' kg <small>'+lamH.length+' bob.</small>':'—'}</b></div><div><span>Programado</span>${prog('Laminadora')}</div>`;
@@ -2549,7 +2587,7 @@ function render(){
     $('refCerr').innerHTML=S.ops.filter(op=>op.estado==='cerrada').sort((a,b)=>b.fin>a.fin?1:-1).slice(0,12).map(op=>{const o=ocOf(op.ocId),c=opCalc(op);return`<div class="pick" style="border-left-color:#c9d2cc" onclick="opReabrir('${op.id}')"><b>${ocLbl(o)}</b> <span class="tag rem">cerrada ${fd(op.fin)}</span><small>${o.desc||''} · ${c.fin.length} bobinas · ${fmt(c.kf)} kg finales</small></div>`}).join('')||'<p class="muted">—</p>';
     const pr=maq?progHoy('Refiladora '+maq):[];$('refProg').innerHTML=pr.length?`<h3>Programado para hoy · Refiladora ${maq}</h3><div class="grid" style="margin-bottom:12px">`+pr.map(c=>`<div class="pick" style="border-left-color:var(--warn);cursor:${c.ocId?'pointer':'default'}" ${c.ocId?`onclick="opOpen('${c.ocId}')"`:''}><b>${croLbl(c)}</b> <span class="tag ref">${c.turno}</span>${c.operario?` <span class="tag rem">${c.operario}</span>`:''}${c.nota?`<small>${c.nota}</small>`:''}</div>`).join('')+'</div><h3>Todas las OC con laminadas</h3>':'';
     $('refPend').innerHTML=abiertas.map(o=>{const lams=S.laminadas.filter(l=>l.ocId===o.id),pend=lams.filter(l=>l.estado!=='cerrada'),op=opOf(o.id),kf=sum(S.finales.filter(f=>f.ocId===o.id),f=>f.kg);
-    if(!lams.length&&!op)return '';
+    if(!lams.length&&!op)return '';if(ocEnLinea(o)&&!lams.some(l=>!esLinea(l)&&l.estado!=='cerrada'))return '';
     return`<div class="pick" style="${esPetOC(o)?'border-left-color:#6d8fd6;background:#f3f7ff':''}" onclick="opOpen('${o.id}')"><b>${ocLbl(o)}</b> ${flujoTag(o)} ${op?tagOf('abierta'):''}<small>${o.desc||''} · ${o.ancho||'?'} mm × ${o.esp||'?'} µ</small><small style="color:var(--brand)">🛠 ${trabajoLbl(o)}</small><small>${pend.length} bobinas por refilar (${fmt(sum(pend,l=>l.kg))} kg) · <b>${fmt(kf)}</b> / ${fmt(o.kg)} kg finales</small><div class="bar"><i style="width:${o.kg?Math.min(100,kf/o.kg*100):0}%"></i></div></div>`}).join('')||'<p class="muted">No hay OC con bobinas laminadas para refilar.</p>';}
   if(mode==='op'&&curOP)renderOP();
   if(mode==='pc'){ // v0.59: solo se dibuja la pestaña que se está viendo
@@ -2569,7 +2607,7 @@ function renderConfig(){
   $('cfgOps').innerHTML='<table>'+S.operarios.map(o=>`<tr><td>${esc(o.n)}</td><td class="n">${esc(o.pin)}</td><td>${o.rol==='admin'?'Todo':'Solo tablets'}</td><td><button class="btn sec" onclick="opRm('${o.pin}')">✕</button></td></tr>`).join('')+'</table>';
   $('cfgTam').innerHTML=tamTxt();
   const v2=(x,y,u1,u2)=>x==null&&y==null?'<span class="muted">—</span>':`${x??'?'}${u1} · ${y??'?'}${u2}`;
-  $('catList').innerHTML=S.catalogo.slice().sort((a,b)=>a.cliente.localeCompare(b.cliente)).map(p=>`<tr><td><b>${esc(p.cliente)}</b><br><span style="font-size:15px;font-weight:700;color:var(--brand)">${esc(p.medida)}</span></td><td>${v2(p.anchoPet,p.espPet,' mm',' µ')}</td><td>${v2(p.anchoPe,p.espPe,' mm',' µ')}</td><td><b>${p.anchoFinal??'?'} mm</b><br><span class="muted">${p.tiras||1} tira${(p.tiras||1)>1?'s':''}</span></td><td class="sm">${p.pesoBobinaPet?`PET ${p.pesoBobinaPet} kg${p.metrosBobinaPet?' / '+p.metrosBobinaPet+' m':''}<br>`:''}${p.pesoBobinaPe?`PE ${p.pesoBobinaPe} kg${p.metrosBobinaPe?' / '+p.metrosBobinaPe+' m':''}<br>`:''}${p.pesoBobinaFinal?`<b>Final ${p.pesoBobinaFinal} kg</b>`:''}${!p.pesoBobinaPet&&!p.pesoBobinaPe&&!p.pesoBobinaFinal?'<span class="muted">—</span>':''}</td><td class="sm">${p.bxp?p.bxp+' bob':'—'}${p.cilindro?`<br><span class="muted">cil. ${p.cilindro} mm</span>`:''}</td><td class="sm">3": ${p.cono3!=null?p.cono3:`<span class="muted">${taraKg('3"',p.anchoFinal)} est.</span>`}<br>6": ${p.cono6!=null?p.cono6:'—'}</td><td class="sm">Lam. ${p.kgHoraLam||'—'}<br>Ref. ${p.kgHoraRef||'—'}</td><td style="text-align:right;white-space:nowrap"><button class="btn sec" onclick="catEdit('${p.id}')">✎</button> <button class="btn sec" onclick="catDel('${p.id}')">✕</button></td></tr>`).join('');
+  $('catList').innerHTML=S.catalogo.slice().sort((a,b)=>a.cliente.localeCompare(b.cliente)).map(p=>`<tr><td><b>${esc(p.cliente)}</b><br><span style="font-size:15px;font-weight:700;color:var(--brand)">${esc(p.medida)}</span></td><td>${v2(p.anchoPet,p.espPet,' mm',' µ')}</td><td>${v2(p.anchoPe,p.espPe,' mm',' µ')}</td><td><b>${p.anchoFinal??'?'} mm</b><br><span class="muted">${p.tiras||1} tira${(p.tiras||1)>1?'s':''}</span>${p.enLinea?'<br><span class="tag cerr">en línea</span>':''}</td><td class="sm">${p.pesoBobinaPet?`PET ${p.pesoBobinaPet} kg${p.metrosBobinaPet?' / '+p.metrosBobinaPet+' m':''}<br>`:''}${p.pesoBobinaPe?`PE ${p.pesoBobinaPe} kg${p.metrosBobinaPe?' / '+p.metrosBobinaPe+' m':''}<br>`:''}${p.pesoBobinaFinal?`<b>Final ${p.pesoBobinaFinal} kg</b>`:''}${!p.pesoBobinaPet&&!p.pesoBobinaPe&&!p.pesoBobinaFinal?'<span class="muted">—</span>':''}</td><td class="sm">${p.bxp?p.bxp+' bob':'—'}${p.cilindro?`<br><span class="muted">cil. ${p.cilindro} mm</span>`:''}</td><td class="sm">3": ${p.cono3!=null?p.cono3:`<span class="muted">${taraKg('3"',p.anchoFinal)} est.</span>`}<br>6": ${p.cono6!=null?p.cono6:'—'}</td><td class="sm">Lam. ${p.kgHoraLam||'—'}<br>Ref. ${p.kgHoraRef||'—'}</td><td style="text-align:right;white-space:nowrap"><button class="btn sec" onclick="catEdit('${p.id}')">✎</button> <button class="btn sec" onclick="catDel('${p.id}')">✕</button></td></tr>`).join('');
 }
 /* ================= v0.41 · REFILADO (Administración) · flujo por OC ================= */
 
@@ -2605,7 +2643,7 @@ function diasTxt(iso){const d=Math.floor(minsAgo(iso)/1440);return d<=0?'hoy':d=
 function renderRfl(){
   segInit('rflOpsSeg',v=>{rflOpsEst=v;renderRfl()});
   const qq=$('qRfl').value,okQ=(o,extra)=>q(qq,ocLbl(o)+' '+(o.desc||'')+' '+(extra||''));
-  const ocAb=l=>ocOf(l.ocId).estado==='abierta';const pend=S.laminadas.filter(l=>l.estado==='pendiente'&&ocAb(l)&&!enCamino(l)&&okFlujo(ocOf(l.ocId))),enM=S.laminadas.filter(l=>l.estado==='en refilado'&&okFlujo(ocOf(l.ocId)));
+  const ocAb=l=>ocOf(l.ocId).estado==='abierta';const pend=S.laminadas.filter(l=>l.estado==='pendiente'&&!esLinea(l)&&ocAb(l)&&!enCamino(l)&&okFlujo(ocOf(l.ocId))),enM=S.laminadas.filter(l=>l.estado==='en refilado'&&!esLinea(l)&&okFlujo(ocOf(l.ocId)));
   const rev=revLams(60).filter(l=>okFlujo(ocOf(l.ocId)));
   const opsAb=S.ops.filter(x=>x.estado==='abierta'&&okFlujo(ocOf(x.ocId)));
   const cnt={pend:[pend.length+enM.length,`${pend.length} listas · ${enM.length} en máquina · ${fmt(sum(pend.concat(enM),l=>l.kg))} kg`],maq:[enM.length,enM.length?[...new Set(enM.map(l=>l.refMaq||'?'))].join(' y '):'máquinas libres'],ops:[opsAb.length,'OPs abiertas'],rev:[rev.length,rev.length?'finales cargados en otra laminada':'todo en orden']};
@@ -2656,7 +2694,7 @@ function renderRfl(){
   $('pcRfl').innerHTML=h;
 }
 // v0.59 · revisar rendimientos
-function revLams(dias){const lim=new Date(Date.now()-(dias||60)*864e5).toISOString();return S.laminadas.filter(l=>{if(l.estado!=='cerrada'||(l.refFin||l.updatedAt||'')<lim)return false;const k=lamCalc(l);return k.ent>0&&(k.rend<85||k.rend>102)})}
+function revLams(dias){const lim=new Date(Date.now()-(dias||60)*864e5).toISOString();return S.laminadas.filter(l=>{if(l.estado!=='cerrada'||esLinea(l)||(l.refFin||l.updatedAt||'')<lim)return false;const k=lamCalc(l);return k.ent>0&&(k.rend<85||k.rend>102)})}
 // sugerencia: una bobina final de la laminada vecina (la del borde, por hora) que deja a las dos dentro de 85–102 %
 function revSugerencia(l,todas){const i=todas.indexOf(l);const rd=(x,dk)=>{const c=lamCalc(x);return c.ent?(c.kf+dk)/c.ent*100:0};const ok=r=>r>=85&&r<=102;
   for(const v of [todas[i-1],todas[i+1]].filter(Boolean)){const kl=lamCalc(l),kv=lamCalc(v);
@@ -2696,11 +2734,12 @@ let laView='oc';const laOpen=new Set();
 const LAV={oc:['OC en laminado','#2b7fa8','Avance de cada OC de laminado: kg laminados contra pedidos, lo que falta y el PET de Chivilcoy disponible para seguir'],pet:['PET para laminar','#8b6fd1','Bobinas PET de Chivilcoy en Lanús para clientes PET/PE, esperando laminado (salen solas cuando el laminador carga la laminada con su partida y N°)'],bob:['Bobinas laminadas','#1e9a4f','Cada bobina que salió de la laminadora, por día: peso contra lo normal de ese producto (mediana de las últimas laminadas), defectos y observaciones'],cal:['Calidad','#a3271f','Defectos marcados por el laminador y pesos fuera de lo normal, por tipo, partida y operario']};
 function laSet(v){laView=v;renderLamAdm()}
 const laLams=()=>S.laminadas.filter(l=>l.tipo!=='PET'&&l.resto!==true);
+const laLamsR=()=>laLams().filter(l=>!esLinea(l)); // sin los PET en línea (para pesos de referencia)
 // referencia de peso: lo normal real de ese producto (mediana de las últimas 30 laminadas del mismo producto/OC); si hay pocas, la del catálogo
 const _laMed={};function laMediana(o){const k=o.prodId||o.id;if(_laMed[k]&&_laMed[k].t>Date.now()-30000)return _laMed[k].v;
-  const ks=laLams().filter(l=>{const x=ocOf(l.ocId);return (o.prodId?x.prodId===o.prodId:x.id===o.id)&&+l.kg>0}).sort((a,b)=>(b.createdAt||'')>(a.createdAt||'')?1:-1).slice(0,30).map(l=>+l.kg).sort((a,b)=>a-b);
+  const ks=laLamsR().filter(l=>{const x=ocOf(l.ocId);return (o.prodId?x.prodId===o.prodId:x.id===o.id)&&+l.kg>0}).sort((a,b)=>(b.createdAt||'')>(a.createdAt||'')?1:-1).slice(0,30).map(l=>+l.kg).sort((a,b)=>a-b);
   const v=ks.length>=5?ks[Math.floor(ks.length/2)]:null;_laMed[k]={t:Date.now(),v};return v}
-function laRef(l){const o=ocOf(l.ocId);if(!l.kg)return null;const m=laMediana(o),p=S.catalogo.find(x=>x.id===o.prodId),r=m||refLam(p);if(!r)return null;return{r,d:(l.kg-r)/r*100,real:!!m}}
+function laRef(l){if(esLinea(l))return null;const o=ocOf(l.ocId);if(!l.kg)return null;const m=laMediana(o),p=S.catalogo.find(x=>x.id===o.prodId),r=m||refLam(p);if(!r)return null;return{r,d:(l.kg-r)/r*100,real:!!m}}
 function laDefs(l){return obsParse(obsDe(l))}
 function laRango(){if(!$('laHasta').value)$('laHasta').value=hoyISO();if(!$('laDesde').value){const d=new Date();d.setDate(d.getDate()-6);$('laDesde').value=dKey(d)}return[$('laDesde').value,$('laHasta').value]}
 async function lamCompletarAdm(ocId){const oc=ocOf(ocId),k=ocKgs(oc);if(!await confirmUI(`¿Dar por <b>completo el laminado</b> de ${esc(ocLbl(oc))}? Van ${fmt(k.lam)} de ${fmt(oc.kg)} kg. Deja de aparecer en la tablet del laminador (el refilado sigue).`,'Dar por completo','Cancelar'))return;oc.lamCompleto=true;oc.lamCompletoAt=now();oc.lamCompletoPor=who;oc.updatedAt=now();save()}
@@ -2710,7 +2749,7 @@ function renderLamAdm(){
   const V=chivVivo(),petDe=o=>V.lam.filter(x=>x.oc&&x.oc.id===o.id);const petTodo=V.lam.filter(x=>okFlujo(x.oc));
   const [desde,hasta]=laRango();const enR=l=>{const k=dKey(l.createdAt);return k>=desde&&k<=hasta};
   const LR=laLams().filter(enR);
-  const hoyL=laLams().filter(l=>esHoy(l.createdAt));
+  const hoyL=[...laLamsR().filter(l=>esHoy(l.createdAt)),...S.finales.filter(f=>f.maq==='Laminadora'&&esHoy(f.createdAt))]; // v0.67: incluye lo que sale en línea
   const falta=sum(ocsL.filter(o=>!o.lamCompleto),o=>Math.max(0,(+o.kg||0)-ocKgs(o).lam));
   const conDef=LR.filter(l=>obsDe(l));
   const sub={oc:`${ocsL.filter(o=>!o.lamCompleto).length} en curso · faltan ${fmt(falta)} kg`,pet:`${petTodo.length} bobinas · ${fmt(sum(petTodo,x=>x.kg))} kg`,bob:`hoy ${hoyL.length} bob · ${fmt(sum(hoyL,l=>l.kg))} kg`,cal:`${conDef.length} con defecto en el período`};
@@ -2768,7 +2807,7 @@ function stkBase(){
   const g=palGroups(),fin=[];
   for(const cli of Object.keys(g))for(const {oc,pallets} of Object.values(g[cli])){if(!okO(oc))continue;for(const pk of Object.keys(pallets)){const fs=pallets[pk].sort((a,b)=>a.nro-b.nro);fin.push({cli,oc,pk,fs,kg:sum(fs,f=>f.kg),kgB:sum(fs,f=>f.kgB||f.kg),ult:fs.map(f=>f.createdAt).sort().slice(-1)[0]})}}
   const proc=S.ocs.filter(okO).flatMap(o=>palsArmando(o.id).map(x=>({o,...x}))).map(x=>{const fs=S.finales.filter(f=>f.ocId===x.o.id&&pk$(f)===x.pk&&f.estado==='en stock').sort((a,b)=>a.nro-b.nro);return{cli:x.o.cliente,oc:x.o,pk:x.pk,m:x.m,fs,cap:x.cap,kg:sum(fs,f=>f.kg),kgB:sum(fs,f=>f.kgB||f.kg),ult:fs.map(f=>f.createdAt).sort().slice(-1)[0]}}).filter(x=>x.fs.length);
-  const bob=tipo=>S.laminadas.filter(l=>l.estado!=='cerrada'&&l.resto!==true&&!(tipo==='PET'&&enCamino(l)&&l.estado==='pendiente')&&(tipo==='PET'?l.tipo==='PET':l.tipo!=='PET')).map(l=>({l,oc:ocOf(l.ocId),kg:stkLamRest(l)})).filter(x=>okA(x.oc)&&x.kg>0).map(x=>({...x,cli:x.oc.cliente}));
+  const bob=tipo=>S.laminadas.filter(l=>l.estado!=='cerrada'&&l.resto!==true&&!esLinea(l)&&!(tipo==='PET'&&enCamino(l)&&l.estado==='pendiente')&&(tipo==='PET'?l.tipo==='PET':l.tipo!=='PET')).map(l=>({l,oc:ocOf(l.ocId),kg:stkLamRest(l)})).filter(x=>okA(x.oc)&&x.kg>0).map(x=>({...x,cli:x.oc.cliente}));
   const V=chivVivo();
   const camRef=S.laminadas.filter(l=>l.tipo==='PET'&&l.estado==='pendiente'&&enCamino(l)).map(l=>({l,oc:ocOf(l.ocId),kg:+l.kg||0})).filter(x=>okO(x.oc)).map(x=>({...x,cli:x.oc.cliente}));
   const vok=x=>okFlujo(x.oc);
@@ -2804,7 +2843,7 @@ function renderStock(){
     rows=B[stkView].filter(r=>qOk(r,r.fs.map(f=>f.partida).join(' ')));const F=rows.flatMap(r=>r.fs);
     kpi=`<div><b>${rows.length}</b><span>${stkView==='fin'?'pallets listos':'pallets armándose'}</span></div><div><b>${fmt(sum(F,f=>f.kg))}</b><span>kg neto · ${fmt(sum(F,f=>f.kgB||f.kg))} kg bruto</span></div><div><b>${F.length}</b><span>bobinas</span></div><div><b>${[...new Set(rows.map(r=>r.cli))].length}</b><span>clientes</span></div>`;
     head=`<th>OC</th><th>Medida</th><th>Pallet</th><th class="n">Bob.</th><th>Nº bobinas</th><th class="n">Kg bruto</th><th class="n">Kg neto</th><th>Partida</th><th>${stkView==='fin'?'Antigüedad':'Última bobina'}</th>${stkView==='proc'?'<th></th>':''}`;
-    line=r=>`<tr>${ocTd$(r.oc)}<td><b>${esc(r.pk)}</b>${r.pk==='sin pallet'?' <span class="tag pend">sin pallet</span>':''}${r.m?`<br><span class="muted" style="font-size:12px">refiladora ${esc(r.m)}</span>`:''}</td><td class="n">${r.fs.length}${stkView==='proc'&&r.cap?' / '+r.cap:''}</td><td>${rango$(r.fs)}</td><td class="n">${fmt(r.kgB)}</td><td class="n"><b>${fmt(r.kg)}</b></td><td>${esc([...new Set(r.fs.map(f=>f.partida).filter(Boolean))].join(', '))}</td><td>${stkView==='fin'?dTag$(r.ult):fh(r.ult)+' · '+fd(r.ult)}</td>${stkView==='proc'?`<td><button class="btn" style="padding:6px 12px;min-height:0;font-size:13px" onclick="rflPalCerrar('${r.oc.id}','${esc(r.m)}')">Cerrar pallet ✓</button></td>`:''}</tr>`;
+    line=r=>`<tr>${ocTd$(r.oc)}<td><b>${esc(r.pk)}</b>${r.pk==='sin pallet'?' <span class="tag pend">sin pallet</span>':''}${r.m?`<br><span class="muted" style="font-size:12px">${esc(maqTxt(r.m))}</span>`:''}</td><td class="n">${r.fs.length}${stkView==='proc'&&r.cap?' / '+r.cap:''}</td><td>${rango$(r.fs)}</td><td class="n">${fmt(r.kgB)}</td><td class="n"><b>${fmt(r.kg)}</b></td><td>${esc([...new Set(r.fs.map(f=>f.partida).filter(Boolean))].join(', '))}</td><td>${stkView==='fin'?dTag$(r.ult):fh(r.ult)+' · '+fd(r.ult)}</td>${stkView==='proc'?`<td><button class="btn" style="padding:6px 12px;min-height:0;font-size:13px" onclick="rflPalCerrar('${r.oc.id}','${esc(r.m)}')">Cerrar pallet ✓</button></td>`:''}</tr>`;
   }else{
     rows=B[stkView].filter(r=>qOk(r,r.l.partida+' '+(r.l.nroOrigen||'')));
     const extra=stkView==='mp'?B.mpl.filter(r=>qOk(r,r.l.partida+' '+(r.l.nroOrigen||''))):[];
