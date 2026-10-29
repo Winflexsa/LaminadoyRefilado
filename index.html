@@ -1060,7 +1060,7 @@ html.celu #c-nav button span{filter:none}
 
 <script>
 /* ================= ESTADO ================= */
-const VERSION='v0.68';
+const VERSION='v0.69';
 const ICN={"dash": "<path d=\"M3.5 16.5a8.5 8.5 0 1 1 17 0\"/><path d=\"M12 16.5l4.2-5.2\"/><circle cx=\"12\" cy=\"16.5\" r=\"1.3\"/><path d=\"M6.2 12.4l1.2.8M12 8v1.5M17.8 12.4l-1.2.8M3 20.5h18\"/>", "plan": "<rect x=\"3\" y=\"4.5\" width=\"18\" height=\"16\" rx=\"1.5\"/><path d=\"M3 9.5h18M8 2.5v4M16 2.5v4M7 13h3M14 13h3M7 16.5h3M14 16.5h3\"/>", "lamadm": "<circle cx=\"6.5\" cy=\"7.5\" r=\"3.5\"/><circle cx=\"6.5\" cy=\"16.5\" r=\"3.5\"/><circle cx=\"6.5\" cy=\"7.5\" r=\"1\"/><circle cx=\"6.5\" cy=\"16.5\" r=\"1\"/><path d=\"M10 7.5l4 3.2M10 16.5l4-3.2M14 12h7\"/><path d=\"M17 9.5v5\"/>", "rfl": "<circle cx=\"6\" cy=\"12\" r=\"3.8\"/><circle cx=\"6\" cy=\"12\" r=\"1\"/><path d=\"M9.8 9.5H21M9.8 14.5H21M15.5 4.5v15\"/><path d=\"M14 4.5h3\"/>", "fin": "<rect x=\"4\" y=\"11\" width=\"7\" height=\"7\"/><rect x=\"13\" y=\"11\" width=\"7\" height=\"7\"/><rect x=\"8.5\" y=\"4\" width=\"7\" height=\"7\"/><path d=\"M2.5 18h19M4.5 18v2.5M12 18v2.5M19.5 18v2.5\"/>", "desp": "<path d=\"M2.5 6h11v10h-11z\"/><path d=\"M13.5 9.5h4l3 3.5V16h-7\"/><circle cx=\"6.5\" cy=\"17.5\" r=\"1.8\"/><circle cx=\"17\" cy=\"17.5\" r=\"1.8\"/>", "rec": "<path d=\"M3 10.5L12 4l9 6.5V20H3z\"/><path d=\"M12 8.5v7M8.8 12.5l3.2 3.2 3.2-3.2\"/><path d=\"M8 20v-2.5h8V20\"/>", "prod": "<circle cx=\"12\" cy=\"13\" r=\"8\"/><path d=\"M12 9v4.5l3 2M10 2.5h4\"/>", "cro": "<rect x=\"3\" y=\"4.5\" width=\"18\" height=\"16\" rx=\"1.5\"/><path d=\"M3 9.5h18M8 2.5v4M16 2.5v4M7 13h3M14 13h3M7 16.5h3M14 16.5h3\"/>", "oc": "<path d=\"M6 2.5h9l4 4V21.5H6z\"/><path d=\"M15 2.5v4h4M9 11h7M9 14.5h7M9 18h4\"/>", "sync": "<path d=\"M20 11a8 8 0 0 0-14.5-4.5L3.5 9M4 13a8 8 0 0 0 14.5 4.5l2-2.5\"/><path d=\"M3.5 4v5h5M20.5 20v-5h-5\"/>", "config": "<circle cx=\"12\" cy=\"12\" r=\"3\"/><path d=\"M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1\"/>", "full": "<rect x=\"2.5\" y=\"4\" width=\"19\" height=\"12.5\" rx=\"1.5\"/><path d=\"M8 20.5h8M12 16.5v4\"/>", "salir": "<path d=\"M14 4.5H5v15h9\"/><path d=\"M10 12h11M17.5 8.5L21 12l-3.5 3.5\"/>"};
 const ico=k=>`<svg class="ico" viewBox="0 0 24 24" aria-hidden="true">${ICN[k]||''}</svg>`;
 const CATALOGO=[
@@ -1120,7 +1120,7 @@ const prodOf=o=>o&&S.catalogo.find(p=>p.id===o.prodId);
 const ocEnLinea=o=>!!o&&!!o.id&&!esPetOC(o)&&(o.enLinea!=null?!!o.enLinea:!!(prodOf(o)||{}).enLinea);
 const esLinea=l=>!!l&&l.tipo==='LINEA';
 const maqTxt=m=>m==='Laminadora'?'laminadora':'refiladora '+m;
-const flujoTag=o=>esPetOC(o)?'<span class="tag tipo-pet">PET</span>':ocEnLinea(o)?'<span class="tag tipo-lam" style="background:#dff1e7;color:#0a6b3a">En línea</span>':'<span class="tag tipo-lam">Laminado</span>';
+const flujoTag=o=>o&&o.directo?'<span class="tag rem">Directo al cliente</span>':esPetOC(o)?'<span class="tag tipo-pet">PET</span>':ocEnLinea(o)?'<span class="tag tipo-lam" style="background:#dff1e7;color:#0a6b3a">En línea</span>':'<span class="tag tipo-lam">Laminado</span>';
 let flujoF='';const okFlujo=o=>!flujoF||(flujoF==='pet'?esPetOC(o):!esPetOC(o));
 document.addEventListener('click',e=>{const b=e.target.closest('.flujoSeg button');if(!b)return;flujoF=b.dataset.v;document.querySelectorAll('.flujoSeg button').forEach(x=>x.classList.toggle('on',x.dataset.v===flujoF));render()});
 const tipoTag=l=>l.tipo==='PET'?'<span class="tag tipo-pet">PET Chivilcoy</span>':'<span class="tag tipo-lam">Laminada PET/PE</span>';
@@ -1779,7 +1779,7 @@ function certSave(){const t=id=>$(id).value.trim();S.params={...(S.params||{}),c
 function newPDF(){const {jsPDF}=window.jspdf;const d=new jsPDF({unit:'mm',format:'a4'});d._fresh=true;return d}
 /* ================= DESPACHOS ================= */
 function palGroups(){ // pallets CERRADOS en stock, agrupados por cliente > OC > pallet
-  const fs=S.finales.filter(f=>f.estado==='en stock'&&palCerrado(f.ocId,pk$(f)));const g={};
+  const fs=S.finales.filter(f=>f.estado==='en stock'&&!(f.directo&&enCamino(f))&&palCerrado(f.ocId,pk$(f)));const g={};
   for(const f of fs){const o=ocOf(f.ocId);const cli=o.cliente||'—',pk=String(f.pallet||'sin pallet');g[cli]=g[cli]||{};g[cli][o.id]=g[cli][o.id]||{oc:o,pallets:{}};g[cli][o.id].pallets[pk]=g[cli][o.id].pallets[pk]||[];g[cli][o.id].pallets[pk].push(f)}
   return g;
 }
@@ -1807,6 +1807,7 @@ function dpGenerar(){
   const ocIds=[...new Set(fs.map(f=>f.ocId))];const nro=ALL('despachos').reduce((m,d)=>Math.max(m,+d.nro||0),+(S.params&&S.params.despMax)||0)+1;
   const dp={id:uid('DP'),nro,fecha:$('dpFecha').value||hoyISO(),remito:$('dpRem').value.trim(),obs:$('dpObs').value.trim(),cliente:clis[0],ocIds,ocNros:ocIds.map(i=>ocOf(i).nro),pallets:[...new Set(fs.map(f=>String(f.pallet||'')))],finIds:fs.map(f=>f.id),nBob:fs.length,kgN:sum(fs,f=>f.kg),kgB:sum(fs,f=>f.kgB||f.kg),cert:$('dpCert').checked,por:who,createdAt:now(),updatedAt:now()};
   fs.forEach(f=>{f.estado='remitida';f.despachoId=dp.id;f.remito=dp.remito||('DESP-'+nro);f.remFecha=dp.fecha;f.updatedAt=now()});
+  ocIds.map(ocOf).filter(o=>o.directo&&o.estado==='abierta').forEach(o=>{const fo=S.finales.filter(f=>f.ocId===o.id);if(fo.every(f=>f.estado==='remitida')&&sum(fo,f=>f.kg)>=(+o.kg||0)*0.95){o.estado='cerrada';o.updatedAt=now()}}); // v0.69
   S.despachos.push(dp);save();toast(`Despacho ${nro} generado`);$('dpRem').value='';$('dpObs').value='';
   dpPDF(dp.id);
 }
@@ -2131,6 +2132,43 @@ function chivCrearOC(ped,medida,kgRec){
     solicitudChiv:ped.solicitud||'',chivPed:ped.id,autoChiv:true,cert:false,kg:Math.round(ped.kgPedidos||kgRec||0),fecha:'',estado:'abierta',createdAt:now(),updatedAt:now(),por:'Chivilcoy (automático)',fromChiv:true};
   epAplicar(o,ped);S.ocs.push(o);return o;
 }
+/* v0.69 · DIRECTOS DE CHIVILCOY → TERMINADO (despachables, con certificado) */
+const CHIV_DIR_DESDE='2026-10-27'; // lo directo enviado antes ya se entregó por fuera de la app
+const chivDirDesde=()=>(S.params&&S.params.chivDirDesde)||CHIV_DIR_DESDE;
+function chivDirOC(ped,medida){
+  const id='OC-CHV-'+chivNorm(ped.id).toUpperCase();
+  let o=S.ocs.find(x=>x.id===id)||S.ocs.find(x=>x.directo&&x.chivPed===ped.id);
+  if(!o&&ALL('ocs').some(x=>x.id===id))return null; // archivada: no se recrea
+  if(!o&&S.tomb&&S.tomb['ocs:'+id])return null;   // borrada a mano: no se recrea
+  let nueva=false;
+  if(!o){o=chivCrearOC(ped,medida,0);nueva=true}
+  if(!o.directo){o.directo=true;o.cert=true;o.cono=String(ped.cono)==='3'?'3"':'6"';o.instr='Directo al cliente: va tal cual sale de Chivilcoy, sin proceso';o.kxb=+ped.kgPorBobina||o.kxb||0;o.updatedAt=now()}
+  return{o,nueva};
+}
+function chivDirAlta(feed,res){
+  const out={n:0,nOC:0,quit:0};const desde=chivDirDesde(),pbD=((S.meta||{}).purgedBefore||'').slice(0,10);
+  const porChiv=new Map(ALL('finales').filter(f=>f.chivId).map(f=>[f.chivId,f]));const enFeed=new Set();
+  for(const b of feed.bobinas){
+    const ped=feed.pedidos[b.ped];if(!ped||chivClase(ped)!=='dir')continue;
+    if((b.fEnvio||'')<desde)continue; // también los marcados a mano: lo anterior al corte ya se entregó
+    if(pbD&&(b.fEnvio||'9')<pbD)continue;
+    const id='FIN-CHV-'+chivNorm(b.id).toUpperCase();enFeed.add(id);
+    if(porChiv.has(b.id))continue;const _t=S.tomb&&S.tomb['finales:'+id];if(_t&&!String(_t).endsWith('~auto'))continue;
+    if(!(+b.kg))continue;
+    const medida=chivMedida(b,ped);const r=chivDirOC(ped,medida);if(!r)continue;const oc=r.o;if(r.nueva)out.nOC++;
+    if(oc.estado==='cerrada'){oc.estado='abierta';oc.updatedAt=now()} // llegó más de una OC ya cerrada
+    const an=+b.ancho||+oc.ancho||0,tara=taraKg(oc.cono||'6"',an,oc)||0,llega=chivLlega(b.tEnvio);
+    const f={id,directo:true,chivId:b.id,ocId:oc.id,opId:null,lamId:null,partida:String(b.partida||'').toUpperCase().trim(),nroOrigen:String(b.nro||'').trim(),lamNro:null,nro:nroFinSig(oc.id),m:0,
+      kg:+b.kg,kgB:Math.round((+b.kg+tara)*10)/10,pallet:String(b.pallet||''),ancho:an,esp:+b.espesor||+oc.esp||0,cono:oc.cono||'6"',etiqueta:'',maq:'Chivilcoy',
+      operario:'Chivilcoy (automático)',remitoChiv:b.remito||'',fechaChiv:b.fEnvio||'',tEnvio:b.tEnvio||'',llega,estado:'en stock',createdAt:llega||((b.fEnvio||hoyISO())+'T12:00:00'),updatedAt:now()};
+    S.finales.push(f);porChiv.set(b.id,f);out.n++;res[oc.cliente+' (directo)']=(res[oc.cliente+' (directo)']||0)+1;
+  }
+  // envío revertido en Chivilcoy (últimos 3 días): si nadie la despachó, se saca sola
+  const genOk=feed.generado&&(Date.now()-new Date(feed.generado))<864e5;
+  if(genOk&&feed.archivoCargado!==false){const lim=new Date(Date.now()-3*864e5).toISOString();
+    S.finales.filter(f=>f.directo&&f.estado==='en stock'&&!enFeed.has(f.id)&&(f.createdAt||'')>=lim).map(f=>f.id).forEach(x=>{killAuto('finales',x);out.quit++})}
+  return out;
+}
 async function chivSync(manual){
   const cod=chivCod();if(!cod||chivEst.leyendo||!who)return;chivEst.t=Date.now();
   chivEst.leyendo=true;if(manual)chivBar();
@@ -2155,8 +2193,11 @@ async function chivSync(manual){
         ancho:+b.ancho||+oc.ancho||0,esp:+b.espesor||oc.espPet||0,maq:'Chivilcoy',operario:'Chivilcoy (automático)',obs:'',fechaChiv:b.fEnvio?b.fEnvio.split('-').reverse().join('/'):'',chivId:b.id,tEnvio:b.tEnvio||'',llega:chivLlega(b.tEnvio),estado:'pendiente',createdAt:chivLlega(b.tEnvio)||now(),updatedAt:now()};
       S.laminadas.push(l);porId.set(id,l);ya.add(chivKey(partida,nroO));n++;res[oc.cliente]=(res[oc.cliente]||0)+1;
     }
+    // v0.69 · DIRECTO AL CLIENTE: las bobinas que van tal cual (Blibox, Laboreau, Trigger, Bligraf en cono 6"…) entran solas
+    // como producto Terminado con su pallet de Chivilcoy, en una OC propia del pedido, para poder despacharlas y sacar el certificado.
+    const nDir=chivDirAlta(feed,res);n+=nDir.n;nOC+=nDir.nOC;quit+=nDir.quit;
     // v0.67: OC creadas solas que quedaron duplicadas de una OC cargada a mano (ej. "Mendía" con tilde): si están vacías, se borran
-    S.ocs.filter(o=>o.autoChiv&&!o.editadoPor&&o.estado==='abierta'&&!S.laminadas.some(l=>l.ocId===o.id)&&!S.finales.some(f=>f.ocId===o.id)&&!S.ops.some(x=>x.ocId===o.id)&&!S.cronograma.some(c=>c.ocId===o.id)).forEach(o=>{
+    S.ocs.filter(o=>o.autoChiv&&!o.directo&&!o.editadoPor&&o.estado==='abierta'&&!S.laminadas.some(l=>l.ocId===o.id)&&!S.finales.some(f=>f.ocId===o.id)&&!S.ops.some(x=>x.ocId===o.id)&&!S.cronograma.some(c=>c.ocId===o.id)).forEach(o=>{
       const dup=S.ocs.find(x=>x.id!==o.id&&!x.autoChiv&&x.estado==='abierta'&&nroN(x.nro)&&nroN(x.nro)===nroN(o.nro)&&chivNorm(x.cliente).slice(0,5)===chivNorm(o.cliente).slice(0,5));if(dup){kill('ocs',o.id);quit++}});
     // v0.66: laminadas que quedaron "en refiladora" en OC ya cerradas: se cierran (si tienen finales) o vuelven a pendiente
     S.laminadas.filter(x=>x.estado==='en refilado'&&ocOf(x.ocId).estado==='cerrada').forEach(x=>{if(S.finales.some(f=>f.lamId===x.id))cerrarLamSimple(x,x.refMaq);else{x.estado='pendiente';x.refMaq=null;x.updatedAt=now()}quit++});
@@ -2184,7 +2225,7 @@ async function chivSync(manual){
       const lim=new Date(Date.now()-3*864e5).toISOString();
       S.laminadas.filter(l=>l.chivId&&!enFeed.has(l.id)&&l.estado==='pendiente'&&(l.createdAt||'')>=lim&&!S.finales.some(f=>f.lamId===l.id)).forEach(l=>{killAuto('laminadas',l.id);quit++});
     }
-    if(n||nOC||quit){save();if(n)toast(`🚚 En camino desde Chivilcoy ${n} bobinas PET para refilar (entran 5 h después del remito): `+Object.entries(res).map(([c,k])=>c+' '+k).join(' · ')+(nOC?` · ${nOC} OC nueva${nOC>1?'s':''} (revisar el trabajo)`:''))}
+    if(n||nOC||quit){save();if(n)toast(`🚚 En camino desde Chivilcoy ${n} bobinas (entran 5 h después del remito): `+Object.entries(res).map(([c,k])=>c+' '+k).join(' · ')+(nOC?` · ${nOC} OC nueva${nOC>1?'s':''} (revisar el trabajo)`:''))}
   }catch(e){chivEst.err=e.message||String(e);console.warn('[chivilcoy]',e)}
   finally{chivEst.leyendo=false;try{if(mode==='pc'&&(pcCur==='fin'||pcCur==='rec'))render();chivBar()}catch(e){}}
 }
@@ -2193,12 +2234,14 @@ function chivVivo(){
   const out={lam:[],dir:[]};if(!chivFeed)return out;
   const lamUsadas=new Set(ALL('laminadas').filter(l=>l.tipo!=='PET').map(l=>chivKey(l.partida,l.nroOrigen)));
   const ocsLam=S.ocs.filter(o=>!esPetOC(o));const lim40=dKey(new Date(Date.now()-40*864e5));
+  const dirReg=new Set(ALL('finales').filter(f=>f.directo&&f.chivId&&!(f.estado==='en stock'&&enCamino(f))).map(f=>f.chivId));
   for(const b of chivFeed.bobinas){
     const ped=chivFeed.pedidos[b.ped];const c=chivClase(ped);if((c!=='lam'&&c!=='dir')||!chivEnRango(b))continue;
     const partida=String(b.partida||'').toUpperCase().trim(),nro=String(b.nro||'').trim();
     if(c==='lam'&&lamUsadas.has(chivKey(partida,nro)))continue;
     const medida=chivMedida(b,ped);
     if(c==='dir'&&(b.fEnvio||'9')<lim40)continue; // v0.66: directos, solo los últimos 40 días
+    if(c==='dir'&&dirReg.has(b.id))continue; // v0.69: ya está en Terminado / despachada
     let oc=c==='lam'?chivBuscarOCLam(ped,b):null;if(oc&&(oc.borrada||oc.estado==='cerrada'))continue; // OC de laminado cerrada o borrada: no se muestra como pendiente
     if(!oc)oc={nro:ped.oc||('pedido '+(ped.solicitud||ped.op||'—')),desc:medida,ancho:b.ancho||ped.ancho,esp:b.espesor||ped.espesor,espPet:b.espesor||ped.espesor,color:ped.color,cliente:ped.cliente,lamina:c==='lam'?'Lamina PET/PE':'Lamina PET',instr:ped.trabajo||''};
     out[c].push({l:{partida,nroOrigen:nro,palletChiv:b.pallet,kg:+b.kg||0,estado:c==='lam'?'para laminar':'entregar',createdAt:chivLlega(b.tEnvio)||((b.fEnvio||'')+'T12:00:00'),llega:chivLlega(b.tEnvio),tEnvio:b.tEnvio||'',remitoChiv:b.remito,chiv:1},oc,kg:+b.kg||0,cli:ped.cliente||oc.cliente||'?',ped});
@@ -2237,7 +2280,7 @@ function effBadge(e){if(e==null)return'<span class="muted">—</span>';const c=e
 function renderProd(){
   const dia=$('prodDia').value||hoyISO();if(!$('prodDia').value)$('prodDia').value=dia;
   const lam=S.laminadas.filter(l=>!l.resto&&l.tipo!=='PET'&&!esLinea(l)&&dKey(l.createdAt)===dia).map(l=>({t:l.createdAt,proc:'lam',maq:'Laminadora',op:l.operario,ocId:l.ocId,lbl:lamLbl(l),kg:l.kg,m:l.m}));
-  const fin=S.finales.filter(f=>dKey(f.createdAt)===dia).map(f=>({t:f.createdAt,proc:f.maq==='Laminadora'?'lam':'ref',maq:f.maq||'?',op:f.operario,ocId:f.ocId,lbl:'bob '+f.nro,kg:f.kg,m:f.m}));
+  const fin=S.finales.filter(f=>!f.directo&&dKey(f.createdAt)===dia).map(f=>({t:f.createdAt,proc:f.maq==='Laminadora'?'lam':'ref',maq:f.maq||'?',op:f.operario,ocId:f.ocId,lbl:'bob '+f.nro,kg:f.kg,m:f.m}));
   const all=[...lam,...fin].sort((a,b)=>a.t>b.t?1:-1);
   const par=S.ops.flatMap(o=>o.paradas.filter(p=>dKey(p.t)===dia));
   const finL=fin.filter(x=>x.proc==='lam'),finR=fin.filter(x=>x.proc==='ref');
@@ -2245,7 +2288,7 @@ function renderProd(){
   // Ahora en planta
   const maqs=[['Laminadora',null,'lam'],['Refiladora Verde','Verde','ref'],['Refiladora Gris','Gris','ref']];
   $('prodAhora').innerHTML=maqs.map(([nm,mq,proc])=>{
-    const ult=(proc==='lam'?[...S.laminadas.filter(l=>!l.resto&&l.tipo!=='PET'&&!esLinea(l)),...S.finales.filter(f=>f.maq==='Laminadora')]:S.finales.filter(f=>f.maq===mq)).sort((a,b)=>b.createdAt>a.createdAt?1:-1)[0];
+    const ult=(proc==='lam'?[...S.laminadas.filter(l=>!l.resto&&l.tipo!=='PET'&&!esLinea(l)),...S.finales.filter(f=>f.maq==='Laminadora')]:S.finales.filter(f=>f.maq===mq&&!f.directo)).sort((a,b)=>b.createdAt>a.createdAt?1:-1)[0];
     const activa=ult&&minsAgo(ult.createdAt)<90;const oc=ult?ocOf(ult.ocId):null;
     const enRef=proc==='ref'?S.laminadas.filter(l=>l.estado==='en refilado'&&l.refMaq===mq):[];
     const objTxt=oc?(objetivo(oc.id,proc)?`objetivo ${objetivo(oc.id,proc)} kg/h`:''):'';
@@ -2297,7 +2340,7 @@ function dbOC(id){const o=ocOf(id);if(!o.id)return dbGo('oc');dbGo('oc');$('qOC'
 function dbIdx(){
   const idx={};
   ALL('laminadas').filter(l=>!l.resto&&l.tipo!=='PET'&&!esLinea(l)&&l.createdAt).forEach(l=>{const k=dKey(l.createdAt);(idx[k]=idx[k]||[]).push({t:l.createdAt,proc:'lam',mq:'Laminadora',op:l.operario,ocId:l.ocId,kg:+l.kg||0,lbl:lamLbl(l)})});
-  ALL('finales').filter(f=>f.createdAt).forEach(f=>{const k=dKey(f.createdAt),lin=f.maq==='Laminadora';(idx[k]=idx[k]||[]).push({t:f.createdAt,proc:lin?'lam':'ref',mq:lin?'Laminadora':'Refiladora '+(f.maq||'?'),op:f.operario,ocId:f.ocId,kg:+f.kg||0,lbl:'bob '+f.nro})});
+  ALL('finales').filter(f=>f.createdAt&&!f.directo).forEach(f=>{const k=dKey(f.createdAt),lin=f.maq==='Laminadora';(idx[k]=idx[k]||[]).push({t:f.createdAt,proc:lin?'lam':'ref',mq:lin?'Laminadora':'Refiladora '+(f.maq||'?'),op:f.operario,ocId:f.ocId,kg:+f.kg||0,lbl:'bob '+f.nro})});
   const par={};ALL('ops').forEach(o=>(o.paradas||[]).forEach(p=>{if(!p.t)return;const k=dKey(p.t),mq=p.maq==='Laminadora'?'Laminadora':'Refiladora '+(p.maq||'?');(par[k+'|'+mq]=par[k+'|'+mq]||[]).push(p)}));
   return{idx,par};
 }
@@ -2466,7 +2509,7 @@ function dbCrono(){
 function dbUrg(o){const d=diasA(ocEnt(o).fecha);if(d==null)return null;if(d<0)return{d,txt:'hace '+(-d)+' d',cls:'bad'};if(d===0)return{d,txt:'vence hoy',cls:'warn'};return{d,txt:'en '+d+' d',cls:d<=3?'warn':'ok'}}
 function dbOCs(){
   const kp=$('db-oc-kpis'),nx=$('db-oc-next');if(!kp||!nx)return;const hoy=hoyISO();
-  const ab=S.ocs.filter(o=>o.estado==='abierta'&&!esDirecto(o.cliente));
+  const ab=S.ocs.filter(o=>o.estado==='abierta'&&!o.directo&&!esDirecto(o.cliente));
   const falta=o=>Math.max(0,(+o.kg||0)-ocKgs(o).fin);
   const fE=o=>ocEnt(o).fecha||'';const venc=ab.filter(ocAtrasada).sort((a,b)=>fE(a).localeCompare(fE(b)));
   const prox=ab.filter(o=>{const u=dbUrg(o);return u&&u.d>=0&&u.d<=7&&ocFaltaRefilar(o,100)}).sort((a,b)=>fE(a).localeCompare(fE(b)));
@@ -2495,7 +2538,7 @@ function dbUltimas(){
 // ── ALERTAS ──
 function dbAlertas(){
   const el=$('db-alertas');if(!el)return;const a=[];
-  const ab=S.ocs.filter(o=>o.estado==='abierta'&&!esDirecto(o.cliente));
+  const ab=S.ocs.filter(o=>o.estado==='abierta'&&!o.directo&&!esDirecto(o.cliente));
   const venc=ab.filter(ocAtrasada);
   const pronto=ab.filter(o=>{const d=diasA(ocEnt(o).fecha);return d!=null&&d>=0&&d<=3&&ocFaltaRefilar(o,90)});
   const viejas=S.laminadas.filter(l=>l.estado==='pendiente'&&!l.resto&&ocOf(l.ocId).estado==='abierta'&&minsAgo(l.createdAt)>3*1440);
@@ -2539,14 +2582,14 @@ function homeRender(){
   $('hmHola').textContent=(h<12?'Buen día':h<20?'Buenas tardes':'Buenas noches')+(who?', '+who.split(' ')[0]:'');
   $('hmFecha').textContent=new Date().toLocaleDateString('es-AR',{weekday:'long',day:'numeric',month:'long'}).replace(/^./,c=>c.toUpperCase());
   const lamH=[...S.laminadas.filter(l=>!l.resto&&l.tipo!=='PET'&&!esLinea(l)&&l.createdAt&&dKey(l.createdAt)===hoy),...S.finales.filter(f=>f.maq==='Laminadora'&&f.createdAt&&dKey(f.createdAt)===hoy)]; // v0.67: incluye lo que sale en línea
-  const finH=S.finales.filter(f=>f.maq!=='Laminadora'&&f.createdAt&&dKey(f.createdAt)===hoy);
+  const finH=S.finales.filter(f=>!f.directo&&f.maq!=='Laminadora'&&f.createdAt&&dKey(f.createdAt)===hoy);
   const prog=mq=>{const c=croItems(hoy,mq).find(x=>x.ocId);if(!c)return'<b class="t">Sin programar</b>';const o=ocOf(c.ocId);return`<b class="t">${esc(o.cliente||'—')} <small>OC ${esc(o.nro||'')}${c.operario?' · '+esc(c.operario):''}</small></b>`};
   const kgM=(arr,mq)=>{const x=arr.filter(f=>f.maq===mq);return x.length?`${fmt(sum(x,f=>f.kg))} kg <small>${x.length} bob.</small>`:'—'};
   $('hmLam').innerHTML=`<div><span>Hoy</span><b>${lamH.length?fmt(sum(lamH,l=>l.kg))+' kg <small>'+lamH.length+' bob.</small>':'—'}</b></div><div><span>Programado</span>${prog('Laminadora')}</div>`;
   const pr=mq=>{const c=croItems(hoy,mq).find(x=>x.ocId);if(!c)return'';const o=ocOf(c.ocId);return`<small class="hm-pr">${esc(o.cliente||'—')} · OC ${esc(o.nro||'')}${c.kgObj?' · obj. '+fmt(c.kgObj)+' kg':''}</small>`};
   $('hmRef').innerHTML=`<div><span>Refiladora Verde</span><b>${kgM(finH,'Verde')}</b>${pr('Refiladora Verde')}</div><div><span>Refiladora Gris</span><b>${kgM(finH,'Gris')}</b>${pr('Refiladora Gris')}</div>`;
   if(rol==='admin'){
-    const ab=S.ocs.filter(o=>o.estado==='abierta'&&!esDirecto(o.cliente));
+    const ab=S.ocs.filter(o=>o.estado==='abierta'&&!o.directo&&!esDirecto(o.cliente));
     const pend=S.laminadas.filter(l=>l.estado==='pendiente'&&!l.resto&&ocOf(l.ocId).estado==='abierta'&&!enCamino(l));
     $('hmAdm').innerHTML=`<div><span>OC abiertas</span><b>${ab.length}</b></div><div><span>Laminado hoy</span><b>${fmt(sum(lamH,l=>l.kg))} <small>kg</small></b></div><div><span>Refilado hoy</span><b>${fmt(sum(finH,f=>f.kg))} <small>kg</small></b></div><div><span>Para refilar</span><b>${pend.length} <small>bob. · ${fmt(sum(pend,l=>l.kg))} kg</small></b></div>`;
   }
@@ -2569,7 +2612,7 @@ function render(){
   if(mode==='home'){homeRender();$('modoLbl').textContent=modo==='asistente'?'modo asistente (paso a paso)':'modo clásico (formularios)'}
   if(mode==='wiz')wizRender();
   $('homeStats').textContent=VERSION;
-  const abiertas=S.ocs.filter(o=>o.estado==='abierta');
+  const abiertas=S.ocs.filter(o=>o.estado==='abierta'&&!o.directo); // v0.69: las OC directas no se procesan en planta
   const opts=`<option value="">— elegir —</option>`+abiertas.map(o=>`<option value="${o.id}">${ocLbl(o)} · ${o.ancho}×${o.esp}µ</option>`).join('');
   if(mode==='lam'){
     const card=o=>{const k=ocKgs(o),lams=S.laminadas.filter(l=>l.ocId===o.id&&!l.resto&&l.tipo!=='PET'),pct=o.kg?Math.min(100,k.lam/o.kg*100):0;
@@ -2798,14 +2841,14 @@ function renderLamAdm(){
 /* v0.47 · STOCK por etapas: Terminado · En proceso · Semielaborado · Materia prima (solo kg; sin restos; sin clientes directos) */
 let stkView='fin',recView='cam';
 const STKV={fin:['Terminado','#1e9a4f','Pallets cerrados y bobinas sin pallet, listos para entregar'],proc:['En proceso','#2f6fd0','Pallets que se están armando en las refiladoras (uno por máquina)'],semi:['Semielaborado','#c98a00','Bobinas laminadas PET/PE esperando refilado'],mp:['Materia prima','#6d8fd6','Bobinas PET de Chivilcoy en Lanús: jumbo para refilar / rebobinar y PET para laminar']};
-const RECV={cam:['En camino','#5b7fa8','Bobinas que Chivilcoy remitió a Lanús: figuran en camino 5 h desde el remito y después pasan solas a su etapa'],dir:['Directo al cliente','#8a8f98','Bobinas de Chivilcoy que se entregan tal cual, sin proceso (llegadas en los últimos 40 días; lo pendiente de entregar se ve en Estado de pedidos)'],man:['Carga a mano','#6f7a74','Respaldo: Excel de Agustín o carga manual de una bobina (normalmente entran solas)']};
+const RECV={cam:['En camino','#5b7fa8','Bobinas que Chivilcoy remitió a Lanús: figuran en camino 5 h desde el remito y después pasan solas a su etapa'],dir:['Directo al cliente','#8a8f98','Bobinas de Chivilcoy que van tal cual al cliente y todavía no entraron solas a Terminado (enviadas antes del corte de directos). Las nuevas pasan solas a Terminado y se despachan desde Despachos'],man:['Carga a mano','#6f7a74','Respaldo: Excel de Agustín o carga manual de una bobina (normalmente entran solas)']};
 const stkOpen=new Set();
 function stkSet(v){if(RECV[v]){recView=v;return pcTab('rec')}stkView=STKV[v]?v:'fin';if(pcCur!=='fin')pcTab('fin');else renderStock()}
 function irRecepPET(){recView='man';pcTab('rec')}
 function recSet(v){recView=v;renderRec();renderPet()}
 function stkLamRest(l){return Math.max(0,(+l.kg||0)-sum(S.finales.filter(f=>f.lamId===l.id),f=>f.kg))}
 function stkBase(){
-  const okO=o=>o&&o.id&&okFlujo(o)&&!esDirecto(o.cliente);
+  const okO=o=>o&&o.id&&okFlujo(o)&&(o.directo||!esDirecto(o.cliente)); // v0.69: las directas de Chivilcoy entran como Terminado
   const okA=o=>okO(o)&&o.estado==='abierta'; // v0.59: lo de OC cerradas no cuenta como semielaborado / materia prima
   const g=palGroups(),fin=[];
   for(const cli of Object.keys(g))for(const {oc,pallets} of Object.values(g[cli])){if(!okO(oc))continue;for(const pk of Object.keys(pallets)){const fs=pallets[pk].sort((a,b)=>a.nro-b.nro);fin.push({cli,oc,pk,fs,kg:sum(fs,f=>f.kg),kgB:sum(fs,f=>f.kgB||f.kg),ult:fs.map(f=>f.createdAt).sort().slice(-1)[0]})}}
